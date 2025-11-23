@@ -1,4 +1,4 @@
-# steven-universe
+# Steven Universe - Monorepo for Steven
 
 My personal monorepo — a unified space that brings together my work across AI, software development, GPU computing, cloud infrastructure, and full-stack applications.
 
@@ -30,6 +30,8 @@ Portfolio website showcasing my projects, skills, and experience.
 
 **Path:** `js/apps/personal-website/`
 **Live:** https://liustev6.ca
+
+---
 
 ### Backend Services
 
