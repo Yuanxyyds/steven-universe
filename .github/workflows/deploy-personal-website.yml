@@ -5,10 +5,12 @@ on:
     branches: [ main ]
     paths:
       - 'js/apps/personal-website/**'
+      - '.github/workflows/deploy-personal-website.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'js/apps/personal-website/**'
+      - '.github/workflows/deploy-personal-website.yml'
 
 env:
   WORKING_DIRECTORY: ./js/apps/personal-website
