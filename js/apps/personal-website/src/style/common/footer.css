@@ -1,0 +1,38 @@
+.footer {
+    bottom: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.footer-paragraph {
+    text-align: center !important;
+}
+
+.footer p {
+    font-size: 1em;
+    color: white !important;
+    margin-top: 0.5em !important;
+    margin-bottom: 0.5em !important;
+}
+
+.footer-icon-list {
+    justify-content: center !important;
+    text-align: center !important;
+    display: flex;
+}
+
+.footer-icons {
+    padding-right: 30px;
+}
+
+.footer-social-icons {
+    position: relative !important;
+    font-size: 1.2em !important;
+    color: #ffffff;
+    transition: 0.5s !important;
+}
+
+.footer-social-icons:hover {
+    color: var(--secondary-color);
+    transition: 0.5s !important;
+}
