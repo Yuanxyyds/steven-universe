@@ -11,6 +11,7 @@ steven-universe/
 │       └── personal-website/     # React-based personal portfolio website
 ├── python/
 │   └── services/
+│       ├── file-management/      # File management microservice (MinIO/S3)
 │       └── web-server/           # Backend API server
 └── .github/
     └── workflows/                # CI/CD pipelines
@@ -32,6 +33,19 @@ Portfolio website showcasing my projects, skills, and experience.
 **Live:** https://liustev6.ca
 
 ---
+
+### File Management Service
+
+Centralized file management microservice with three-tier bucket architecture for MinIO/S3 operations.
+
+**Main Features:**
+- Type 1: Private + Internal only (ML models, backend-only data)
+- Type 2: Private + Signed URLs (user uploads, time-limited access)
+- Type 3: Public buckets (AI-generated photos, direct URL access)
+- Dual token authentication (internal + frontend)
+- Docker + LXC deployment
+
+**Path:** `python/services/file-management/`
 
 ### Backend Services
 
