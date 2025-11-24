@@ -4,18 +4,57 @@ Frontend and backend services can request time-limited signed URLs for private c
 """
 
 import logging
-from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 from botocore.exceptions import ClientError
+import requests
 
+from shared_schemas.file_service import (
+    SignedUrlRequest,
+    SignedUrlResponse,
+    UrlType,
+    UploadResponse,
+    DeleteRequest,
+    DeleteResponse,
+    ListFilesRequest,
+    ListFilesResponse,
+    FileMetadata,
+)
+from shared_schemas.common import SuccessResponse
 from app.core.auth import verify_api_access, TokenType
 from app.core.config import BucketType, settings, get_bucket_type
 from app.s3.client import s3_client
 
 logger = logging.getLogger(__name__)
+
+
+def rewrite_minio_url_for_frontend(minio_url: str) -> str:
+    """
+    Rewrite MinIO signed URL to use public service domain as proxy.
+
+    Converts:
+        http://192.168.50.26:9000/user-uploads/profiles/user123.jpg?X-Amz-Signature=...
+    To:
+        https://files.yourdomain.com/signed/download/user-uploads/profiles/user123.jpg?X-Amz-Signature=...
+
+    The /signed/download endpoint will proxy the request back to MinIO, preserving all query
+    parameters so MinIO can validate the signature and expiration.
+
+    Args:
+        minio_url: Original MinIO signed URL with signature
+
+    Returns:
+        Rewritten URL using public service domain
+    """
+    # Construct MinIO base URL
+    minio_base = f"http://{settings.MINIO_ENDPOINT}" if not settings.MINIO_SECURE else f"https://{settings.MINIO_ENDPOINT}"
+
+    if minio_url.startswith(minio_base):
+        # Replace MinIO endpoint with public service URL + /signed/download prefix
+        return minio_url.replace(minio_base, f"{settings.PUBLIC_SERVICE_URL}/signed/download", 1)
+
+    return minio_url
 
 # Router for authenticated operations (upload, delete, generate URL)
 router_auth = APIRouter(
@@ -31,19 +70,7 @@ router_no_auth = APIRouter(
 )
 
 
-class SignedURLRequest(BaseModel):
-    """Request model for signed URL generation."""
-    bucket: str
-    key: str
-    expiration: int = Field(
-        default=3600,
-        ge=60,
-        le=86400,
-        description="URL expiration in seconds (min: 60s, max: 24h)"
-    )
-
-
-@router_auth.post("/upload")
+@router_auth.post("/upload", response_model=SuccessResponse[UploadResponse])
 async def upload_to_signed_bucket(
     bucket: str = Form(...),
     key: str = Form(...),
@@ -91,15 +118,15 @@ async def upload_to_signed_bucket(
         else:
             url = f"{settings.PUBLIC_SERVICE_URL}/signed/download/{result['bucket']}/{result['key']}"
 
-        return {
-            "success": True,
-            "message": "File uploaded successfully",
-            "data": {
-                "bucket": result["bucket"],
-                "key": result["key"],
-                "url": url
-            }
-        }
+        return SuccessResponse(
+            success=True,
+            message="File uploaded successfully",
+            data=UploadResponse(
+                bucket=result["bucket"],
+                key=result["key"],
+                url=url
+            )
+        )
 
     except ClientError as e:
         logger.error(f"S3 error during signed bucket upload: {e}")
@@ -115,9 +142,9 @@ async def upload_to_signed_bucket(
         )
 
 
-@router_auth.post("/url")
+@router_auth.post("/url", response_model=SignedUrlResponse)
 async def generate_signed_url(
-    request: SignedURLRequest,
+    request: SignedUrlRequest,
     token_type: TokenType = Depends(verify_api_access)
 ):
     """
@@ -162,22 +189,29 @@ async def generate_signed_url(
                 key=request.key,
                 expiration=request.expiration
             )
-            url_type = "direct_minio"
+            url_type = UrlType.DIRECT_MINIO
             logger.info(f"Generated direct MinIO signed URL for {request.bucket}/{request.key} (internal service)")
         else:
-            # Frontend gets public service proxy URL (accessible from internet)
-            url = f"{settings.PUBLIC_SERVICE_URL}/signed/download/{request.bucket}/{request.key}"
-            url_type = "public_proxy"
-            logger.info(f"Generated public proxy URL for {request.bucket}/{request.key} (frontend)")
+            # Frontend gets rewritten MinIO signed URL (proxied through public service)
+            # Generate real MinIO signed URL with signature
+            minio_signed_url = s3_client.generate_presigned_url(
+                bucket=request.bucket,
+                key=request.key,
+                expiration=request.expiration
+            )
+            # Rewrite to use public domain: http://192.168.50.26:9000/... -> https://files.yourdomain.com/download/...
+            url = rewrite_minio_url_for_frontend(minio_signed_url)
+            url_type = UrlType.PUBLIC_PROXY
+            logger.info(f"Generated rewritten signed URL for {request.bucket}/{request.key} (frontend, expires in {request.expiration}s)")
 
-        return {
-            "success": True,
-            "url": url,
-            "url_type": url_type,  # Help caller understand what type of URL they got
-            "expires_in": request.expiration,
-            "bucket": request.bucket,
-            "key": request.key
-        }
+        return SignedUrlResponse(
+            success=True,
+            url=url,
+            url_type=url_type,
+            expires_in=request.expiration,
+            bucket=request.bucket,
+            key=request.key
+        )
 
     except HTTPException:
         raise
@@ -195,47 +229,49 @@ async def generate_signed_url(
         )
 
 
-@router_auth.delete("/delete")
+@router_auth.delete("/delete", response_model=SuccessResponse[DeleteResponse])
 async def delete_from_signed_bucket(
-    bucket: str,
-    key: str
+    request: DeleteRequest = Depends()
 ):
     """
     Delete file from signed URL bucket.
     Requires frontend or internal token.
 
     Args:
-        bucket: Bucket name (must be in SIGNED_BUCKETS)
-        key: Object key to delete
+        request: DeleteRequest with bucket and key
 
     Returns:
         Deletion result
     """
     # Validate bucket type
-    if get_bucket_type(bucket) != BucketType.SIGNED:
+    if get_bucket_type(request.bucket) != BucketType.SIGNED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bucket '{bucket}' is not configured as a signed-URL bucket"
+            detail=f"Bucket '{request.bucket}' is not configured as a signed-URL bucket"
         )
 
     try:
         # Check if file exists
-        if not s3_client.file_exists(bucket, key):
+        if not s3_client.file_exists(request.bucket, request.key):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {bucket}/{key}"
+                detail=f"File not found: {request.bucket}/{request.key}"
             )
 
         # Delete file
-        result = s3_client.delete_file(bucket=bucket, key=key)
+        s3_client.delete_file(bucket=request.bucket, key=request.key)
 
-        logger.info(f"Signed bucket deletion successful: {bucket}/{key}")
+        logger.info(f"Signed bucket deletion successful: {request.bucket}/{request.key}")
 
-        return {
-            "success": True,
-            "message": "File deleted successfully",
-            "data": result
-        }
+        return SuccessResponse(
+            success=True,
+            message="File deleted successfully",
+            data=DeleteResponse(
+                bucket=request.bucket,
+                key=request.key,
+                deleted=True
+            )
+        )
 
     except HTTPException:
         raise
@@ -254,18 +290,26 @@ async def delete_from_signed_bucket(
 
 
 @router_no_auth.get("/download/{bucket}/{key:path}")
-async def download_file(bucket: str, key: str):
+async def download_file(bucket: str, key: str, request: Request):
     """
-    Download file from signed bucket (proxy endpoint).
-    This endpoint is publicly accessible and does not require auth.
-    Proxies the file from MinIO to the client.
+    Proxy endpoint that forwards signed URL requests to MinIO.
+
+    Receives rewritten signed URLs from frontend:
+        https://files.yourdomain.com/signed/download/user-uploads/user123.jpg?X-Amz-Signature=...
+
+    Forwards to MinIO with all query parameters preserved:
+        http://192.168.50.26:9000/user-uploads/user123.jpg?X-Amz-Signature=...
+
+    MinIO validates the signature and expiration, then returns the file.
+    This endpoint proxies the response back to the client.
 
     Args:
         bucket: Bucket name (must be in SIGNED_BUCKETS)
         key: Object key (file path)
+        request: FastAPI request (to extract query parameters like X-Amz-Signature)
 
     Returns:
-        File stream
+        File stream from MinIO
     """
     # Validate bucket type
     if get_bucket_type(bucket) != BucketType.SIGNED:
@@ -275,48 +319,70 @@ async def download_file(bucket: str, key: str):
         )
 
     try:
-        # Check if file exists
-        if not s3_client.file_exists(bucket, key):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {bucket}/{key}"
-            )
+        # Construct MinIO URL with bucket and key
+        minio_protocol = "https" if settings.MINIO_SECURE else "http"
+        minio_url = f"{minio_protocol}://{settings.MINIO_ENDPOINT}/{bucket}/{key}"
 
-        # Get file from MinIO
-        response = s3_client.client.get_object(Bucket=bucket, Key=key)
+        # Preserve all query parameters (X-Amz-Signature, X-Amz-Expires, etc.)
+        query_string = str(request.url.query)
+        if query_string:
+            minio_url += f"?{query_string}"
 
-        # Get content type
-        content_type = response.get('ContentType', 'application/octet-stream')
+        logger.info(f"Proxying signed URL request to MinIO: {bucket}/{key}")
 
-        # Stream the file
+        # Forward request to MinIO (MinIO validates signature and expiration)
+        minio_response = requests.get(minio_url, stream=True)
+
+        # Check if MinIO returned an error (e.g., signature invalid, URL expired)
+        if minio_response.status_code != 200:
+            logger.warning(f"MinIO rejected request for {bucket}/{key}: {minio_response.status_code}")
+
+            # Common MinIO error responses
+            if minio_response.status_code == 403:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied - signature invalid or URL expired"
+                )
+            elif minio_response.status_code == 404:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"File not found: {bucket}/{key}"
+                )
+            else:
+                raise HTTPException(
+                    status_code=minio_response.status_code,
+                    detail=f"Storage backend error: {minio_response.text}"
+                )
+
+        # Stream the file back to the client
+        # Using 256KB chunks for smooth image loading (avoids line-by-line rendering)
         return StreamingResponse(
-            response['Body'],
-            media_type=content_type,
+            minio_response.iter_content(chunk_size=262144),  # 256KB
+            media_type=minio_response.headers.get('content-type', 'application/octet-stream'),
             headers={
-                'Content-Disposition': f'inline; filename="{key.split("/")[-1]}"'
+                'Content-Disposition': minio_response.headers.get('content-disposition', f'inline; filename="{key.split("/")[-1]}"')
             }
         )
 
     except HTTPException:
         raise
-    except ClientError as e:
-        logger.error(f"S3 error during file download: {e}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to connect to MinIO: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to download file: {str(e)}"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to connect to storage backend"
         )
     except Exception as e:
-        logger.error(f"Unexpected error during file download: {e}")
+        logger.error(f"Unexpected error during proxy: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
 
 
-@router_auth.get("/list")
+@router_auth.get("/list", response_model=ListFilesResponse)
 async def list_signed_bucket_files(
-    bucket: str,
-    prefix: Optional[str] = "",
+    request: ListFilesRequest = Depends(),
     token_type: TokenType = Depends(verify_api_access)
 ):
     """
@@ -325,50 +391,49 @@ async def list_signed_bucket_files(
     - Frontend token: Returns public service proxy URLs
 
     Args:
-        bucket: Bucket name (must be in SIGNED_BUCKETS)
-        prefix: Optional prefix to filter files
+        request: ListFilesRequest with bucket and prefix
         token_type: Token type from authentication
 
     Returns:
         List of file keys with URLs (direct or proxy)
     """
     # Validate bucket type
-    if get_bucket_type(bucket) != BucketType.SIGNED:
+    if get_bucket_type(request.bucket) != BucketType.SIGNED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bucket '{bucket}' is not configured as a signed-URL bucket"
+            detail=f"Bucket '{request.bucket}' is not configured as a signed-URL bucket"
         )
 
     try:
-        files = s3_client.list_files(bucket=bucket, prefix=prefix)
+        files = s3_client.list_files(bucket=request.bucket, prefix=request.prefix)
 
         # Return files with URLs based on token type
         if token_type == TokenType.INTERNAL:
             # Internal services get direct MinIO URLs
-            files_with_urls = [
-                {
-                    "key": file_key,
-                    "url": s3_client.get_public_url(bucket, file_key)  # Direct MinIO URL
-                }
+            files_with_metadata = [
+                FileMetadata(
+                    key=file_key,
+                    url=s3_client.get_public_url(request.bucket, file_key)
+                )
                 for file_key in files
             ]
         else:
             # Frontend gets public service proxy URLs
-            files_with_urls = [
-                {
-                    "key": file_key,
-                    "url": f"{settings.PUBLIC_SERVICE_URL}/signed/download/{bucket}/{file_key}"
-                }
+            files_with_metadata = [
+                FileMetadata(
+                    key=file_key,
+                    url=f"{settings.PUBLIC_SERVICE_URL}/signed/download/{request.bucket}/{file_key}"
+                )
                 for file_key in files
             ]
 
-        return {
-            "success": True,
-            "bucket": bucket,
-            "prefix": prefix,
-            "count": len(files_with_urls),
-            "files": files_with_urls
-        }
+        return ListFilesResponse(
+            success=True,
+            bucket=request.bucket,
+            prefix=request.prefix,
+            count=len(files_with_metadata),
+            files=files_with_metadata
+        )
 
     except ClientError as e:
         logger.error(f"S3 error during signed bucket listing: {e}")

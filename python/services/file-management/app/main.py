@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from shared_schemas.file_service import HealthCheckResponse
 from app.core.config import settings
 from app.s3.client import s3_client
 from app.api import internal, signed, public
@@ -115,25 +116,24 @@ async def root():
     }
 
 
-@app.get("/health", tags=["health"])
+@app.get("/health", tags=["health"], response_model=HealthCheckResponse)
 async def health_check():
     """Health check endpoint."""
     try:
         # Test S3 connection
         s3_client.client.list_buckets()
 
-        return {
-            "status": "healthy",
-            "s3_connection": "ok"
-        }
+        return HealthCheckResponse(
+            status="healthy",
+            s3_connection="ok"
+        )
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return JSONResponse(
             status_code=503,
             content={
                 "status": "unhealthy",
-                "s3_connection": "failed",
-                "error": str(e)
+                "s3_connection": "failed"
             }
         )
 

@@ -4,13 +4,21 @@ These endpoints require internal token authentication and are for backend servic
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from botocore.exceptions import ClientError
 
+from shared_schemas.file_service import (
+    UploadResponse,
+    DeleteRequest,
+    DeleteResponse,
+    ListFilesRequest,
+    ListFilesResponse,
+    FileMetadata,
+)
+from shared_schemas.common import SuccessResponse
 from app.core.auth import verify_internal_token
-from app.core.config import BucketType, settings, get_bucket_type, validate_bucket
+from app.core.config import BucketType, get_bucket_type
 from app.s3.client import s3_client
 
 logger = logging.getLogger(__name__)
@@ -22,7 +30,7 @@ router = APIRouter(
 )
 
 
-@router.post("/upload")
+@router.post("/upload", response_model=SuccessResponse[UploadResponse])
 async def upload_to_internal_bucket(
     bucket: str = Form(...),
     key: str = Form(...),
@@ -61,11 +69,15 @@ async def upload_to_internal_bucket(
 
         logger.info(f"Internal upload successful: {bucket}/{key}")
 
-        return {
-            "success": True,
-            "message": "File uploaded successfully",
-            "data": result
-        }
+        return SuccessResponse(
+            success=True,
+            message="File uploaded successfully",
+            data=UploadResponse(
+                bucket=result["bucket"],
+                key=result["key"],
+                url=result["url"]
+            )
+        )
 
     except ClientError as e:
         logger.error(f"S3 error during internal upload: {e}")
@@ -81,47 +93,49 @@ async def upload_to_internal_bucket(
         )
 
 
-@router.delete("/delete")
+@router.delete("/delete", response_model=SuccessResponse[DeleteResponse])
 async def delete_from_internal_bucket(
-    bucket: str,
-    key: str
+    request: DeleteRequest = Depends()
 ):
     """
     Delete file from private internal bucket.
     Only accessible by backend services with internal token.
 
     Args:
-        bucket: Bucket name (must be in INTERNAL_BUCKETS)
-        key: Object key to delete
+        request: DeleteRequest with bucket and key
 
     Returns:
         Deletion result
     """
     # Validate bucket type
-    if get_bucket_type(bucket) != BucketType.INTERNAL:
+    if get_bucket_type(request.bucket) != BucketType.INTERNAL:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bucket '{bucket}' is not configured as an internal bucket"
+            detail=f"Bucket '{request.bucket}' is not configured as an internal bucket"
         )
 
     try:
         # Check if file exists
-        if not s3_client.file_exists(bucket, key):
+        if not s3_client.file_exists(request.bucket, request.key):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {bucket}/{key}"
+                detail=f"File not found: {request.bucket}/{request.key}"
             )
 
         # Delete file
-        result = s3_client.delete_file(bucket=bucket, key=key)
+        s3_client.delete_file(bucket=request.bucket, key=request.key)
 
-        logger.info(f"Internal deletion successful: {bucket}/{key}")
+        logger.info(f"Internal deletion successful: {request.bucket}/{request.key}")
 
-        return {
-            "success": True,
-            "message": "File deleted successfully",
-            "data": result
-        }
+        return SuccessResponse(
+            success=True,
+            message="File deleted successfully",
+            data=DeleteResponse(
+                bucket=request.bucket,
+                key=request.key,
+                deleted=True
+            )
+        )
 
     except HTTPException:
         raise
@@ -139,39 +153,46 @@ async def delete_from_internal_bucket(
         )
 
 
-@router.get("/list")
+@router.get("/list", response_model=ListFilesResponse)
 async def list_internal_bucket_files(
-    bucket: str,
-    prefix: Optional[str] = ""
+    request: ListFilesRequest = Depends()
 ):
     """
     List files in private internal bucket.
     Only accessible by backend services with internal token.
 
     Args:
-        bucket: Bucket name (must be in INTERNAL_BUCKETS)
-        prefix: Optional prefix to filter files
+        request: ListFilesRequest with bucket and prefix
 
     Returns:
         List of file keys
     """
     # Validate bucket type
-    if get_bucket_type(bucket) != BucketType.INTERNAL:
+    if get_bucket_type(request.bucket) != BucketType.INTERNAL:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bucket '{bucket}' is not configured as an internal bucket"
+            detail=f"Bucket '{request.bucket}' is not configured as an internal bucket"
         )
 
     try:
-        files = s3_client.list_files(bucket=bucket, prefix=prefix)
+        files = s3_client.list_files(bucket=request.bucket, prefix=request.prefix)
 
-        return {
-            "success": True,
-            "bucket": bucket,
-            "prefix": prefix,
-            "count": len(files),
-            "files": files
-        }
+        # Convert to FileMetadata objects
+        files_with_metadata = [
+            FileMetadata(
+                key=file_key,
+                url=s3_client.get_public_url(request.bucket, file_key)
+            )
+            for file_key in files
+        ]
+
+        return ListFilesResponse(
+            success=True,
+            bucket=request.bucket,
+            prefix=request.prefix,
+            count=len(files_with_metadata),
+            files=files_with_metadata
+        )
 
     except ClientError as e:
         logger.error(f"S3 error during internal listing: {e}")

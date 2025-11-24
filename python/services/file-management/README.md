@@ -11,8 +11,6 @@ This service provides a unified API for managing files across three different ac
 - **Type 2**: Private + Signed URLs (frontend can request time-limited access)
 - **Type 3**: Public Buckets (direct URL access, always open)
 
-## Architecture
-
 ### Three-Tier Bucket System
 
 | Type | Use Case | Direct Links | Auth Required | Example Buckets |
@@ -103,28 +101,6 @@ curl -X POST http://localhost:8000/signed/url \
   "bucket": "user-uploads",
   "key": "profiles/user123.jpg"
 }
-```
-
-#### Frontend Usage Example
-```javascript
-// Request signed URL
-const response = await fetch('http://localhost:8000/signed/url', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer <FRONTEND_API_KEY>',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    bucket: 'user-uploads',
-    key: 'avatar.jpg',
-    expiration: 3600
-  })
-});
-
-const { url } = await response.json();
-
-// Use signed URL (valid for 1 hour)
-<img src={url} />
 ```
 
 ---
@@ -228,6 +204,20 @@ MAX_SIGNED_URL_EXPIRATION=86400
 LOG_LEVEL=INFO
 ```
 
+## Development Setup
+
+### Local Development
+
+```bash
+# Install dependencies (includes shared-schemas in editable mode)
+pip install -r requirements-dev.txt
+
+# Run locally
+uvicorn app.main:app --reload
+```
+
+**Note:** Use `requirements-dev.txt` for local development. It includes `requirements.txt` plus the editable shared-schemas package.
+
 ## Deployment
 
 ### Prerequisites
@@ -309,8 +299,9 @@ LOG_LEVEL=INFO
 **The deployment script will:**
 - 📋 Load environment from `.env`
 - ✅ Validate required variables
-- 📦 Sync files to LXC via rsync
-- 🔨 Build Docker image on LXC
+- 📦 Sync service files to LXC via rsync
+- 📦 Sync shared-schemas dependency to LXC
+- 🔨 Build Docker image on LXC (installs shared-schemas first)
 - 🚀 Deploy and start container
 - 🏥 Run health checks
 
@@ -349,19 +340,14 @@ The service automatically sets bucket policies on startup:
 - **Type 1 & 2 buckets**: Private (no public access)
 - **Type 3 buckets**: Public-read (direct URL access)
 
-Manual policy configuration (if needed):
-```bash
-# Set public-read policy
-mc anonymous set public myminio/ai-generated-photos
-```
-
 ## Tech Stack
 
 - FastAPI - Web framework
 - boto3 - S3 client
 - MinIO - S3-compatible storage
-- Pydantic - Data validation
+- Pydantic - Data validation & schemas
 - Uvicorn - ASGI server
+- **shared-schemas** - Type-safe API contracts
 
 ## Future Enhancements
 

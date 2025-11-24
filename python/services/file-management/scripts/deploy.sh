@@ -52,6 +52,7 @@ echo -e "${GREEN}✅ Environment variables validated${NC}"
 echo -e "${YELLOW}📦 Syncing files to LXC...${NC}"
 DEPLOY_PATH="${LXC_DEPLOY_PATH:-~/file-management}"
 
+# Sync service directory
 rsync -avz --delete \
   --exclude '.git' \
   --exclude '.github' \
@@ -62,6 +63,14 @@ rsync -avz --delete \
   --exclude '.pytest_cache' \
   --exclude 'scripts' \
   ./ "$LXC_HOST:$DEPLOY_PATH/"
+
+# Sync shared-schemas package (required dependency)
+echo -e "${YELLOW}📦 Syncing shared-schemas...${NC}"
+rsync -avz --delete \
+  --exclude '__pycache__' \
+  --exclude '*.pyc' \
+  --exclude '.pytest_cache' \
+  ../../libs/shared-schemas/ "$LXC_HOST:$DEPLOY_PATH/shared-schemas/"
 
 echo -e "${GREEN}✅ Files synced successfully${NC}"
 
