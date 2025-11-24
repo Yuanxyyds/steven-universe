@@ -49,14 +49,28 @@ Centralized file management microservice with three-tier bucket architecture for
 
 **Path:** `python/services/file-management/`
 
-### Backend Services
+### Web Server (API Gateway)
 
-Python API server providing ML model endpoints and backend services.
+FastAPI-based API Gateway that routes requests to specialized microservices.
 
 **Main Features:**
-- StevenAI chatbot API (GPT-4, Llama with RAG)
-- Food image classification
-- Land sink prediction
-- Server statistics and monitoring
+- Proxmox server monitoring and statistics
+- API gateway routing to downstream microservices
+- Health checks for all connected services
+- CORS configuration for frontend integration
+- Docker + LXC deployment with automated sync
+
+**Current Migration Status:**
+- ✅ Phase 1: Proxmox stats API (completed)
+- 🚧 Phase 2: StevenAI chatbot service (planned)
+- 🚧 Phase 3: Food101 classification service (planned)
+- 🚧 Phase 4: Landsink prediction service (planned)
+
+**Architecture:**
+```
+Frontend → Web Server (Gateway) → Specialized Microservices
+                                → File Management Service
+                                → Proxmox API
+```
 
 **Path:** `python/services/web-server/`

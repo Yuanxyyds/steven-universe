@@ -1,0 +1,7 @@
+# Development requirements (local development only)
+
+# Include base requirements
+-r requirements.txt
+
+# Shared schemas (editable install for local development)
+-e ../../libs/shared-schemas
