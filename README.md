@@ -10,6 +10,8 @@ steven-universe/
 │   └── apps/
 │       └── personal-website/     # React-based personal portfolio website
 ├── python/
+│   ├── libs/
+│   │   └── shared-schemas/       # Shared Pydantic schemas for API contracts
 │   └── services/
 │       ├── file-management/      # File management microservice (MinIO/S3)
 │       └── web-server/           # Backend API server

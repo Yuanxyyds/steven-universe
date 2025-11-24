@@ -8,12 +8,16 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy shared-schemas package first (dependency)
+COPY shared-schemas/ /tmp/shared-schemas/
 
-# Install Python dependencies
+# Install shared-schemas
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir /tmp/shared-schemas
+
+# Copy requirements and install other dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/

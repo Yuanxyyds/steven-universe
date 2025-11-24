@@ -4,12 +4,22 @@ Direct URLs work for these buckets. Writes require auth, reads don't.
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 from botocore.exceptions import ClientError
 
+from shared_schemas.file_service import (
+    UploadResponse,
+    GetUrlRequest,
+    PublicUrlResponse,
+    DeleteRequest,
+    DeleteResponse,
+    ListFilesRequest,
+    ListFilesResponse,
+    FileMetadata,
+)
+from shared_schemas.common import SuccessResponse
 from app.core.auth import verify_api_access
 from app.core.config import BucketType, get_bucket_type, settings
 from app.s3.client import s3_client
@@ -30,7 +40,7 @@ router_no_auth = APIRouter(
 )
 
 
-@router_auth.post("/upload")
+@router_auth.post("/upload", response_model=SuccessResponse[UploadResponse])
 async def upload_to_public_bucket(
     bucket: str = Form(...),
     key: str = Form(...),
@@ -72,15 +82,15 @@ async def upload_to_public_bucket(
         # Return public service URL instead of MinIO URL
         public_url = f"{settings.PUBLIC_SERVICE_URL}/public/download/{result['bucket']}/{result['key']}"
 
-        return {
-            "success": True,
-            "message": "File uploaded successfully to public bucket",
-            "data": {
-                "bucket": result["bucket"],
-                "key": result["key"],
-                "public_url": public_url
-            }
-        }
+        return SuccessResponse(
+            success=True,
+            message="File uploaded successfully to public bucket",
+            data=UploadResponse(
+                bucket=result["bucket"],
+                key=result["key"],
+                url=public_url
+            )
+        )
 
     except ClientError as e:
         logger.error(f"S3 error during public bucket upload: {e}")
@@ -96,47 +106,49 @@ async def upload_to_public_bucket(
         )
 
 
-@router_auth.delete("/delete")
+@router_auth.delete("/delete", response_model=SuccessResponse[DeleteResponse])
 async def delete_from_public_bucket(
-    bucket: str,
-    key: str
+    request: DeleteRequest = Depends()
 ):
     """
     Delete file from public bucket.
     Requires frontend or internal token.
 
     Args:
-        bucket: Bucket name (must be in PUBLIC_BUCKETS)
-        key: Object key to delete
+        request: DeleteRequest with bucket and key
 
     Returns:
         Deletion result
     """
     # Validate bucket type
-    if get_bucket_type(bucket) != BucketType.PUBLIC:
+    if get_bucket_type(request.bucket) != BucketType.PUBLIC:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bucket '{bucket}' is not configured as a public bucket"
+            detail=f"Bucket '{request.bucket}' is not configured as a public bucket"
         )
 
     try:
         # Check if file exists
-        if not s3_client.file_exists(bucket, key):
+        if not s3_client.file_exists(request.bucket, request.key):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {bucket}/{key}"
+                detail=f"File not found: {request.bucket}/{request.key}"
             )
 
         # Delete file
-        result = s3_client.delete_file(bucket=bucket, key=key)
+        s3_client.delete_file(bucket=request.bucket, key=request.key)
 
-        logger.info(f"Public bucket deletion successful: {bucket}/{key}")
+        logger.info(f"Public bucket deletion successful: {request.bucket}/{request.key}")
 
-        return {
-            "success": True,
-            "message": "File deleted successfully",
-            "data": result
-        }
+        return SuccessResponse(
+            success=True,
+            message="File deleted successfully",
+            data=DeleteResponse(
+                bucket=request.bucket,
+                key=request.key,
+                deleted=True
+            )
+        )
 
     except HTTPException:
         raise
@@ -214,45 +226,44 @@ async def download_public_file(bucket: str, key: str):
         )
 
 
-@router_no_auth.get("/url")
-async def get_public_url(bucket: str, key: str):
+@router_no_auth.get("/url", response_model=PublicUrlResponse)
+async def get_public_url(request: GetUrlRequest = Depends()):
     """
     Get public URL for a file (returns service proxy URL, not MinIO URL).
     No authentication required.
 
     Args:
-        bucket: Bucket name (must be in PUBLIC_BUCKETS)
-        key: Object key
+        request: GetUrlRequest with bucket and key
 
     Returns:
         Public service URL
     """
     # Validate bucket type
-    if get_bucket_type(bucket) != BucketType.PUBLIC:
+    if get_bucket_type(request.bucket) != BucketType.PUBLIC:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bucket '{bucket}' is not configured as a public bucket"
+            detail=f"Bucket '{request.bucket}' is not configured as a public bucket"
         )
 
     try:
         # Check if file exists
-        if not s3_client.file_exists(bucket, key):
+        if not s3_client.file_exists(request.bucket, request.key):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {bucket}/{key}"
+                detail=f"File not found: {request.bucket}/{request.key}"
             )
 
         # Return public service URL instead of MinIO URL
-        url = f"{settings.PUBLIC_SERVICE_URL}/public/download/{bucket}/{key}"
+        url = f"{settings.PUBLIC_SERVICE_URL}/public/download/{request.bucket}/{request.key}"
 
-        logger.info(f"Retrieved public URL for {bucket}/{key}")
+        logger.info(f"Retrieved public URL for {request.bucket}/{request.key}")
 
-        return {
-            "success": True,
-            "url": url,
-            "bucket": bucket,
-            "key": key
-        }
+        return PublicUrlResponse(
+            success=True,
+            url=url,
+            bucket=request.bucket,
+            key=request.key
+        )
 
     except HTTPException:
         raise
@@ -270,48 +281,46 @@ async def get_public_url(bucket: str, key: str):
         )
 
 
-@router_no_auth.get("/list")
+@router_no_auth.get("/list", response_model=ListFilesResponse)
 async def list_public_bucket_files(
-    bucket: str,
-    prefix: Optional[str] = ""
+    request: ListFilesRequest = Depends()
 ):
     """
     List files in public bucket.
     No authentication required.
 
     Args:
-        bucket: Bucket name (must be in PUBLIC_BUCKETS)
-        prefix: Optional prefix to filter files
+        request: ListFilesRequest with bucket and prefix
 
     Returns:
         List of file keys with public URLs
     """
     # Validate bucket type
-    if get_bucket_type(bucket) != BucketType.PUBLIC:
+    if get_bucket_type(request.bucket) != BucketType.PUBLIC:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Bucket '{bucket}' is not configured as a public bucket"
+            detail=f"Bucket '{request.bucket}' is not configured as a public bucket"
         )
 
     try:
-        files = s3_client.list_files(bucket=bucket, prefix=prefix)
+        files = s3_client.list_files(bucket=request.bucket, prefix=request.prefix)
 
         # Add public service URLs to each file
-        files_with_urls = [
-            {
-                "key": file_key,
-                "url": f"{settings.PUBLIC_SERVICE_URL}/public/download/{bucket}/{file_key}"
-            }
+        files_with_metadata = [
+            FileMetadata(
+                key=file_key,
+                url=f"{settings.PUBLIC_SERVICE_URL}/public/download/{request.bucket}/{file_key}"
+            )
             for file_key in files
         ]
 
-        return {
-            "success": True,
-            "bucket": bucket,
-            "prefix": prefix,
-            "count": len(files_with_urls),
-            "files": files_with_urls
-        }
+        return ListFilesResponse(
+            success=True,
+            bucket=request.bucket,
+            prefix=request.prefix,
+            count=len(files_with_metadata),
+            files=files_with_metadata
+        )
 
     except ClientError as e:
         logger.error(f"S3 error during public bucket listing: {e}")
