@@ -1,0 +1,24 @@
+# FastAPI and server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.9
+
+# HTTP client
+httpx==0.26.0
+
+# Configuration and validation
+python-dotenv==1.0.0
+pydantic-settings==2.1.0
+pyyaml==6.0.1
+
+# Docker SDK
+docker==7.0.0
+
+# GPU monitoring
+nvidia-ml-py==12.535.133
+
+# Streaming
+sse-starlette==2.0.0
+
+# Async utilities
+aiofiles==23.2.1
