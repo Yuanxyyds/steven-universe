@@ -10,6 +10,7 @@ Handles:
 - Container lifecycle management
 """
 
+import asyncio
 import logging
 from typing import Dict, List, Optional, AsyncIterator
 import docker
@@ -40,13 +41,13 @@ class DockerManager:
         logger.info("Initializing Docker Manager...")
 
         try:
-            self._client = docker.DockerClient(
-                base_url=f"unix://{settings.DOCKER_SOCKET_PATH}"
-            )
+            # Use from_env() which auto-detects the Docker socket
+            # This is more reliable than manually specifying the socket path
+            self._client = docker.from_env()
 
             # Test connection
             self._client.ping()
-            logger.info(f"Docker client initialized (socket={settings.DOCKER_SOCKET_PATH})")
+            logger.info("Docker client initialized and connected")
 
             # Log Docker info
             info = self._client.info()
@@ -305,7 +306,24 @@ class DockerManager:
                 timestamps=False
             )
 
-            for log_bytes in log_generator:
+            # Use asyncio.to_thread to prevent blocking the event loop
+            # The docker-py log_generator blocks on I/O, so we need to run it in a thread
+            loop = asyncio.get_event_loop()
+
+            def read_next_log():
+                """Blocking call to get next log line - runs in thread pool."""
+                try:
+                    return next(log_generator)
+                except StopIteration:
+                    return None
+
+            while True:
+                # Run blocking operation in thread pool
+                log_bytes = await loop.run_in_executor(None, read_next_log)
+
+                if log_bytes is None:
+                    break
+
                 line = log_bytes.decode('utf-8').rstrip()
                 yield line
 

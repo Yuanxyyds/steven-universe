@@ -1,5 +1,5 @@
 """
-Model caching with automatic fetching from file-service.
+Model downloader with automatic fetching from file-service.
 """
 
 import os
@@ -15,9 +15,9 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-class ModelCacheManager:
+class ModelDownloader:
     """
-    Manages model caching with automatic fetching from file-service.
+    Downloads and manages models with automatic fetching from file-service.
 
     Implements hybrid approach:
     1. Check if model exists on host
@@ -37,7 +37,7 @@ class ModelCacheManager:
         if self._initialized:
             return
 
-        logger.info(f"Initializing Model Cache Manager at {self._cache_dir}")
+        logger.info(f"Initializing Model Downloader at {self._cache_dir}")
 
         # Create cache directory if it doesn't exist
         try:
@@ -51,7 +51,7 @@ class ModelCacheManager:
         await self._scan_existing_models()
 
         self._initialized = True
-        logger.info(f"Model Cache Manager initialized with {len(self._cache_registry)} cached models")
+        logger.info(f"Model Downloader initialized with {len(self._cache_registry)} cached models")
 
     async def _scan_existing_models(self):
         """Scan cache directory for existing models."""
@@ -192,5 +192,5 @@ class ModelCacheManager:
             logger.info("Cleared all cached models")
 
 
-# Global model cache manager instance
-model_cache_manager = ModelCacheManager()
+# Global model downloader instance (singleton)
+model_downloader = ModelDownloader()

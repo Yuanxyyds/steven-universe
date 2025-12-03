@@ -3,9 +3,9 @@ Configuration management for GPU Service.
 Loads environment variables using Pydantic Settings.
 """
 
-from typing import List, Dict
-from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from typing import List, Dict, Union
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -16,12 +16,12 @@ class Settings(BaseSettings):
     APP_VERSION: str
     LOG_LEVEL: str
 
-    # CORS Configuration
-    CORS_ORIGINS: List[str]
+    # CORS Configuration (will be parsed by model_validator)
+    CORS_ORIGINS: Union[str, List[str]]
 
-    # GPU Configuration
-    GPU_DEVICE_IDS: List[int]
-    GPU_DEVICE_DIFFICULTY: Dict[int, str]  # Map device_id to difficulty ("low"/"high")
+    # GPU Configuration (will be parsed by model_validator)
+    GPU_DEVICE_IDS: Union[str, List[int]]
+    GPU_DEVICE_DIFFICULTY: Union[str, Dict[int, str]]  # Map device_id to difficulty ("low"/"high")
     GPU_METRICS_REFRESH_INTERVAL: int = 5
 
     # Session Configuration
@@ -44,8 +44,7 @@ class Settings(BaseSettings):
     JOB_CPU_QUOTA: int = 100000
 
     # Docker Configuration
-    DOCKER_SOCKET_PATH: str
-    ALLOWED_DOCKER_IMAGES: List[str]
+    ALLOWED_DOCKER_IMAGES: Union[str, List[str]]
 
     # Model Cache Configuration
     MODEL_CACHE_DIR: str
@@ -58,48 +57,45 @@ class Settings(BaseSettings):
     # Authentication
     INTERNAL_API_KEY: str
 
-    @field_validator("CORS_ORIGINS", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def parse_cors_origins(cls, v):
-        """Parse CORS_ORIGINS from comma-separated string to list."""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+    def parse_env_values(cls, values):
+        """Parse environment variables from strings to proper types."""
 
-    @field_validator("GPU_DEVICE_IDS", mode="before")
-    @classmethod
-    def parse_gpu_device_ids(cls, v):
-        """Parse GPU_DEVICE_IDS from comma-separated string to list of ints."""
-        if isinstance(v, str):
-            return [int(device_id.strip()) for device_id in v.split(",")]
-        return v
+        # Parse CORS_ORIGINS from comma-separated string to list
+        if isinstance(values.get("CORS_ORIGINS"), str):
+            values["CORS_ORIGINS"] = [
+                origin.strip() for origin in values["CORS_ORIGINS"].split(",")
+            ]
 
-    @field_validator("ALLOWED_DOCKER_IMAGES", mode="before")
-    @classmethod
-    def parse_allowed_images(cls, v):
-        """Parse ALLOWED_DOCKER_IMAGES from comma-separated string to list."""
-        if isinstance(v, str):
-            return [image.strip() for image in v.split(",")]
-        return v
+        # Parse GPU_DEVICE_IDS from comma-separated string to list of ints
+        if isinstance(values.get("GPU_DEVICE_IDS"), str):
+            values["GPU_DEVICE_IDS"] = [
+                int(device_id.strip()) for device_id in values["GPU_DEVICE_IDS"].split(",")
+            ]
 
-    @field_validator("GPU_DEVICE_DIFFICULTY", mode="before")
-    @classmethod
-    def parse_gpu_difficulty(cls, v):
-        """
-        Parse GPU_DEVICE_DIFFICULTY from comma-separated string to dict.
-        Format: "0:low,1:high"
-        """
-        if isinstance(v, str):
+        # Parse ALLOWED_DOCKER_IMAGES from comma-separated string to list
+        if isinstance(values.get("ALLOWED_DOCKER_IMAGES"), str):
+            values["ALLOWED_DOCKER_IMAGES"] = [
+                image.strip() for image in values["ALLOWED_DOCKER_IMAGES"].split(",")
+            ]
+
+        # Parse GPU_DEVICE_DIFFICULTY from comma-separated string to dict
+        # Format: "0:low,1:high"
+        if isinstance(values.get("GPU_DEVICE_DIFFICULTY"), str):
             result = {}
-            for pair in v.split(","):
+            for pair in values["GPU_DEVICE_DIFFICULTY"].split(","):
                 device_id, difficulty = pair.split(":")
                 result[int(device_id.strip())] = difficulty.strip()
-            return result
-        return v
+            values["GPU_DEVICE_DIFFICULTY"] = result
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+        return values
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        env_parse_none_str=None,
+    )
 
 
 # Global settings instance

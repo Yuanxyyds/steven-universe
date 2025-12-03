@@ -1,22 +1,18 @@
 #!/bin/bash
 
 ##############################################################################
-# GPU Service Deployment Script
+# GPU Service Remote Build Deployment Script
 #
-# Deploys the GPU service to the remote GPU VM with Docker support.
+# This script builds the Docker image directly on the GPU server instead of
+# building locally and transferring. This is much faster (30s vs 3min).
 #
 # Prerequisites:
 # - SSH access to VM_HOST configured in .env
 # - Docker and nvidia-docker installed on remote VM
 # - NVIDIA drivers and CUDA installed on remote VM
-# - Model cache directory exists on remote VM
 #
 # Usage:
-#   ./scripts/deploy.sh [--build-only] [--no-build]
-#
-# Options:
-#   --build-only    Build Docker image only, don't deploy
-#   --no-build      Skip Docker build, deploy existing image
+#   ./scripts/deploy-remote-build.sh
 ##############################################################################
 
 set -e  # Exit on error
@@ -53,34 +49,13 @@ if [ -z "$DEPLOY_PATH" ]; then
     exit 1
 fi
 
-# Parse arguments
-BUILD_ONLY=false
-NO_BUILD=false
-
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --build-only)
-            BUILD_ONLY=true
-            shift
-            ;;
-        --no-build)
-            NO_BUILD=true
-            shift
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            exit 1
-            ;;
-    esac
-done
-
 # Docker image details
 IMAGE_NAME="gpu-service"
 IMAGE_TAG="${APP_VERSION:-latest}"
 FULL_IMAGE_NAME="$IMAGE_NAME:$IMAGE_TAG"
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}GPU Service Deployment${NC}"
+echo -e "${GREEN}GPU Service Remote Build Deployment${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo -e "Target: ${BLUE}$VM_HOST${NC}"
 echo -e "Deploy Path: ${BLUE}$DEPLOY_PATH${NC}"
@@ -88,56 +63,59 @@ echo -e "Image: ${BLUE}$FULL_IMAGE_NAME${NC}"
 echo ""
 
 ##############################################################################
-# Step 1: Build Docker Image
+# Step 1: Transfer Source Code to VM
 ##############################################################################
 
-if [ "$NO_BUILD" = false ]; then
-    echo -e "${YELLOW}Step 1: Building Docker image...${NC}"
+echo -e "${YELLOW}Step 1: Transferring source code to VM...${NC}"
 
-    cd "$PROJECT_ROOT"
+# Get python root directory
+PYTHON_ROOT="$(dirname "$(dirname "$PROJECT_ROOT")")"
 
-    # Build with shared-schemas
+# Create build directory structure on VM
+ssh "$VM_HOST" "mkdir -p $DEPLOY_PATH/build/libs $DEPLOY_PATH/build/services"
+
+# Transfer only shared-schemas and gpu-server
+echo "Syncing shared-schemas..."
+rsync -av --delete \
+    --exclude '__pycache__' \
+    --exclude '*.pyc' \
+    --exclude '.git' \
+    --exclude 'venv' \
+    "$PYTHON_ROOT/libs/shared-schemas/" \
+    "$VM_HOST:$DEPLOY_PATH/build/libs/shared-schemas/"
+
+echo "Syncing gpu-server..."
+rsync -av --delete \
+    --exclude '__pycache__' \
+    --exclude '*.pyc' \
+    --exclude '.git' \
+    --exclude 'venv' \
+    "$PYTHON_ROOT/services/gpu-server/" \
+    "$VM_HOST:$DEPLOY_PATH/build/services/gpu-server/"
+
+echo -e "${GREEN}✓ Source code transferred (shared-schemas + gpu-server only)${NC}"
+echo ""
+
+##############################################################################
+# Step 2: Build Docker Image on VM
+##############################################################################
+
+echo -e "${YELLOW}Step 2: Building Docker image on remote VM...${NC}"
+
+ssh "$VM_HOST" << EOF
+    cd $DEPLOY_PATH/build
+
+    echo "Building Docker image..."
     docker build \
         --build-arg APP_VERSION="$APP_VERSION" \
         -t "$FULL_IMAGE_NAME" \
-        -f Dockerfile \
+        -f services/gpu-server/Dockerfile \
         .
 
-    echo -e "${GREEN}✓ Docker image built successfully${NC}"
-    echo ""
-else
-    echo -e "${YELLOW}Step 1: Skipping Docker build (--no-build)${NC}"
-    echo ""
-fi
+    echo "✓ Docker image built successfully"
+EOF
 
-if [ "$BUILD_ONLY" = true ]; then
-    echo -e "${GREEN}Build complete (--build-only mode)${NC}"
-    exit 0
-fi
-
-##############################################################################
-# Step 2: Save and Transfer Image
-##############################################################################
-
-echo -e "${YELLOW}Step 2: Transferring Docker image to VM...${NC}"
-
-# Save image to tar
-IMAGE_TAR="/tmp/${IMAGE_NAME}_${IMAGE_TAG}.tar"
-echo "Saving image to $IMAGE_TAR..."
-docker save "$FULL_IMAGE_NAME" -o "$IMAGE_TAR"
-
-# Transfer to VM
-echo "Transferring to $VM_HOST..."
-scp "$IMAGE_TAR" "$VM_HOST:/tmp/"
-
-# Load image on VM
-echo "Loading image on VM..."
-ssh "$VM_HOST" "docker load -i /tmp/$(basename $IMAGE_TAR) && rm /tmp/$(basename $IMAGE_TAR)"
-
-# Cleanup local tar
-rm "$IMAGE_TAR"
-
-echo -e "${GREEN}✓ Image transferred successfully${NC}"
+echo -e "${GREEN}✓ Image built on VM${NC}"
 echo ""
 
 ##############################################################################
@@ -145,9 +123,6 @@ echo ""
 ##############################################################################
 
 echo -e "${YELLOW}Step 3: Transferring configuration files...${NC}"
-
-# Create deployment directory on VM
-ssh "$VM_HOST" "mkdir -p $DEPLOY_PATH"
 
 # Transfer .env file
 if [ -f "$PROJECT_ROOT/.env" ]; then
@@ -157,13 +132,61 @@ else
     echo -e "${RED}Warning: .env file not found${NC}"
 fi
 
-# Transfer model_presets.yaml
-if [ -f "$PROJECT_ROOT/app/config/model_presets.yaml" ]; then
-    ssh "$VM_HOST" "mkdir -p $DEPLOY_PATH/config"
-    scp "$PROJECT_ROOT/app/config/model_presets.yaml" "$VM_HOST:$DEPLOY_PATH/config/model_presets.yaml"
-    echo -e "${GREEN}✓ Transferred model_presets.yaml${NC}"
+# Config files (task_definitions.yaml, task_actions.yaml, model_paths.yaml) are baked into Docker image
+echo -e "${GREEN}✓ Configuration files will be included in Docker image${NC}"
+
+echo ""
+
+##############################################################################
+# Step 3.5: Transfer GPU Workers
+##############################################################################
+
+echo -e "${YELLOW}Step 3.5: Transferring GPU workers to VM...${NC}"
+
+# Get workers directory (python/workers/gpu-server/)
+WORKERS_DIR="$(dirname "$(dirname "$PROJECT_ROOT")")/workers/gpu-server"
+
+if [ -d "$WORKERS_DIR" ]; then
+    echo "Syncing GPU workers..."
+
+    # Create workers directory on VM
+    ssh "$VM_HOST" "mkdir -p ~/gpu-workers"
+
+    # Sync workers directory
+    rsync -av --delete \
+        --exclude '__pycache__' \
+        --exclude '*.pyc' \
+        --exclude '.git' \
+        --exclude 'venv' \
+        "$WORKERS_DIR/" \
+        "$VM_HOST:~/gpu-workers/"
+
+    echo -e "${GREEN}✓ GPU workers transferred to ~/gpu-workers${NC}"
+
+    # Build workers on VM
+    echo "Building workers on VM..."
+    ssh "$VM_HOST" << 'WORKER_EOF'
+        cd ~/gpu-workers
+
+        # Find all build.sh scripts and execute them
+        for build_script in $(find . -name "build.sh" -type f); do
+            worker_dir=$(dirname "$build_script")
+            echo "Building worker in $worker_dir..."
+            cd ~/gpu-workers/$worker_dir
+            chmod +x build.sh
+            ./build.sh
+            echo "✓ Built worker: $worker_dir"
+        done
+
+        echo ""
+        echo "Worker images:"
+        docker images | grep -E "worker|loading"
+WORKER_EOF
+
+    echo -e "${GREEN}✓ GPU workers built${NC}"
 else
-    echo -e "${RED}Warning: model_presets.yaml not found${NC}"
+    echo -e "${YELLOW}Warning: Workers directory not found at $WORKERS_DIR${NC}"
+    echo -e "${YELLOW}Skipping worker deployment${NC}"
 fi
 
 echo ""
@@ -174,7 +197,7 @@ echo ""
 
 echo -e "${YELLOW}Step 4: Setting up directories on VM...${NC}"
 
-ssh "$VM_HOST" << 'EOF'
+ssh "$VM_HOST" << EOF
     # Model cache directory
     if [ -n "$MODEL_CACHE_DIR" ]; then
         mkdir -p "$MODEL_CACHE_DIR"
@@ -221,10 +244,9 @@ ssh "$VM_HOST" << EOF
         --name gpu-service \
         --restart unless-stopped \
         --gpus all \
-        -p 8001:8001 \
+        -p 8001:8000 \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v \${MODEL_CACHE_DIR}:\${MODEL_CACHE_DIR} \
-        -v $DEPLOY_PATH/config:/app/app/config \
         --env-file .env \
         "$FULL_IMAGE_NAME"
 

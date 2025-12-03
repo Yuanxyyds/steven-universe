@@ -11,8 +11,8 @@ python-dotenv==1.0.0
 pydantic-settings==2.1.0
 pyyaml==6.0.1
 
-# Docker SDK
-docker==7.0.0
+# Docker SDK (>=7.1.0 fixes urllib3 compatibility issue)
+docker>=7.1.0
 
 # GPU monitoring
 nvidia-ml-py==12.535.133

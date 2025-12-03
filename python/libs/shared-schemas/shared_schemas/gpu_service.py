@@ -40,14 +40,6 @@ class TaskDifficulty(str, Enum):
     HIGH = "high"  # Use high-power GPU
 
 
-class JobType(str, Enum):
-    """Type of GPU job/workload."""
-    INFERENCE = "inference"
-    TRAINING = "training"
-    PREPROCESSING = "preprocessing"
-    CUSTOM = "custom"
-
-
 class EventType(str, Enum):
     """Streaming event types for SSE."""
     CONNECTION = "connection"      # GPU allocation status
@@ -62,33 +54,53 @@ class EventType(str, Enum):
 # Request/Response Models
 # ============================================================================
 
-class TaskSubmitRequest(BaseModel):
-    """Request to submit a new task."""
-    # Session control
-    task_type: TaskType = Field(..., description="Task type: oneoff or session")
-    session_id: Optional[str] = Field(default=None, description="Existing session ID to reuse")
-    create_session: bool = Field(default=False, description="Create new session for this task")
+class PreDefinedTaskRequest(BaseModel):
+    """
+    Request for pre-defined task execution.
 
-    # Task configuration
-    task_difficulty: TaskDifficulty = Field(..., description="Computational difficulty: low or high")
-    model_id: str = Field(..., description="Model identifier (e.g., 'llama-7b', 'stable-diffusion-xl')")
-    task_preset: str = Field(..., description="Task preset (e.g., 'inference', 'training')")
-
-    # Task-specific parameters (flexible for different task types)
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Task-specific parameters (e.g., prompt, max_tokens, temperature)"
+    All pre-defined tasks must specify a task_name which maps to configuration
+    in task_definitions.yaml. Other fields are optional overrides.
+    """
+    task_name: str = Field(
+        ...,
+        description="Pre-defined task name (required, e.g., 'loading-test')"
     )
 
-    # Execution limits
-    timeout_seconds: int = Field(default=300, ge=10, le=1800, description="Task timeout in seconds")
+    # Optional overrides for task definition defaults
+    task_difficulty: Optional[TaskDifficulty] = Field(
+        default=None,
+        description="Override task difficulty: low or high"
+    )
+    timeout_seconds: Optional[int] = Field(
+        default=None,
+        ge=10,
+        le=1800,
+        description="Override task timeout in seconds"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Task-specific parameters merged with task definition defaults"
+    )
+
+    # Session control (for future session support)
+    session_id: Optional[str] = Field(
+        default=None,
+        description="Existing session ID to reuse (for session tasks)"
+    )
+    create_session: bool = Field(
+        default=False,
+        description="Create new session for this task (for session tasks)"
+    )
 
 
-class TaskSubmitResponse(BaseModel):
-    """Response immediately after task submission (before streaming starts)."""
-    task_id: str = Field(..., description="Server-generated task ID (UUID)")
-    session_id: str = Field(..., description="Session ID (new or existing)")
-    status: str = Field(..., description="Initial status: processing, queued, or rejected")
+class CustomTaskRequest(BaseModel):
+    """
+    Request for custom task execution (TODO).
+
+    Placeholder for future implementation where users can specify
+    arbitrary docker images, commands, and configurations.
+    """
+    pass
 
 
 class StreamEvent(BaseModel):
@@ -140,57 +152,3 @@ class HealthResponse(BaseModel):
     gpus: List[GPUStatus]
     active_sessions: int = Field(..., description="Number of active sessions")
     active_tasks: int = Field(..., description="Number of currently processing tasks")
-
-
-# ============================================================================
-# Legacy Models (for backward compatibility - can be deprecated later)
-# ============================================================================
-
-class JobStatus(str, Enum):
-    """Legacy job execution status."""
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-
-
-class JobSubmitRequest(BaseModel):
-    """Legacy request to submit a new GPU job."""
-    job_type: JobType = JobType.INFERENCE
-    docker_image: str = Field(..., description="Docker image to run")
-    command: List[str] = Field(..., description="Command to execute in container")
-    env_vars: Dict[str, str] = Field(default_factory=dict, description="Environment variables")
-    timeout_seconds: int = Field(default=3600, ge=60, le=86400, description="Job timeout")
-    priority: int = Field(default=5, ge=1, le=10, description="Job priority (1=lowest, 10=highest)")
-    model_id: Optional[str] = Field(default=None, description="Model ID to fetch from file-service")
-    volume_mounts: Dict[str, str] = Field(default_factory=dict, description="Additional volume mounts")
-
-
-class JobSubmitResponse(BaseModel):
-    """Legacy response after submitting a job."""
-    success: bool
-    job_id: str
-    status: JobStatus
-    created_at: datetime
-    estimated_wait_time_seconds: Optional[int] = None
-    message: Optional[str] = None
-
-
-class JobResponse(BaseModel):
-    """Legacy detailed job information."""
-    job_id: str
-    status: JobStatus
-    job_type: JobType
-    docker_image: str
-    command: List[str]
-    gpu_device_id: Optional[int] = None
-    container_id: Optional[str] = None
-    created_at: datetime
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    elapsed_seconds: Optional[int] = None
-    timeout_seconds: int
-    priority: int
-    error_message: Optional[str] = None
-    recent_logs: List[str] = Field(default_factory=list)

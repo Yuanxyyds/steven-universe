@@ -116,7 +116,7 @@ INITIALIZING → WAITING → WORKING → WAITING → ... → KILLED
 ┌─────────────────────────────────────────────────────────┐
 │                   Client (Web Server)                    │
 └────────────────────┬────────────────────────────────────┘
-                     │ POST /tasks/submit (SSE)
+                     │ POST /api/tasks/predefined (SSE)
                      ↓
 ┌─────────────────────────────────────────────────────────┐
 │                   API Layer (FastAPI)                    │
@@ -127,104 +127,171 @@ INITIALIZING → WAITING → WORKING → WAITING → ... → KILLED
           │                 │                  │
           ↓                 ↓                  ↓
 ┌─────────────────────────────────────────────────────────┐
-│                   Core Managers                          │
+│            Singleton Managers (app/core/manager/)        │
+│            One instance per service                      │
 │                                                          │
 │  ┌────────────────────────────────────────────────┐    │
-│  │          Session Manager                        │    │
-│  │  • Track sessions (id → Session mapping)       │    │
-│  │  • Match IDLE sessions to new requests         │    │
-│  │  • Monitor timeouts (idle + max lifetime)      │    │
-│  │  • Per-session FIFO queue (max 3-5 requests)   │    │
+│  │          Task Manager (Central Coordinator)     │    │
+│  │  • Holds references to all other managers      │    │
+│  │  • Tracks running tasks (task_id → Instance)   │    │
+│  │  • Enables monitoring and forced shutdown      │    │
 │  └────────────────┬───────────────────────────────┘    │
 │                   │                                      │
 │  ┌────────────────┼───────────────────────────────┐    │
-│  │    GPU Manager │                                │    │
+│  │  GPU Manager   │                                │    │
 │  │  • Allocate GPU by difficulty (low/high)       │    │
-│  │  • Track availability                          │    │
+│  │  • Track availability (is_available flag)      │    │
 │  │  • Monitor metrics (memory, temp, utilization) │    │
 │  └────────────────┼───────────────────────────────┘    │
 │                   │                                      │
 │  ┌────────────────┼───────────────────────────────┐    │
-│  │ Model Cache    │                                │    │
-│  │  • Check local cache (/data/models/{id})       │    │
-│  │  • Fetch from file-service if missing          │    │
-│  │  • Return host path for volume mount           │    │
+│  │ Session Mgr    │                                │    │
+│  │  • Track sessions (id → Session mapping)       │    │
+│  │  • Match IDLE sessions to new requests         │    │
+│  │  • Monitor timeouts (idle + max lifetime)      │    │
 │  └────────────────┼───────────────────────────────┘    │
 │                   │                                      │
 │  ┌────────────────┼───────────────────────────────┐    │
-│  │ Model Config   │                                │    │
-│  │  • Load YAML presets                           │    │
-│  │  • Validate model_id + task_preset             │    │
-│  │  • Return docker_image, command, env_vars      │    │
+│  │ Docker Mgr     │                                │    │
+│  │  • Create containers (session/one-off)         │    │
+│  │  • Stream logs via thread pool (non-blocking)  │    │
+│  │  • Execute commands via docker exec            │    │
+│  └────────────────┼───────────────────────────────┘    │
+│                   │                                      │
+│  ┌────────────────┼───────────────────────────────┐    │
+│  │ Model Download │                                │    │
+│  │  • Check local cache (/data/models/{id})       │    │
+│  │  • Fetch from file-service if missing          │    │
+│  │  • Return host path for volume mount           │    │
 │  └────────────────┼───────────────────────────────┘    │
 └───────────────────┼─────────────────────────────────────┘
                     │
                     ↓
 ┌─────────────────────────────────────────────────────────┐
-│              Execution Layer                             │
+│       Per-Request Instances (app/core/instance/)         │
+│       One instance per task request                      │
 │                                                          │
 │  ┌────────────────────────────────────────────────┐    │
-│  │          Docker Manager                         │    │
-│  │  • Create session containers (long-lived)      │    │
-│  │  • Create one-off containers (ephemeral)       │    │
-│  │  • Mount volumes, pass GPU, set env vars       │    │
-│  │  • Execute commands via docker exec            │    │
+│  │       Task Request Handler (Pipeline)           │    │
+│  │  1. Config Load  → ConfigLoader                │    │
+│  │  2. Model Prepare → ModelDownloader             │    │
+│  │  3. GPU Allocate → GPUManager                   │    │
+│  │  4. Docker Create → DockerManager               │    │
+│  │  5. Instance Create → InstanceManager           │    │
+│  │  6. Task Register → TaskManager                 │    │
+│  │  7. Stream Execution                            │    │
 │  └────────────────┬───────────────────────────────┘    │
 │                   │                                      │
 │  ┌────────────────┼───────────────────────────────┐    │
-│  │   Instance Manager (per request)               │    │
-│  │  • Stream docker logs (docker logs --follow)   │    │
+│  │ Config Loader  │                                │    │
+│  │  • Load 3 YAML files (definitions/actions/paths)│   │
+│  │  • Merge task definition + action + model path │    │
+│  │  • Apply request overrides                     │    │
+│  └────────────────┼───────────────────────────────┘    │
+│                   │                                      │
+│  ┌────────────────┼───────────────────────────────┐    │
+│  │  Instance Mgr  │                                │    │
+│  │  • Stream docker logs (via thread pool)        │    │
 │  │  • Parse stdout/stderr into events             │    │
 │  │  • Emit SSE events (CONNECTION, WORKER, etc.)  │    │
-│  │  • Track worker status and metadata            │    │
+│  │  • Enforce task timeout                        │    │
 │  └────────────────┬───────────────────────────────┘    │
 └───────────────────┼─────────────────────────────────────┘
                     │
                     ↓
 ┌─────────────────────────────────────────────────────────┐
 │          Worker Container (Docker)                       │
-│  • Runs on sibling container (DOOD pattern)             │
+│  • Runs as sibling container (DOOD pattern)             │
 │  • Has GPU access via --gpus device=N                   │
 │  • Model mounted at /models (volume mount)              │
 │  • Receives MODEL_PATH=/models env var                  │
-│  • Outputs to stdout/stderr (parsed by Instance Mgr)    │
+│  • Outputs JSON events to stdout (parsed by Instance)   │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Data Flow: Task Submission
+### Data Flow: Task Submission (Pre-defined Tasks)
+
+The service uses a 7-step pipeline orchestrated by `TaskRequestHandler` for pre-defined tasks:
 
 ```
-1. Client → API: POST /tasks/submit
-   {model_id: "llama-7b", task_preset: "inference", metadata: {...}}
+1. Client → API: POST /api/tasks/predefined
+   {task_name: "loading-test", task_difficulty: "low", metadata: {...}}
 
-2. API → Model Config: Validate model_id + preset
-   ← Returns: {docker_image, command, env_vars}
+2. API → TaskRequestHandler: Create per-request instance
 
-3. API → Session Manager: Find or create session
+3. Pipeline Execution:
+
+   Step 1: Config Load
+   ├─ ConfigLoader.load_task_config(task_name)
+   ├─ Reads task_definitions.yaml → TaskDefinition
+   ├─ Reads task_actions.yaml → TaskAction (docker_image, command)
+   ├─ Reads model_paths.yaml → ModelPath (if applicable)
+   └─ Apply request overrides (difficulty, timeout, metadata)
+
+   Step 2: Model Prepare
+   ├─ ModelDownloader.prepare_model(model_id)
+   ├─ Check: /data/models/{model_id}/ exists?
+   ├─ If missing & AUTO_FETCH_MODELS=true: Download from file-service
+   └─ Return: host_path or None
+
+   Step 3: GPU Allocate
+   ├─ TaskManager.gpu_manager.allocate_gpu(difficulty)
+   ├─ Filter GPUs by difficulty (low/high)
+   ├─ Find first available GPU in filtered list
+   └─ Return: gpu_id or raise ServiceFullError (503)
+
+   Step 4: Emit CONNECTION Event
+   └─ SSE: {"event": "connection", "status": "allocated", "gpu_id": X}
+
+   Step 5: Docker Create
+   ├─ TaskManager.docker_manager.create_oneoff_container()
+   ├─ Mount: -v /host/models:/models:ro
+   ├─ GPU: --gpus device={gpu_id}
+   ├─ Auto-remove: --rm (cleanup after exit)
+   └─ Return: container_id
+
+   Step 6: Instance Create
+   ├─ Create InstanceManager(task_id, container_id, timeout)
+   └─ TaskManager.register_task(task_id, instance)
+
+   Step 7: Stream Execution
+   ├─ InstanceManager.stream_task_execution()
+   ├─ Thread-pooled log streaming (loop.run_in_executor)
+   ├─ Parse logs → SSE events (WORKER, TEXT_DELTA, LOGS, TASK_FINISH)
+   └─ Yield events to client
+
+4. Cleanup:
+   ├─ TaskManager.unregister_task(task_id)
+   ├─ GPUManager.release_gpu(gpu_id)
+   └─ Container auto-removed (--rm flag)
+```
+
+### Data Flow: Session-based Tasks (Legacy/TODO)
+
+```
+1. Client → API: POST /api/tasks/submit
+   {task_type: "session", model_id: "llama-7b", task_preset: "inference"}
+
+2. API → Session Manager: Find or create session
    ├─ Check for IDLE session with same model_id
-   │  └─ If found: Reuse (skip steps 4-7)
+   │  └─ If found: Reuse (skip container creation)
    └─ If not found: Create new session
 
-4. Session Manager → GPU Manager: Allocate GPU by difficulty
+3. Session Manager → GPU Manager: Allocate GPU by difficulty
    ← Returns: gpu_device_id or None (503 if full)
 
-5. Session Manager → Model Cache: Get model path
+4. Session Manager → Model Downloader: Get model path
    ├─ Check local: /data/models/{model_id}
    └─ If missing: Fetch from file-service
 
-6. Session Manager → Docker Manager: Create container
+5. Session Manager → Docker Manager: Create session container
    {gpu_id, docker_image, command, env_vars, model_path}
-   ← Returns: container_id
+   ← Returns: container_id (long-lived, NOT auto-removed)
 
-7. Docker Manager: Start container with:
-   --gpus device={gpu_id}
-   -v {model_host_path}:/models
-   -e MODEL_PATH=/models
-
-8. Session Manager → Instance Manager: Stream logs
+6. Session Manager → Instance Manager: Stream logs
    ← SSE events: CONNECTION, WORKER, TEXT_DELTA, TEXT, TASK_FINISH
 
-9. Instance Manager → Client: Stream via API
+7. Container stays alive in WAITING state for subsequent requests
 ```
 
 ---
@@ -565,23 +632,53 @@ Worker containers output to stdout/stderr. The Instance Manager parses these log
 
 ### Three-Layer Architecture
 
+The model management system uses a three-file configuration approach with separate concerns:
+
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Layer 1: Model Presets Configuration (YAML)         │
+│ Layer 1: YAML Configuration (Three Files)           │
 │                                                      │
-│ model_presets.yaml:                                 │
-│   models:                                           │
-│     llama-7b:                                       │
-│       inference:                                    │
-│         docker_image: "llm-runner:latest"           │
-│         command: ["python", "inference.py"]         │
-│         env_vars:                                   │
-│           MODEL_NAME: "llama-7b"                    │
+│ task_definitions.yaml - Task metadata:              │
+│   loading-test:                                     │
+│     description: "Test worker"                      │
+│     task_type: "oneoff"                             │
+│     task_difficulty: "low"                          │
+│     timeout_seconds: 60                             │
+│     model_id: "test-loading"                        │
+│                                                      │
+│ task_actions.yaml - Docker execution config:        │
+│   test-loading:                                     │
+│     docker_image: "loading-worker:latest"           │
+│     command: ["python", "/app/worker.py"]           │
+│     env_vars:                                       │
+│       MODEL_NAME: test-loading                      │
+│                                                      │
+│ model_paths.yaml - Model file locations:            │
+│   llama-7b:                                         │
+│     path: /data/models/llama-7b                     │
+│     description: "LLaMA 7B model weights"           │
+│     size_gb: 13.5                                   │
 └─────────────────────────────────────────────────────┘
                          │
                          ↓
 ┌─────────────────────────────────────────────────────┐
-│ Layer 2: Model Cache Manager                        │
+│ Layer 2: Config Loader (Per-Request Instance)       │
+│                                                      │
+│ Responsibilities:                                   │
+│ • Load all three YAML files on demand              │
+│ • Merge task definition + action + model path      │
+│ • Return complete config tuple                     │
+│                                                      │
+│ ConfigLoader.load_task_config(task_name):          │
+│   1. Read task_definitions.yaml[task_name]         │
+│   2. Read task_actions.yaml[model_id]              │
+│   3. Read model_paths.yaml[model_id] (optional)    │
+│   4. Return (TaskDef, TaskAction, ModelPath)       │
+└─────────────────────────────────────────────────────┘
+                         │
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Layer 3: Model Downloader (Singleton Manager)       │
 │                                                      │
 │ Responsibilities:                                   │
 │ • Check if model exists: /data/models/{model_id}/   │
@@ -602,7 +699,7 @@ Worker containers output to stdout/stderr. The Instance Manager parses these log
                          │
                          ↓
 ┌─────────────────────────────────────────────────────┐
-│ Layer 3: Docker Volume Mount                        │
+│ Layer 4: Docker Volume Mount                        │
 │                                                      │
 │ docker run \                                        │
 │   -v /data/models/llama-7b:/models \                │
@@ -619,33 +716,54 @@ Worker containers output to stdout/stderr. The Instance Manager parses these log
 ### Model Fetch Flow
 
 ```
-1. Client requests: model_id="llama-7b"
+1. Client requests: task_name="loading-test"
 
-2. Model Config: Validate "llama-7b" exists in presets
-   ✓ Valid
+2. Config Loader (per-request): load_task_config("loading-test")
+   ├─ Read task_definitions.yaml["loading-test"] → model_id="test-loading"
+   ├─ Read task_actions.yaml["test-loading"] → docker_image, command
+   ├─ Read model_paths.yaml["test-loading"] (optional)
+   └─ Return complete config tuple
 
-3. Model Cache Manager: get_model_path("llama-7b")
+3. Model Downloader (singleton): prepare_model("test-loading")
    │
-   ├─ Check: /data/models/llama-7b/ exists?
+   ├─ Check: /data/models/test-loading/ exists?
    │  │
-   │  ├─ YES: Return "/data/models/llama-7b"
+   │  ├─ YES: Return "/data/models/test-loading"
    │  │
-   │  └─ NO: Fetch from file-service
+   │  └─ NO: Fetch from file-service (if AUTO_FETCH_MODELS=true)
    │     │
    │     ├─ Prevent concurrent fetches (asyncio.Lock)
-   │     ├─ Request: GET file-service/internal/models/llama-7b
-   │     ├─ Download to: /data/models/llama-7b/
-   │     ├─ Register in cache: cache_registry["llama-7b"] = path
-   │     └─ Return: "/data/models/llama-7b"
+   │     ├─ Request: POST file-service/api/models/download
+   │     ├─ Download to: /data/models/test-loading/
+   │     ├─ Register in cache: cache_registry["test-loading"] = path
+   │     └─ Return: "/data/models/test-loading"
 
-4. Docker Manager: Create container
-   -v /data/models/llama-7b:/models
+4. Docker Manager: Create one-off container
+   -v /data/models/test-loading:/models:ro
    -e MODEL_PATH=/models
+   --rm (auto-remove after exit)
 
 5. Worker Container:
    model_path = os.environ["MODEL_PATH"]  # "/models"
    load_model(model_path)
 ```
+
+### Three-File Config System Benefits
+
+**Separation of Concerns:**
+- `task_definitions.yaml` - What tasks exist and their defaults
+- `task_actions.yaml` - How to execute tasks (Docker config)
+- `model_paths.yaml` - Where model files are located
+
+**Flexibility:**
+- Multiple tasks can share the same Docker image
+- Model paths can be updated without touching task definitions
+- Easy to add new tasks without complex nested YAML
+
+**Maintainability:**
+- Clear boundaries between metadata, execution, and storage
+- Easier to validate each config file independently
+- Better organization for large numbers of tasks
 
 ---
 
@@ -873,6 +991,85 @@ async with self._lock:
 
 ---
 
+## Performance Optimization
+
+### Async I/O and Thread-Pooled Log Streaming
+
+**Problem:**
+Docker-py's `container.logs()` is a synchronous, blocking operation. When streaming logs from a container, this blocks the asyncio event loop, making the service unresponsive to other requests (e.g., health checks).
+
+**Solution:**
+Use `asyncio.loop.run_in_executor()` to run blocking I/O operations in a thread pool:
+
+```python
+# docker_manager.py, lines 282-333
+async def stream_logs(container_id: str, follow: bool = True) -> AsyncIterator[str]:
+    """Stream logs from container without blocking the event loop."""
+
+    container = self._client.containers.get(container_id)
+    log_generator = container.logs(stream=True, follow=follow)
+
+    # Get event loop
+    loop = asyncio.get_event_loop()
+
+    def read_next_log():
+        """Blocking call to get next log line - runs in thread pool."""
+        try:
+            return next(log_generator)
+        except StopIteration:
+            return None
+
+    while True:
+        # Run blocking operation in thread pool (non-blocking to event loop)
+        log_bytes = await loop.run_in_executor(None, read_next_log)
+
+        if log_bytes is None:
+            break
+
+        line = log_bytes.decode('utf-8').rstrip()
+        yield line
+```
+
+**Benefits:**
+- Health checks respond quickly even during active log streaming
+- Multiple tasks can stream logs concurrently without blocking each other
+- Event loop remains responsive to new incoming requests
+- No need to use multiprocessing or additional workers
+
+**Implementation Location:**
+- `app/core/manager/docker_manager.py:282-333` - Thread-pooled log streaming
+- `app/core/instance/instance_manager.py` - Uses docker_manager.stream_logs()
+
+### Concurrency Settings
+
+The service runs as a single Uvicorn worker with high concurrency limits:
+
+```bash
+uvicorn app.main:app \
+  --workers 1 \
+  --limit-concurrency 1000 \
+  --backlog 2048
+```
+
+**Why Single Worker?**
+- GPU Manager, Task Manager, and Session Manager maintain in-memory state
+- Multiple workers would require Redis for shared state (future enhancement)
+- Single worker + large thread pool handles concurrent requests efficiently
+
+**Concurrency Limits:**
+- `--limit-concurrency 1000`: Supports 1000 concurrent connections
+- `--backlog 2048`: Queue size for burst traffic
+- Thread pool automatically scales for blocking I/O operations
+
+**Trade-offs:**
+- ✅ **Pro**: Simple in-memory state management
+- ✅ **Pro**: No Redis dependency
+- ✅ **Pro**: Fast state access (no network calls)
+- ❌ **Con**: State lost on service restart (sessions killed)
+- ❌ **Con**: Cannot scale horizontally without shared state
+
+---
+
 ## Design Rationale
 
 ### Why Session-Based?
@@ -924,6 +1121,47 @@ async with self._lock:
 - **Version controlled**: Track changes in git
 - **No database dependency**: Simple deployment
 - **Type-safe loading**: Pydantic validates structure
+
+### Why Split Core into Manager vs Instance?
+
+**Alternative**: Keep all components in flat `app/core/` directory
+
+**Our Choice**: Two subdirectories - `manager/` (singletons) and `instance/` (per-request)
+
+**Rationale**:
+- **Clear lifecycle separation**: Singleton vs per-request is explicit in directory structure
+- **Prevents shared state bugs**: Impossible to accidentally share per-request state across tasks
+- **Easier to understand**: New developers immediately see which components are global vs task-specific
+- **Better testing**: Singleton managers mocked once, instances created fresh per test
+- **Explicit dependencies**: Per-request instances receive manager references, making data flow clear
+
+**Component Distribution:**
+
+**Singletons** (`app/core/manager/`):
+- `gpu_manager.py` - One GPU allocation pool for entire service
+- `session_manager.py` - One session registry for all sessions
+- `docker_manager.py` - One Docker client for all containers
+- `task_manager.py` - One task tracker for all running tasks
+- `model_downloader.py` - One model cache manager
+
+**Per-Request** (`app/core/instance/`):
+- `config_loader.py` - Loads config for each task independently
+- `instance_manager.py` - Tracks one container's logs and events
+- `task_request_handler.py` - Orchestrates pipeline for one task request
+
+### Why Three Config Files Instead of One?
+
+**Alternative**: Single `model_presets.yaml` with nested structure
+
+**Our Choice**: Three separate files (`task_definitions.yaml`, `task_actions.yaml`, `model_paths.yaml`)
+
+**Rationale**:
+- **Separation of concerns**: Task metadata vs Docker config vs file paths are distinct responsibilities
+- **Reusability**: Multiple tasks can reference the same Docker image without duplication
+- **Flexibility**: Update model file paths without touching task definitions
+- **Validation**: Each file has clear schema, easier to validate independently
+- **Maintainability**: Smaller files, clearer purpose, less cognitive load
+- **Extensibility**: Easy to add fourth config file (e.g., resource_limits.yaml) without complex nesting
 
 ---
 

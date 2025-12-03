@@ -14,7 +14,7 @@ import logging
 from typing import AsyncIterator, Optional
 from datetime import datetime
 
-from app.core.docker_manager import docker_manager
+from app.core.manager.docker_manager import docker_manager
 from app.models.events import StreamEvent, EventParser
 from app.models.task import Task
 from shared_schemas.gpu_service import TaskStatus
@@ -41,53 +41,53 @@ class InstanceManager:
     4. Enforces task timeout
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, task_id: str, container_id: str, timeout_seconds: int):
+        """
+        Initialize instance manager with per-request data.
+
+        Args:
+            task_id: Task identifier
+            container_id: Docker container ID
+            timeout_seconds: Task timeout in seconds
+        """
+        self.task_id = task_id
+        self.container_id = container_id
+        self.timeout_seconds = timeout_seconds
 
     async def stream_task_execution(
         self,
-        task: Task,
-        container_id: str,
         session_id: Optional[str] = None
     ) -> AsyncIterator[StreamEvent]:
         """
         Stream task execution via docker logs parsing.
 
         Args:
-            task: Task being executed
-            container_id: Docker container ID
             session_id: Optional session ID
 
         Yields:
             StreamEvent objects
         """
-        logger.info(f"Starting log stream for task {task.task_id} (container={container_id[:12]})")
+        logger.info(f"Starting log stream for task {self.task_id} (container={self.container_id[:12]})")
 
         task_start_time = datetime.utcnow()
-        task.started_at = task_start_time
-        task.status = TaskStatus.RUNNING
 
         try:
             # Emit WORKER event (container created)
-            yield StreamEvent.worker(status="created", container_id=container_id)
+            yield StreamEvent.worker(status="created", container_id=self.container_id)
 
             # Stream and parse docker logs
-            log_stream = docker_manager.stream_logs(container_id, follow=True)
+            log_stream = docker_manager.stream_logs(self.container_id, follow=True)
 
             async for log_line in log_stream:
                 # Check task timeout
                 elapsed = (datetime.utcnow() - task_start_time).total_seconds()
-                if elapsed > task.timeout_seconds:
-                    logger.warning(f"Task {task.task_id} exceeded timeout ({task.timeout_seconds}s)")
+                if elapsed > self.timeout_seconds:
+                    logger.warning(f"Task {self.task_id} exceeded timeout ({self.timeout_seconds}s)")
 
                     # Stop container
-                    await docker_manager.stop_container(container_id)
+                    await docker_manager.stop_container(self.container_id)
 
                     # Emit timeout event
-                    task.status = TaskStatus.FAILED
-                    task.completed_at = datetime.utcnow()
-                    task.error_message = "Task timeout exceeded"
-
                     yield StreamEvent.task_finish(
                         status="timeout",
                         elapsed_seconds=int(elapsed),
@@ -101,11 +101,9 @@ class InstanceManager:
                     yield event
 
             # Task completed successfully (container exited)
-            task.status = TaskStatus.COMPLETED
-            task.completed_at = datetime.utcnow()
-            elapsed_seconds = task.elapsed_seconds
+            elapsed_seconds = int((datetime.utcnow() - task_start_time).total_seconds())
 
-            logger.info(f"Task {task.task_id} completed successfully ({elapsed_seconds}s)")
+            logger.info(f"Task {self.task_id} completed successfully ({elapsed_seconds}s)")
 
             yield StreamEvent.task_finish(
                 status="completed",
@@ -113,10 +111,7 @@ class InstanceManager:
             )
 
         except asyncio.CancelledError:
-            logger.info(f"Task {task.task_id} stream cancelled")
-            task.status = TaskStatus.FAILED
-            task.completed_at = datetime.utcnow()
-            task.error_message = "Task cancelled"
+            logger.info(f"Task {self.task_id} stream cancelled")
 
             yield StreamEvent.task_finish(
                 status="cancelled",
@@ -125,10 +120,7 @@ class InstanceManager:
             raise
 
         except Exception as e:
-            logger.error(f"Error streaming task {task.task_id}: {e}", exc_info=True)
-            task.status = TaskStatus.FAILED
-            task.completed_at = datetime.utcnow()
-            task.error_message = str(e)
+            logger.error(f"Error streaming task {self.task_id}: {e}", exc_info=True)
 
             yield StreamEvent.task_finish(
                 status="failed",
@@ -193,7 +185,3 @@ class InstanceManager:
         else:
             logger.error(f"Failed to send task {task.task_id} to container {container_id[:12]}")
             return False
-
-
-# Global instance manager
-instance_manager = InstanceManager()

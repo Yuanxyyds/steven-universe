@@ -1,0 +1,45 @@
+# Task Definitions - Pre-defined Task Templates
+#
+# Defines tasks that clients can invoke by name.
+# Each task specifies defaults that can be overridden by the client.
+#
+# Purpose: Provide simple, named tasks with sensible defaults
+#
+# Client Usage:
+#   Request by name with optional overrides:
+#   {
+#     "task_name": "loading-test",
+#     "task_difficulty": "high",  # Override default
+#     "metadata": {"custom": "value"}
+#   }
+#
+# Structure:
+#   {task_name}:
+#     description: Human-readable description
+#     task_type: oneoff | session (default, can be overridden)
+#     task_difficulty: low | high (default, can be overridden)
+#     model_id: Model identifier (optional, can be overridden)
+#     timeout_seconds: Default timeout (can be overridden)
+#     metadata: Default parameters (merged with client metadata)
+
+# =============================================================================
+# Test Tasks
+# =============================================================================
+
+loading-test:
+  description: "Test task that simulates GPU model loading and unloading"
+  task_type: oneoff
+  task_difficulty: low
+  timeout_seconds: 60
+  metadata: {}
+
+loading-test-session:
+  description: "Session-based model loading test"
+  task_type: session
+  task_difficulty: low
+  timeout_seconds: 300
+  metadata: {}
+
+# =============================================================================
+# LLM Tasks
+# =============================================================================
