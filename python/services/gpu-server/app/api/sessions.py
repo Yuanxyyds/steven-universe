@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import Annotated
 
 from app.core.dependencies import verify_api_key
-from app.core.session_manager import session_manager
+from app.core.manager.session_manager import session_manager
 from shared_schemas.gpu_service import SessionResponse, SessionListResponse
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])

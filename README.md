@@ -12,9 +12,12 @@ steven-universe/
 ├── python/
 │   ├── libs/
 │   │   └── shared-schemas/       # Shared Pydantic schemas for API contracts
-│   └── services/
-│       ├── file-management/      # File management microservice (MinIO/S3)
-│       └── web-server/           # Backend API server
+│   ├── services/
+│   │   ├── file-management/      # File management microservice (MinIO/S3)
+│   │   ├── web-server/           # Backend API server
+│   │   └── gpu-server/           # GPU task execution service
+│   └── workers/
+│       └── gpu-server/           # GPU worker container images
 └── .github/
     └── workflows/                # CI/CD pipelines
 ```
@@ -70,7 +73,41 @@ FastAPI-based API Gateway that routes requests to specialized microservices.
 ```
 Frontend → Web Server (Gateway) → Specialized Microservices
                                 → File Management Service
+                                → GPU Service
                                 → Proxmox API
 ```
 
 **Path:** `python/services/web-server/`
+
+---
+
+### GPU Service
+
+Session-based GPU task execution service with real-time event streaming and automatic resource management.
+
+**Main Features:**
+- **Difficulty-based GPU routing**: Route tasks to appropriate GPUs (low/high difficulty)
+- **Pre-defined task execution**: YAML-based configuration for task definitions and Docker configs
+- **SSE streaming**: Real-time event streaming with structured events (CONNECTION, WORKER, TEXT_DELTA, LOGS, TASK_FINISH)
+- **Automatic model caching**: Downloads models from file-service on demand
+- **Session management**: Long-lived containers with idle timeouts and max lifetime limits
+- **Docker-outside-of-Docker (DOOD)**: Service creates sibling containers with GPU passthrough
+
+**Architecture:**
+```
+Client → GPU Service → GPU Manager (allocate by difficulty)
+                    → Docker Manager (create containers with GPU)
+                    → Model Downloader (fetch from file-service)
+                    → Task Manager (track running tasks)
+                    └→ GPU Workers (Docker containers with NVIDIA GPU access)
+```
+
+**Technology Stack:**
+- FastAPI with async I/O and SSE streaming
+- Docker SDK for container orchestration
+- PYNVML for GPU metrics monitoring
+- NVIDIA CUDA for GPU passthrough
+
+**Path:** `python/services/gpu-server/`
+**Workers:** `python/workers/gpu-server/`
+**Documentation:** See `python/services/gpu-server/README.md` and `SERVER_DESIGN.md`

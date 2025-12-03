@@ -11,10 +11,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.gpu_manager import gpu_manager
-from app.core.session_manager import session_manager
-from app.core.docker_manager import docker_manager
-from app.core.model_config import model_config_manager
+from app.core.manager.gpu_manager import gpu_manager
+from app.core.manager.session_manager import session_manager
+from app.core.manager.docker_manager import docker_manager
+from app.core.manager.model_downloader import model_downloader
+from app.core.manager.task_manager import task_manager
 from app.api import health, tasks, sessions
 
 # Configure logging
@@ -36,10 +37,10 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
 
     try:
-        # Initialize model config manager
-        logger.info("Loading model presets configuration...")
-        model_config_manager.load_config()
-        logger.info(f"Loaded {len(model_config_manager._config.get('models', {}))} model configurations")
+        # Initialize model downloader
+        logger.info("Initializing model downloader...")
+        await model_downloader.initialize()
+        logger.info(f"Model downloader initialized with {len(model_downloader.get_cached_models())} cached models")
 
         # Initialize GPU manager
         logger.info("Initializing GPU manager...")
@@ -64,6 +65,9 @@ async def lifespan(app: FastAPI):
         await session_manager.initialize()
         logger.info("Session manager initialized")
 
+        # TaskManager is automatically initialized (holds references to singletons)
+        logger.info(f"TaskManager ready (tracking {len(task_manager.get_running_tasks())} running tasks)")
+
         logger.info(f"{settings.APP_NAME} started successfully")
 
         yield
@@ -72,17 +76,16 @@ async def lifespan(app: FastAPI):
         # Cleanup on shutdown
         logger.info("Shutting down service...")
 
-        # Cleanup session manager (kills all sessions)
-        logger.info("Cleaning up sessions...")
-        await session_manager.cleanup()
+        # Shutdown all running tasks
+        running_tasks = task_manager.get_running_tasks()
+        if running_tasks:
+            logger.info(f"Shutting down {len(running_tasks)} running tasks...")
+            for task_id in running_tasks:
+                await task_manager.shutdown_task(task_id)
 
-        # Cleanup Docker manager
-        logger.info("Cleaning up Docker resources...")
-        await docker_manager.cleanup()
-
-        # Cleanup GPU manager
-        logger.info("Cleaning up GPU manager...")
-        await gpu_manager.cleanup()
+        # Shutdown session manager (kills all sessions)
+        logger.info("Shutting down sessions...")
+        await session_manager.shutdown()
 
         logger.info(f"{settings.APP_NAME} shutdown complete")
 

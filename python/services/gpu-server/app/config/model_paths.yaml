@@ -1,0 +1,27 @@
+# Model Paths - Pre-downloaded Model Locations
+#
+# Maps model_id to the host filesystem path where the model is stored.
+# Used to mount models into worker containers.
+#
+# Purpose:
+#   - Specify where models are stored on the GPU server
+#   - Avoid downloading models every time (use pre-downloaded models)
+#   - Enable sharing models across different tasks
+#
+# Structure:
+#   {model_id}:
+#     path: Absolute path on host filesystem
+#     description: Human-readable description
+#     size_gb: Approximate size (for documentation)
+#
+# Note: If a model is not found here, the service will attempt to download
+#       it from file-service (if AUTO_FETCH_MODELS=true)
+
+# =============================================================================
+# Test Models
+# =============================================================================
+
+llama-7b:
+  path: /data/models/llama-7b
+  description: "LLaMA 7B parameter model"
+  size_gb: 13.5

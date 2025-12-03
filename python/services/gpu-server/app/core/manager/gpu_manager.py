@@ -159,19 +159,23 @@ class GPUManager:
 
         return matching_gpus
 
-    async def release_gpu(self, device_id: int):
+    async def release_gpu(self, device_id: int, task_id: Optional[str] = None):
         """
         Release a GPU back to the pool.
 
         Args:
             device_id: GPU device ID to release
+            task_id: Optional task ID for logging (not used for validation)
         """
         async with self._lock:
             if device_id in self._devices:
                 job_id = self._devices[device_id].current_job_id
                 self._devices[device_id].is_available = True
                 self._devices[device_id].current_job_id = None
-                logger.info(f"Released GPU {device_id} from job {job_id}")
+                log_msg = f"Released GPU {device_id} from job {job_id}"
+                if task_id:
+                    log_msg += f" (task {task_id})"
+                logger.info(log_msg)
             else:
                 logger.warning(f"Attempted to release unknown GPU {device_id}")
 

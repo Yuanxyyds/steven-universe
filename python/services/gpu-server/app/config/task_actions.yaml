@@ -1,0 +1,34 @@
+# Task Actions - Worker Execution Configuration
+#
+# Maps task_name to worker implementation details.
+# Specifies how to build and run the worker container for each task.
+#
+# Purpose:
+#   - Define which Docker image to use
+#   - Specify build context and Dockerfile location
+#   - Configure runtime command and environment variables
+#
+# Structure:
+#   {task_name}:
+#     source_path: Path to worker source code (for building)
+#     dockerfile: Path to Dockerfile (relative to source_path)
+#     docker_image: Docker image name:tag
+#     command: Command to run in container
+#     env_vars: Environment variables to set
+#     build_args: Docker build arguments (optional)
+#
+# Note: The service will mount the model path automatically if model_id is specified in task_definitions.yaml
+
+# =============================================================================
+# Test Workers
+# =============================================================================
+
+loading-test:
+  source_path: ~/gpu-workers/test/loading-worker  # Path on GPU server host
+  dockerfile: Dockerfile
+  docker_image: loading-worker:latest
+  command: ["python", "/app/worker.py"]
+  env_vars:
+    MODEL_NAME: test-loading
+    WORKER_TYPE: test
+  build_args: {}

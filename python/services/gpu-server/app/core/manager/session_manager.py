@@ -17,7 +17,7 @@ from datetime import datetime
 from app.models.session import Session
 from app.models.task import Task
 from app.core.config import settings
-from app.core.gpu_manager import gpu_manager
+from app.core.manager.gpu_manager import gpu_manager
 from shared_schemas.gpu_service import SessionStatus
 
 logger = logging.getLogger(__name__)

@@ -57,26 +57,50 @@ FILE_SERVICE_INTERNAL_KEY=your-internal-secret-key-here
 INTERNAL_API_KEY=your-internal-api-key-here
 ```
 
-### 2. Model Presets Configuration
+### 2. Task Configuration
 
-Edit `app/config/model_presets.yaml` to define your models:
+The service uses three YAML files to configure tasks:
+
+#### `app/config/task_definitions.yaml`
+Defines task metadata and defaults:
 
 ```yaml
-models:
-  llama-7b:
-    inference:
-      docker_image: "llm-runner:latest"
-      command: ["python", "inference.py"]
-      env_vars:
-        MODEL_NAME: "llama-7b"
-
-  stable-diffusion-xl:
-    generate:
-      docker_image: "diffusion-runner:latest"
-      command: ["python", "generate.py"]
-      env_vars:
-        MODEL_NAME: "stable-diffusion-xl"
+loading-test:
+  description: "Test worker that simulates GPU loading"
+  task_type: "oneoff"
+  task_difficulty: "low"
+  timeout_seconds: 60
+  metadata:
+    test_mode: true
+  model_id: "test-loading"
 ```
+
+#### `app/config/task_actions.yaml`
+Maps model IDs to Docker configurations:
+
+```yaml
+test-loading:
+  source_path: ~/gpu-workers/test/loading-worker
+  dockerfile: Dockerfile
+  docker_image: loading-worker:latest
+  command: ["python", "/app/worker.py"]
+  env_vars:
+    MODEL_NAME: test-loading
+    WORKER_TYPE: test
+  build_args: {}
+```
+
+#### `app/config/model_paths.yaml`
+Specifies model file locations (optional, for tasks requiring model files):
+
+```yaml
+llama-7b:
+  path: /data/models/llama-7b
+  description: "LLaMA 7B model weights"
+  size_gb: 13.5
+```
+
+This three-file structure separates task metadata, Docker execution configuration, and model file paths for better organization and maintainability.
 
 ### 3. Local Development
 
@@ -112,6 +136,8 @@ Deploy using the deployment script:
 
 ## API Endpoints
 
+**Note**: All task and session endpoints use the `/api` prefix.
+
 ### Health Check
 
 ```bash
@@ -120,7 +146,42 @@ GET /health
 
 Returns service status, GPU devices, active sessions, and active tasks.
 
+```bash
+GET /health/resources
+```
+
+Returns detailed resource allocation including GPU status, running tasks, and session details.
+
 ### Task Submission
+
+#### Pre-defined Tasks (Recommended)
+
+```bash
+POST /api/tasks/predefined
+Content-Type: application/json
+X-API-Key: your-internal-api-key-here
+
+{
+  "task_name": "loading-test",
+  "task_difficulty": "low",
+  "timeout_seconds": 300,
+  "metadata": {
+    "custom_param": "value"
+  }
+}
+```
+
+Executes a pre-defined task from `task_definitions.yaml` configuration. The `task_name` field is required and maps to a configured task.
+
+#### Custom Tasks
+
+```bash
+POST /api/tasks/custom
+```
+
+Custom task execution (Not yet implemented - returns 501).
+
+#### Legacy Task Submission
 
 ```bash
 POST /api/tasks/submit
@@ -140,7 +201,11 @@ X-API-Key: your-internal-api-key-here
 }
 ```
 
-Returns SSE stream with events:
+Legacy endpoint for backward compatibility.
+
+**SSE Stream Response**:
+
+All task endpoints return an SSE stream with events:
 
 - `CONNECTION`: GPU allocated, session ready
 - `WORKER`: Container status (created, working, waiting)
@@ -167,15 +232,44 @@ POST /api/sessions/{session_id}/keepalive
 
 ## Request Flow
 
-### One-off Task
+### Pre-defined Task Pipeline (Recommended)
 
-1. Client submits task with `task_type: "oneoff"`
-2. Server allocates GPU based on `task_difficulty`
-3. Server creates ephemeral container with model mounted
-4. Server streams execution events via SSE
-5. Container exits, GPU is released
+The service uses a 7-step pipeline for executing pre-defined tasks:
 
-### Session-based Task
+1. **Config Load**: `ConfigLoader` loads task configuration from YAML files
+   - `task_definitions.yaml` → Task metadata (type, difficulty, timeout)
+   - `task_actions.yaml` → Docker configuration (image, command, env vars)
+   - `model_paths.yaml` → Model file paths (if applicable)
+
+2. **Model Prepare**: `ModelDownloader` ensures model availability
+   - Checks if model exists on host (`/data/models/{model_id}`)
+   - Downloads from file-service if missing and `AUTO_FETCH_MODELS=true`
+   - Returns host path for volume mounting
+
+3. **GPU Allocate**: `GPUManager` allocates GPU based on difficulty
+   - Routes to low-difficulty GPU (RTX 4060 Ti) or high-difficulty GPU (RTX 5090)
+   - Returns device ID or rejects with 503 if all matching GPUs busy
+
+4. **Docker Create**: `DockerManager` creates one-off container
+   - Mounts model volume: `-v /host/models:/models:ro`
+   - Sets GPU passthrough: `--gpus device={gpu_id}`
+   - Applies resource limits (memory, CPU)
+
+5. **Instance Create**: `InstanceManager` tracks worker and streams logs
+   - Monitors container stdout/stderr via thread-pooled streaming
+   - Parses log output into structured SSE events
+   - Enforces task timeout
+
+6. **Task Register**: `TaskManager` tracks running task globally
+   - Registers task_id → InstanceManager mapping
+   - Enables monitoring and forced shutdown if needed
+
+7. **Stream Execution**: Client receives SSE stream with real-time events
+   - CONNECTION, WORKER, TEXT_DELTA, TEXT, LOGS, TASK_FINISH
+
+**Cleanup**: GPU released, task unregistered, container auto-removed
+
+### Session-based Task (Legacy/TODO)
 
 **First Request:**
 1. Client submits task with `task_type: "session"`
@@ -229,6 +323,80 @@ Models are automatically fetched from file-service if not found in local cache:
    - Download to `MODEL_CACHE_DIR/llama-7b/`
 4. Mount model to container: `-v /host/path:/models:ro`
 5. Set environment variable: `MODEL_PATH=/models`
+
+## GPU Workers
+
+GPU workers are Docker containers that execute tasks on GPUs. Worker images are stored in the `python/workers/` directory.
+
+### Worker Structure
+
+```
+python/workers/
+└── gpu-server/
+    └── test/
+        └── loading-worker/
+            ├── Dockerfile
+            ├── worker.py
+            └── build.sh
+```
+
+### Creating a Worker
+
+1. Create a directory under `python/workers/gpu-server/`
+2. Add a `Dockerfile` with your worker image
+3. Add a `build.sh` script:
+
+```bash
+#!/bin/bash
+docker build -t my-worker:latest .
+```
+
+4. Reference the image in `task_actions.yaml`:
+
+```yaml
+my-task:
+  docker_image: my-worker:latest
+  command: ["python", "/app/worker.py"]
+```
+
+### Worker Event Protocol
+
+Workers communicate with the service by emitting JSON events to stdout:
+
+```python
+import json
+
+def emit_event(event_type: str, data: dict):
+    event = {"event": event_type, **data}
+    print(json.dumps(event), flush=True)
+
+# Connection event
+emit_event("connection", {"status": "connected", "worker": "my-worker"})
+
+# Worker status
+emit_event("worker", {"status": "ready", "message": "Initialized"})
+
+# Streaming output
+emit_event("text_delta", {"delta": "Hello "})
+emit_event("text_delta", {"delta": "world!"})
+
+# Completion
+emit_event("finish", {"status": "completed"})
+```
+
+### Deployment
+
+Worker images are automatically built during deployment:
+
+```bash
+./scripts/deploy.sh
+```
+
+The deployment script:
+1. Syncs `python/workers/` to GPU server (Step 3.5)
+2. Finds all `build.sh` scripts
+3. Executes each `build.sh` to build worker images
+4. Images are available on the GPU server for task execution
 
 ## Docker Configuration
 
@@ -298,19 +466,27 @@ gpu-server/
 │   │   ├── tasks.py      # Task submission
 │   │   └── sessions.py   # Session management
 │   ├── config/           # Configuration
-│   │   └── model_presets.yaml
-│   ├── core/             # Core managers
+│   │   ├── task_definitions.yaml  # Task metadata
+│   │   ├── task_actions.yaml      # Docker configs
+│   │   └── model_paths.yaml       # Model file paths
+│   ├── core/
+│   │   ├── manager/      # Singleton managers
+│   │   │   ├── docker_manager.py   # Container orchestration
+│   │   │   ├── gpu_manager.py      # GPU allocation
+│   │   │   ├── session_manager.py  # Session lifecycle
+│   │   │   ├── task_manager.py     # Task state tracker
+│   │   │   └── model_downloader.py # Model caching
+│   │   ├── instance/     # Per-request instances
+│   │   │   ├── instance_manager.py   # Log streaming
+│   │   │   ├── config_loader.py      # YAML loading
+│   │   │   └── task_request_handler.py  # Pipeline executor
 │   │   ├── config.py     # Settings
-│   │   ├── dependencies.py
-│   │   ├── docker_manager.py
-│   │   ├── gpu_manager.py
-│   │   ├── instance_manager.py
-│   │   ├── model_config.py
-│   │   └── session_manager.py
+│   │   └── dependencies.py
 │   ├── models/           # Data models
 │   │   ├── events.py
 │   │   ├── session.py
-│   │   └── task.py
+│   │   ├── task.py
+│   │   └── gpu.py
 │   └── main.py           # FastAPI application
 ├── scripts/
 │   └── deploy.sh         # Deployment script
@@ -320,6 +496,10 @@ gpu-server/
 ├── README.md
 └── SERVER_DESIGN.md
 ```
+
+The core is organized into two subdirectories:
+- **`manager/`**: Singleton managers (one per service)
+- **`instance/`**: Per-request instances (one per task)
 
 ### Running Tests
 
@@ -385,6 +565,25 @@ Common issues:
 - Internal-only file-service communication
 
 ## Performance Tuning
+
+### Async I/O Optimization
+
+The service uses thread-pooled log streaming to prevent event loop blocking:
+
+- **Problem**: Docker-py's `container.logs()` is synchronous, blocks the event loop
+- **Solution**: `loop.run_in_executor()` runs blocking I/O in thread pool
+- **Benefit**: Health checks respond quickly even during active log streaming
+- **Implementation**: See `docker_manager.stream_logs()` (line 282-333)
+
+### Concurrency Settings
+
+The service runs as a single Uvicorn worker with high concurrency limits:
+
+- `--workers 1`: Single process (manager state is in-memory, not Redis)
+- `--limit-concurrency 1000`: Supports 1000 concurrent connections
+- `--backlog 2048`: Queue size for burst traffic
+
+**Why single worker?** GPU Manager, Task Manager, and Session Manager maintain in-memory state. Multiple workers would require Redis for shared state (future enhancement).
 
 ### Session Configuration
 
