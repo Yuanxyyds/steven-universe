@@ -6,6 +6,7 @@ These endpoints require internal token authentication and are for backend servic
 import logging
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
 from botocore.exceptions import ClientError
 
 from shared_schemas.file_service import (
@@ -15,6 +16,8 @@ from shared_schemas.file_service import (
     ListFilesRequest,
     ListFilesResponse,
     FileMetadata,
+    GetUrlRequest,
+    PublicUrlResponse,
 )
 from shared_schemas.common import SuccessResponse
 from app.core.auth import verify_internal_token
@@ -202,6 +205,120 @@ async def list_internal_bucket_files(
         )
     except Exception as e:
         logger.error(f"Unexpected error during internal listing: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.get("/download/{bucket}/{key:path}")
+async def download_from_internal_bucket(bucket: str, key: str):
+    """
+    Download file from private internal bucket (streaming endpoint).
+    Only accessible by backend services with internal token.
+
+    Args:
+        bucket: Bucket name (must be in INTERNAL_BUCKETS)
+        key: Object key (file path)
+
+    Returns:
+        File stream
+    """
+    # Validate bucket type
+    if get_bucket_type(bucket) != BucketType.INTERNAL:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Bucket '{bucket}' is not configured as an internal bucket"
+        )
+
+    try:
+        # Check if file exists
+        if not s3_client.file_exists(bucket, key):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File not found: {bucket}/{key}"
+            )
+
+        # Get file from MinIO
+        response = s3_client.client.get_object(Bucket=bucket, Key=key)
+
+        # Get content type
+        content_type = response.get('ContentType', 'application/octet-stream')
+
+        # Stream the file
+        return StreamingResponse(
+            response['Body'],
+            media_type=content_type,
+            headers={
+                'Content-Disposition': f'attachment; filename="{key.split("/")[-1]}"'
+            }
+        )
+
+    except HTTPException:
+        raise
+    except ClientError as e:
+        logger.error(f"S3 error during internal download: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to download file: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during internal download: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.get("/url", response_model=PublicUrlResponse)
+async def get_internal_url(request: GetUrlRequest = Depends()):
+    """
+    Get direct URL for a file in internal bucket.
+    Only accessible by backend services with internal token.
+
+    Args:
+        request: GetUrlRequest with bucket and key
+
+    Returns:
+        Direct MinIO URL
+    """
+    # Validate bucket type
+    if get_bucket_type(request.bucket) != BucketType.INTERNAL:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Bucket '{request.bucket}' is not configured as an internal bucket"
+        )
+
+    try:
+        # Check if file exists
+        if not s3_client.file_exists(request.bucket, request.key):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File not found: {request.bucket}/{request.key}"
+            )
+
+        # Return direct MinIO URL (internal services only)
+        url = s3_client.get_public_url(request.bucket, request.key)
+
+        logger.info(f"Retrieved internal URL for {request.bucket}/{request.key}")
+
+        return PublicUrlResponse(
+            success=True,
+            url=url,
+            bucket=request.bucket,
+            key=request.key
+        )
+
+    except HTTPException:
+        raise
+    except ClientError as e:
+        logger.error(f"S3 error retrieving internal URL: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve URL: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error retrieving internal URL: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
