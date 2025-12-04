@@ -3,16 +3,20 @@ MinIO S3 Client wrapper.
 Handles all S3 operations including upload, delete, signed URLs, and bucket policies.
 """
 
+import asyncio
 import json
 import logging
-from typing import BinaryIO, Optional, Literal
+from concurrent.futures import ThreadPoolExecutor
+from typing import BinaryIO, Optional, Literal, Callable, AsyncIterator
 from urllib.parse import urlparse
 
 import boto3
+from boto3.s3.transfer import TransferConfig
 from botocore.client import Config
 from botocore.exceptions import ClientError
 
 from app.core.config import BucketType, settings, get_bucket_type
+from app.s3.config import MULTIPART_THRESHOLD, MULTIPART_CHUNKSIZE, MAX_CONCURRENCY
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,10 @@ class S3Client:
         )
 
         self.endpoint_url = endpoint_url
+
+        # Single-worker executor for large uploads (prevents thread explosion)
+        self.upload_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="s3-upload")
+
         logger.info(f"S3 client initialized with endpoint: {endpoint_url}")
 
     def upload_file(
@@ -85,6 +93,98 @@ class S3Client:
 
         except ClientError as e:
             logger.error(f"Failed to upload {bucket}/{key}: {e}")
+            raise
+
+    async def upload_file_streaming(
+        self,
+        bucket: str,
+        key: str,
+        chunk_iterator: AsyncIterator[bytes],
+        content_type: Optional[str] = None,
+        progress_callback: Optional[Callable[[int], None]] = None
+    ) -> dict:
+        """
+        Upload file using streaming with multipart support.
+
+        This method streams file chunks directly to MinIO without buffering to disk.
+        boto3's TransferConfig handles multipart automatically and cleanup on failure.
+
+        Args:
+            bucket: Bucket name
+            key: Object key (file path in bucket)
+            chunk_iterator: Async iterator yielding file chunks
+            content_type: MIME type of the file
+            progress_callback: Optional callback function called with bytes uploaded
+
+        Returns:
+            Dict with upload result
+
+        Raises:
+            ClientError: If upload fails
+        """
+        from app.utils.streaming import AsyncChunkBuffer
+
+        try:
+            # Extra args for S3
+            extra_args = {}
+            if content_type:
+                extra_args['ContentType'] = content_type
+
+            # Wrap async iterator in file-like object with bounded queue
+            file_like = AsyncChunkBuffer(chunk_iterator)
+
+            # Configure transfer settings for multipart
+            config = TransferConfig(
+                multipart_threshold=MULTIPART_THRESHOLD,
+                multipart_chunksize=MULTIPART_CHUNKSIZE,
+                max_concurrency=MAX_CONCURRENCY,
+                use_threads=False  # We're running in executor already
+            )
+
+            # Define sync upload function for executor
+            def _upload():
+                try:
+                    # boto3 handles multipart internally with TransferConfig
+                    # Auto-cleanup on failure
+                    self.client.upload_fileobj(
+                        file_like,
+                        bucket,
+                        key,
+                        ExtraArgs=extra_args,
+                        Config=config,
+                        Callback=progress_callback
+                    )
+                except Exception as e:
+                    logger.error(f"[STREAMING UPLOAD] upload_fileobj failed: {e}")
+                    raise
+
+            # Run upload in dedicated executor to avoid blocking event loop
+            logger.info(f"[STREAMING UPLOAD] Starting: {bucket}/{key}")
+            await asyncio.get_event_loop().run_in_executor(
+                self.upload_executor,
+                _upload
+            )
+
+            logger.info(f"[STREAMING UPLOAD] Completed: {bucket}/{key}")
+
+            # Get checksum and size
+            checksum = file_like.get_checksum()
+            size_bytes = file_like.total_bytes
+
+            if checksum:
+                logger.info(f"[STREAMING UPLOAD] SHA256: {checksum}, Size: {size_bytes} bytes")
+
+            return {
+                "success": True,
+                "bucket": bucket,
+                "key": key,
+                "url": self._get_object_url(bucket, key),
+                "sha256": checksum,
+                "size_bytes": size_bytes
+            }
+
+        except Exception as e:
+            logger.error(f"[STREAMING UPLOAD] Failed: {bucket}/{key} :: {e}")
             raise
 
     def delete_file(self, bucket: str, key: str) -> dict:

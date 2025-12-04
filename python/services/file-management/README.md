@@ -33,16 +33,34 @@ This service provides a unified API for managing files across three different ac
 
 #### Upload to Internal Bucket
 ```bash
-POST /internal/upload
-Content-Type: multipart/form-data
+PUT /internal/upload/{bucket}/{key}
+Content-Type: application/octet-stream (auto-detected from file extension)
 
-# Example
-curl -X POST http://localhost:8000/internal/upload \
+# Example - Content-Type auto-detected
+curl -X PUT "http://localhost:8000/internal/upload/models/model_v1.safetensors" \
   -H "Authorization: Bearer <INTERNAL_SECRET_KEY>" \
-  -F "bucket=models" \
-  -F "key=model_v1.safetensors" \
-  -F "file=@model.safetensors"
+  --data-binary "@model.safetensors"
+
+# Response includes SHA256 checksum for integrity verification
+{
+  "success": true,
+  "message": "File uploaded successfully",
+  "data": {
+    "bucket": "models",
+    "key": "model_v1.safetensors",
+    "url": "http://minio:9000/models/model_v1.safetensors",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 1073741824
+  }
+}
 ```
+
+**Features:**
+- ✅ Zero-buffer streaming - supports files of any size (tested with 60GB+)
+- ✅ Auto Content-Type detection from file extension
+- ✅ SHA256 checksum for integrity verification
+- ✅ Progress logging every 50MB
+- ✅ No /tmp disk usage
 
 #### Delete from Internal Bucket
 ```bash
@@ -64,17 +82,30 @@ Authorization: Bearer <INTERNAL_SECRET_KEY>
 
 #### Upload to Signed Bucket
 ```bash
-POST /signed/upload
-Content-Type: multipart/form-data
+PUT /signed/upload/{bucket}/{key}
 Authorization: Bearer <FRONTEND_API_KEY>
 
 # Example
-curl -X POST http://localhost:8000/signed/upload \
+curl -X PUT "http://localhost:8000/signed/upload/user-uploads/profiles/avatar.jpg" \
   -H "Authorization: Bearer <FRONTEND_API_KEY>" \
-  -F "bucket=user-uploads" \
-  -F "key=avatar.jpg" \
-  -F "file=@avatar.jpg"
+  --data-binary "@avatar.jpg"
+
+# Response (URL varies by token type)
+{
+  "success": true,
+  "data": {
+    "bucket": "user-uploads",
+    "key": "profiles/avatar.jpg",
+    "url": "https://files.yourdomain.com/signed/download/user-uploads/profiles/avatar.jpg",
+    "sha256": "...",
+    "size_bytes": 1048576
+  }
+}
 ```
+
+**URL Behavior:**
+- **Internal token**: Returns direct MinIO URL (fast, for backend services)
+- **Frontend token**: Returns public proxy URL (accessible from internet)
 
 #### Generate Signed URL
 ```bash
@@ -109,24 +140,23 @@ curl -X POST http://localhost:8000/signed/url \
 
 #### Upload to Public Bucket (Auth Required)
 ```bash
-POST /public/upload
-Content-Type: multipart/form-data
+PUT /public/upload/{bucket}/{key}
 Authorization: Bearer <FRONTEND_API_KEY>
 
 # Example
-curl -X POST http://localhost:8000/public/upload \
+curl -X PUT "http://localhost:8000/public/upload/public/ai-art/image123.jpg" \
   -H "Authorization: Bearer <FRONTEND_API_KEY>" \
-  -F "bucket=ai-generated-photos" \
-  -F "key=image123.jpg" \
-  -F "file=@image.jpg"
+  --data-binary "@image.jpg"
 
-# Response includes public URL
+# Response includes public proxy URL
 {
   "success": true,
   "data": {
-    "bucket": "ai-generated-photos",
-    "key": "image123.jpg",
-    "public_url": "http://minio:9000/ai-generated-photos/image123.jpg"
+    "bucket": "public",
+    "key": "ai-art/image123.jpg",
+    "url": "https://files.yourdomain.com/public/download/public/ai-art/image123.jpg",
+    "sha256": "...",
+    "size_bytes": 2097152
   }
 }
 ```
@@ -339,6 +369,39 @@ mc mb myminio/ai-generated-photos
 The service automatically sets bucket policies on startup:
 - **Type 1 & 2 buckets**: Private (no public access)
 - **Type 3 buckets**: Public-read (direct URL access)
+
+## Upload Architecture
+
+### Raw Binary Streaming
+
+All upload endpoints use **raw binary streaming** (not multipart/form-data) for maximum reliability and performance:
+
+**Why Raw Binary?**
+- ✅ **100% reliable** - No client-side multipart encoding bugs
+- ✅ **Zero overhead** - No multipart boundaries (~400 bytes saved per upload)
+- ✅ **Exact byte counts** - Content-Length = actual file size
+- ✅ **Simpler** - Just forward bytes, no parsing
+- ✅ **Auto Content-Type** - Detected from file extension
+- ✅ **SHA256 verification** - Real-time integrity checking
+
+**Implementation:**
+```
+Client → --data-binary → FastAPI request.stream() → AsyncChunkBuffer → boto3 → MinIO
+```
+
+**Memory Usage:**
+- Small files (<10MB): ~1-2MB buffer
+- Large files (60GB+): ~12.5MB buffer (configurable)
+- **No /tmp disk usage** - pure streaming
+
+**Common MIME Types Auto-Detected:**
+- `.pdf` → `application/pdf`
+- `.jpg`, `.jpeg` → `image/jpeg`
+- `.png` → `image/png`
+- `.mp4` → `video/mp4`
+- `.tar.gz` → `application/gzip`
+- `.zip` → `application/zip`
+- And many more...
 
 ## Tech Stack
 

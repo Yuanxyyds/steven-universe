@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # Application
     LOG_LEVEL: str = "INFO"
 
+    # Streaming Upload Configuration
+    MAX_BUFFERED_CHUNKS: int = 50  # Number of 256KB chunks to buffer (default: 10 = 2.5MB)
+                                   # Increase for high-speed networks (e.g., 50 = 12.5MB for 1Gbps+)
+
     # Bucket Type Definitions
     # Type 1: Private + Internal Only (backend services only)
     INTERNAL_BUCKETS: List[str] = ["models"]
