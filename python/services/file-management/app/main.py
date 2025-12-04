@@ -159,5 +159,8 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=True,
-        log_level=settings.LOG_LEVEL.lower()
+        log_level=settings.LOG_LEVEL.lower(),
+        timeout_keep_alive=7200,  # 2 hours for very large file uploads
+        limit_max_requests=0,     # No limit on requests
+        limit_concurrency=100     # Allow more concurrent connections
     )

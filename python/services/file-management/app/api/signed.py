@@ -4,8 +4,9 @@ Frontend and backend services can request time-limited signed URLs for private c
 """
 
 import logging
+import time
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from botocore.exceptions import ClientError
 import requests
@@ -25,6 +26,7 @@ from shared_schemas.common import SuccessResponse
 from app.core.auth import verify_api_access, TokenType
 from app.core.config import BucketType, settings, get_bucket_type
 from app.s3.client import s3_client
+from app.utils.content_type import detect_content_type
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +61,7 @@ def rewrite_minio_url_for_frontend(minio_url: str) -> str:
 # Router for authenticated operations (upload, delete, generate URL)
 router_auth = APIRouter(
     prefix="/signed",
-    tags=["signed"],
-    dependencies=[Depends(verify_api_access)]
+    tags=["signed"]
 )
 
 # Router for unauthenticated operations (download with signed URL)
@@ -70,27 +71,39 @@ router_no_auth = APIRouter(
 )
 
 
-@router_auth.post("/upload", response_model=SuccessResponse[UploadResponse])
-async def upload_to_signed_bucket(
-    bucket: str = Form(...),
-    key: str = Form(...),
-    file: UploadFile = File(...),
+@router_auth.put("/upload/{bucket}/{key:path}", response_model=SuccessResponse[UploadResponse])
+async def upload_file(
+    bucket: str,
+    key: str,
+    request: Request,
     token_type: TokenType = Depends(verify_api_access)
 ):
     """
-    Upload file to private bucket that supports signed URL access.
-    - Internal token: Returns direct MinIO URL
-    - Frontend token: Returns public service proxy URL
+    Upload file to signed bucket (raw binary streaming).
+
+    Streams file directly to MinIO without buffering - supports files of any size.
+    Content-Type is auto-detected from file extension if not provided.
+
+    Returns different URL based on token type:
+    - Internal token: Direct MinIO URL (faster for backend services)
+    - Frontend token: Public service proxy URL (accessible from internet)
+
+    Example:
+        curl -X PUT "http://server/signed/upload/user-uploads/profile.jpg" \\
+          -H "Authorization: Bearer TOKEN" \\
+          --data-binary "@profile.jpg"
 
     Args:
         bucket: Bucket name (must be in SIGNED_BUCKETS)
-        key: Object key (file path in bucket)
-        file: File to upload
+        key: Object key / file path
+        request: FastAPI Request with raw binary body
         token_type: Token type from authentication
 
     Returns:
-        Upload result with bucket, key, and URL (direct or proxy)
+        Upload result with bucket, key, URL, SHA256, and size
     """
+    start_time = time.time()
+
     # Validate bucket type
     if get_bucket_type(bucket) != BucketType.SIGNED:
         raise HTTPException(
@@ -102,15 +115,45 @@ async def upload_to_signed_bucket(
         # Ensure bucket exists with proper policy
         s3_client.ensure_bucket_exists(bucket)
 
-        # Upload file
-        result = s3_client.upload_file(
+        # Auto-detect content type from file extension
+        provided_type = request.headers.get("content-type")
+        content_type = detect_content_type(key, provided_type)
+
+        # Progress callback
+        uploaded_bytes = [0]
+        last_log_mb = [0]
+
+        def progress(bytes_amount):
+            uploaded_bytes[0] += bytes_amount
+            current_mb = uploaded_bytes[0] / 1024 / 1024
+            if current_mb - last_log_mb[0] >= 50:
+                logger.info(f"[SIGNED UPLOAD] Progress: {current_mb:.2f}MB uploaded ({bucket}/{key})")
+                last_log_mb[0] = current_mb
+
+        # Create chunk iterator directly from request stream
+        async def chunk_iterator():
+            async for chunk in request.stream():
+                yield chunk
+
+        # Stream upload
+        logger.info(f"[SIGNED UPLOAD] Starting: {bucket}/{key}")
+        result = await s3_client.upload_file_streaming(
             bucket=bucket,
             key=key,
-            file_obj=file.file,
-            content_type=file.content_type
+            chunk_iterator=chunk_iterator(),
+            content_type=content_type,
+            progress_callback=progress
         )
 
-        logger.info(f"Signed bucket upload successful: {bucket}/{key}")
+        duration = time.time() - start_time
+        size_mb = result.get("size_bytes", 0) / 1024 / 1024
+        sha256 = result.get("sha256")
+        actual_size = result.get("size_bytes", 0)
+
+        logger.info(
+            f"[SIGNED UPLOAD] Completed: {bucket}/{key} "
+            f"({size_mb:.2f}MB in {duration:.2f}s, SHA256: {sha256})"
+        )
 
         # Return URL based on token type
         if token_type == TokenType.INTERNAL:
@@ -124,18 +167,20 @@ async def upload_to_signed_bucket(
             data=UploadResponse(
                 bucket=result["bucket"],
                 key=result["key"],
-                url=url
+                url=url,
+                sha256=sha256,
+                size_bytes=actual_size
             )
         )
 
     except ClientError as e:
-        logger.error(f"S3 error during signed bucket upload: {e}")
+        logger.error(f"[SIGNED UPLOAD] S3 error: {bucket}/{key} :: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload file: {str(e)}"
         )
     except Exception as e:
-        logger.error(f"Unexpected error during signed bucket upload: {e}")
+        logger.error(f"[SIGNED UPLOAD] Unexpected error: {bucket}/{key} :: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"

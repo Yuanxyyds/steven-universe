@@ -58,6 +58,8 @@ class UploadResponse(BaseModel):
     bucket: str
     key: str
     url: str
+    sha256: Optional[str] = None  # SHA256 checksum for integrity verification
+    size_bytes: Optional[int] = None  # Actual uploaded file size in bytes
 
 
 # ============================================================================
