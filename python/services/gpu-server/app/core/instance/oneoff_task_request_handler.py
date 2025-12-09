@@ -2,20 +2,124 @@
 OneOff task request handler with pipeline execution.
 """
 
+import asyncio
 import uuid
 import logging
 from typing import Dict, Any, AsyncIterator, Optional
+from datetime import datetime
 
 from fastapi import HTTPException
 
-from app.core.instance.config_loader import ConfigLoader, TaskDefinition, TaskAction, ModelPath
-from app.core.instance.instance_manager import InstanceManager
+from app.core.instance.config_loader import ConfigLoader
+from app.models.task import Task, TaskDefinition, TaskAction
 from app.core.manager.model_downloader import model_downloader
 from app.core.manager.task_manager import task_manager
-from app.models.events import StreamEvent
+from app.core.manager.docker_manager import docker_manager
+from app.models.events import StreamEvent, EventParser
 from shared_schemas.gpu_service import TaskType
 
 logger = logging.getLogger(__name__)
+
+
+class _DockerLogStreamer:
+    """
+    Docker log streamer for oneoff tasks.
+
+    Handles:
+    - Streaming docker logs from oneoff containers
+    - Parsing logs into structured events
+    - Emitting SSE events
+    - Task timeout enforcement
+    """
+
+    def __init__(self, task_id: str, container_id: str, timeout_seconds: int):
+        """
+        Initialize docker log streamer.
+
+        Args:
+            task_id: Task identifier
+            container_id: Docker container ID
+            timeout_seconds: Task timeout in seconds
+        """
+        self.task_id = task_id
+        self.container_id = container_id
+        self.timeout_seconds = timeout_seconds
+
+    async def stream_task_execution(
+        self,
+        session_id: Optional[str] = None
+    ) -> AsyncIterator[StreamEvent]:
+        """
+        Stream task execution via docker logs parsing.
+
+        Args:
+            session_id: Optional session ID (unused for oneoff tasks)
+
+        Yields:
+            StreamEvent objects
+        """
+        logger.info(f"Starting log stream for task {self.task_id} (container={self.container_id[:12]})")
+
+        task_start_time = datetime.utcnow()
+
+        try:
+            # Emit LOGS event (container created)
+            yield StreamEvent.logs(
+                log=f"Worker container created: {self.container_id[:12]}",
+                level="info"
+            )
+
+            # Stream and parse docker logs
+            log_stream = docker_manager.stream_logs(self.container_id, follow=True)
+
+            async for log_line in log_stream:
+                # Check task timeout
+                elapsed = (datetime.utcnow() - task_start_time).total_seconds()
+                if elapsed > self.timeout_seconds:
+                    logger.warning(f"Task {self.task_id} exceeded timeout ({self.timeout_seconds}s)")
+
+                    # Stop container
+                    await docker_manager.stop_container(self.container_id)
+
+                    # Emit timeout event
+                    yield StreamEvent.completed(
+                        status="timeout",
+                        elapsed_seconds=int(elapsed),
+                        error="Task timeout exceeded"
+                    )
+                    return
+
+                # Parse log line into event
+                event = EventParser.parse_log_line(log_line)
+                if event:
+                    yield event
+
+            # Task completed successfully (container exited)
+            elapsed_seconds = int((datetime.utcnow() - task_start_time).total_seconds())
+
+            logger.info(f"Task {self.task_id} completed successfully ({elapsed_seconds}s)")
+
+            yield StreamEvent.completed(
+                status="completed",
+                elapsed_seconds=elapsed_seconds
+            )
+
+        except asyncio.CancelledError:
+            logger.info(f"Task {self.task_id} stream cancelled")
+
+            yield StreamEvent.completed(
+                status="cancelled",
+                error="Task cancelled"
+            )
+            raise
+
+        except Exception as e:
+            logger.error(f"Error streaming task {self.task_id}: {e}", exc_info=True)
+
+            yield StreamEvent.completed(
+                status="failed",
+                error=str(e)
+            )
 
 
 class OneOffTaskRequestHandler:
@@ -27,7 +131,7 @@ class OneOffTaskRequestHandler:
     1. Load config (ConfigLoader instance per-request)
     2. Prepare model (ModelDownloader singleton, only if model_path provided)
     3. Allocate GPU (TaskManager.gpu_manager singleton)
-    4. Create instance manager (InstanceManager instance per-request)
+    4. Create Docker log streamer (_DockerLogStreamer instance per-request)
     5. Create Docker container (TaskManager.docker_manager singleton)
     6. Register with TaskManager (tracks running tasks)
     7. Stream execution
@@ -56,11 +160,11 @@ class OneOffTaskRequestHandler:
         self.config_loader = ConfigLoader()  # Per-request instance
         self.task_def: Optional[TaskDefinition] = None
         self.task_action: Optional[TaskAction] = None
-        self.model_path_config: Optional[ModelPath] = None
         self.model_host_path: Optional[str] = None
         self.gpu_id: Optional[int] = None
         self.container_id: Optional[str] = None
-        self.instance_mgr: Optional[InstanceManager] = None
+        self.log_streamer: Optional[_DockerLogStreamer] = None
+        self.task: Optional[Task] = None  # Task object for tracking
 
     async def execute(self) -> AsyncIterator[StreamEvent]:
         """
@@ -76,6 +180,16 @@ class OneOffTaskRequestHandler:
             # Step 1: Load config
             logger.info(f"[{self.task_id}] Step 1: Loading config for task {self.task_name}")
             await self._load_config()
+
+            # Step 1b: Create Task object for tracking
+            self.task = Task.create(
+                task_definition=self.task_def,
+                task_action=self.task_action,
+                model_path=None,  # Will be populated after model download
+                task_id=self.task_id,
+                session_id=None  # Oneoff tasks don't have session_id
+            )
+            logger.info(f"[{self.task_id}] Task object created for tracking")
 
             # Step 2: Prepare model (only if model_path provided)
             logger.info(f"[{self.task_id}] Step 2: Preparing model")
@@ -96,18 +210,22 @@ class OneOffTaskRequestHandler:
             logger.info(f"[{self.task_id}] Step 5: Creating Docker container")
             await self._create_container()
 
-            # Step 4: Create instance manager (after container exists)
-            logger.info(f"[{self.task_id}] Step 4: Creating instance manager")
-            await self._create_instance_manager()
+            # Step 4: Create docker log streamer (after container exists)
+            logger.info(f"[{self.task_id}] Step 4: Creating docker log streamer")
+            await self._create_log_streamer()
+
+            # Step 5: Update task with container_id and GPU
+            self.task.container_id = self.container_id
+            self.task.gpu_id = self.gpu_id
 
             # Step 6: Register with task manager
             logger.info(f"[{self.task_id}] Step 6: Registering task with TaskManager")
-            await task_manager.register_task(self.task_id, self.instance_mgr)
+            await task_manager.register_task(self.task_id, self.task)
 
             # Step 7: Stream execution
             logger.info(f"[{self.task_id}] Step 7: Streaming task execution")
 
-            async for event in self.instance_mgr.stream_task_execution(session_id=None):
+            async for event in self.log_streamer.stream_task_execution(session_id=None):
                 yield event
 
         except HTTPException:
@@ -124,26 +242,17 @@ class OneOffTaskRequestHandler:
 
     async def _load_config(self):
         """
-        Step 1: Load configuration.
+        Step 1: Load configuration with request overrides applied.
 
-        Loads task definition, task action, and optional model path from YAML configs.
-        Applies request overrides to task definition.
+        Loads task definition and task action from YAML configs.
+        ConfigLoader handles applying request overrides.
         """
         try:
-            self.task_def, self.task_action, self.model_path_config = \
-                self.config_loader.load_task_config(self.task_name)
-
-            # Apply overrides
-            if self.request_overrides.get('task_difficulty'):
-                self.task_def.task_difficulty = self.request_overrides['task_difficulty']
-            if self.request_overrides.get('timeout_seconds'):
-                self.task_def.timeout_seconds = self.request_overrides['timeout_seconds']
-
-            # Merge metadata
-            self.task_def.metadata = {
-                **self.task_def.metadata,
-                **self.request_overrides.get('metadata', {})
-            }
+            self.task_def, self.task_action, _ = \
+                self.config_loader.load_task_config(
+                    task_name=self.task_name,
+                    request_overrides=self.request_overrides
+                )
 
             logger.info(
                 f"[{self.task_id}] Config loaded: "
@@ -159,11 +268,11 @@ class OneOffTaskRequestHandler:
         """
         Step 2: Prepare model (download if needed).
 
-        Only downloads model if model_path is provided in config.
+        Only downloads model if model_id is provided in config.
         Uses ModelDownloader singleton.
         """
-        if not self.model_path_config:
-            logger.info(f"[{self.task_id}] No model_path configured, skipping model preparation")
+        if not self.task_def.model_id:
+            logger.info(f"[{self.task_id}] No model_id configured, skipping model preparation")
             self.model_host_path = None
             return
 
@@ -171,14 +280,14 @@ class OneOffTaskRequestHandler:
         import httpx
         async with httpx.AsyncClient() as client:
             self.model_host_path = await model_downloader.get_model_path(
-                model_id=self.model_path_config.model_id,
+                model_id=self.task_def.model_id,
                 http_client=client
             )
 
         if not self.model_host_path:
             raise HTTPException(
                 status_code=500,
-                detail=f"Model {self.model_path_config.model_id} not available and fetch failed"
+                detail=f"Model {self.task_def.model_id} not available and fetch failed"
             )
 
         logger.info(f"[{self.task_id}] Model ready at {self.model_host_path}")
@@ -232,19 +341,19 @@ class OneOffTaskRequestHandler:
 
         logger.info(f"[{self.task_id}] Created container {self.container_id[:12]}")
 
-    async def _create_instance_manager(self):
+    async def _create_log_streamer(self):
         """
-        Step 4: Create instance manager.
+        Step 4: Create docker log streamer.
 
-        Creates per-request instance manager to track worker and stream logs.
+        Creates per-request log streamer to stream docker logs and emit SSE events.
         """
-        self.instance_mgr = InstanceManager(
+        self.log_streamer = _DockerLogStreamer(
             task_id=self.task_id,
             container_id=self.container_id,
             timeout_seconds=self.task_def.timeout_seconds
         )
 
-        logger.info(f"[{self.task_id}] Instance manager created")
+        logger.info(f"[{self.task_id}] Docker log streamer created")
 
     async def _cleanup(self):
         """

@@ -6,6 +6,8 @@ import asyncio
 import logging
 from typing import Dict, List
 
+from app.models.task import Task
+
 logger = logging.getLogger(__name__)
 
 
@@ -15,7 +17,7 @@ class TaskManager:
 
     Responsibilities:
     - Hold references to GPU Manager, Session Manager, Docker Manager
-    - Track all running tasks with their InstanceManagers
+    - Track all running tasks with their Task objects
     - Provide unified interface for task lifecycle
     """
 
@@ -29,19 +31,19 @@ class TaskManager:
         self.session_manager = session_manager
         self.docker_manager = docker_manager
 
-        self._running_tasks: Dict[str, 'InstanceManager'] = {}  # task_id -> instance
+        self._running_tasks: Dict[str, Task] = {}  # task_id -> Task object
         self._lock = asyncio.Lock()
 
-    async def register_task(self, task_id: str, instance_manager: 'InstanceManager'):
+    async def register_task(self, task_id: str, task: Task):
         """
         Register a running task.
 
         Args:
             task_id: Task identifier
-            instance_manager: Instance manager handling this task
+            task: Task object containing metadata
         """
         async with self._lock:
-            self._running_tasks[task_id] = instance_manager
+            self._running_tasks[task_id] = task
             logger.info(f"Registered task {task_id} ({len(self._running_tasks)} total running)")
 
     async def unregister_task(self, task_id: str):

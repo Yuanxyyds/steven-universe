@@ -23,7 +23,9 @@ async def run_predefined_task(request: PreDefinedTaskRequest):
     """
     Execute a pre-defined task with SSE streaming.
 
-    Uses clean pipeline pattern with OneOffTaskRequestHandler for execution.
+    Routes to appropriate handler based on task_type:
+    - oneoff: OneOffTaskRequestHandler
+    - session: SessionTaskHandler
 
     Args:
         request: Pre-defined task request
@@ -34,19 +36,44 @@ async def run_predefined_task(request: PreDefinedTaskRequest):
     Raises:
         HTTPException: 404 if task not found, 503 if no resources available
     """
+    from app.core.instance.config_loader import ConfigLoader
     from app.core.instance.oneoff_task_request_handler import OneOffTaskRequestHandler
+    from app.core.instance.session_task_handler import SessionTaskHandler
 
     logger.info(f"Pre-defined task submission: task_name={request.task_name}")
 
-    # Create handler
-    handler = OneOffTaskRequestHandler(
-        task_name=request.task_name,
-        request_overrides={
-            'task_difficulty': request.task_difficulty,
-            'timeout_seconds': request.timeout_seconds,
-            'metadata': request.metadata,
-        }
-    )
+    # Load config to determine task type
+    config_loader = ConfigLoader()
+    try:
+        task_def, _, _ = config_loader.load_task_config(request.task_name)
+    except Exception as e:
+        logger.error(f"Failed to load task config: {e}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task '{request.task_name}' not found"
+        )
+
+    # Route based on task type
+    if task_def.task_type == "session":
+        # Session task - use SessionTaskHandler
+        handler = SessionTaskHandler(
+            task_name=request.task_name,
+            request_overrides={
+                'task_difficulty': request.task_difficulty,
+                'timeout_seconds': request.timeout_seconds,
+                'metadata': request.metadata,
+            }
+        )
+    else:
+        # OneOff task - use OneOffTaskRequestHandler
+        handler = OneOffTaskRequestHandler(
+            task_name=request.task_name,
+            request_overrides={
+                'task_difficulty': request.task_difficulty,
+                'timeout_seconds': request.timeout_seconds,
+                'metadata': request.metadata,
+            }
+        )
 
     # Execute pipeline and stream
     return EventSourceResponse(handler.execute())

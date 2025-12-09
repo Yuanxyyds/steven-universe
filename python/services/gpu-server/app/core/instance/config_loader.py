@@ -7,44 +7,12 @@ task action, and model path for a specific task.
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional, List, Any, Tuple
-from dataclasses import dataclass
+from typing import Dict, Optional, Any, Tuple
 import yaml
 
+from app.models.task import TaskDefinition, TaskAction, ModelPath
+
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class TaskDefinition:
-    """Pre-defined task template configuration."""
-    task_name: str
-    description: str
-    task_type: str  # "oneoff" or "session"
-    task_difficulty: str  # "low" or "high"
-    timeout_seconds: int
-    metadata: Dict[str, Any]
-    model_id: Optional[str] = None  # Optional for non-LLM tasks
-
-
-@dataclass
-class TaskAction:
-    """Worker execution configuration for a task."""
-    task_name: str
-    source_path: str
-    dockerfile: str
-    docker_image: str
-    command: List[str]
-    env_vars: Dict[str, str]
-    build_args: Dict[str, str]
-
-
-@dataclass
-class ModelPath:
-    """Model filesystem path configuration."""
-    model_id: str
-    path: str
-    description: str
-    size_gb: float
 
 
 class ConfigLoader:
@@ -114,7 +82,8 @@ class ConfigLoader:
             task_difficulty=task_data.get("task_difficulty", "low"),
             timeout_seconds=task_data.get("timeout_seconds", 300),
             metadata=task_data.get("metadata", {}),
-            model_id=task_data.get("model_id")
+            model_id=task_data.get("model_id"),
+            scheduler_type=task_data.get("scheduler_type", "centralized")
         )
 
     def get_task_action(self, task_name: str) -> Optional[TaskAction]:
@@ -170,15 +139,24 @@ class ConfigLoader:
             size_gb=path_data.get("size_gb", 0.0)
         )
 
-    def load_task_config(self, task_name: str) -> Tuple[TaskDefinition, TaskAction, Optional[ModelPath]]:
+    def load_task_config(
+        self,
+        task_name: str,
+        request_overrides: Optional[Dict[str, Any]] = None
+    ) -> Tuple[TaskDefinition, TaskAction, Optional[ModelPath]]:
         """
-        Load complete configuration for a task.
+        Load complete configuration for a task with optional request overrides.
 
         Lazy-loads task definition and task action (required),
         and model path (optional, only if model_id is specified in task definition).
+        Applies request overrides to task definition before returning.
 
         Args:
             task_name: Task name to lookup
+            request_overrides: Optional dict with overrides for:
+                - task_difficulty
+                - timeout_seconds
+                - metadata
 
         Returns:
             Tuple of (TaskDefinition, TaskAction, ModelPath or None)
@@ -190,6 +168,15 @@ class ConfigLoader:
         task_def = self.get_task_definition(task_name)
         if not task_def:
             raise ValueError(f"Task definition not found: {task_name}")
+
+        # Apply request overrides if provided
+        if request_overrides:
+            if request_overrides.get('task_difficulty'):
+                task_def.task_difficulty = request_overrides['task_difficulty']
+            if request_overrides.get('timeout_seconds'):
+                task_def.timeout_seconds = request_overrides['timeout_seconds']
+            if request_overrides.get('metadata'):
+                task_def.metadata.update(request_overrides['metadata'])
 
         # Load task action by task_name
         task_action = self.get_task_action(task_name)

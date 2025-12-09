@@ -1,605 +1,389 @@
-# GPU Service
+# GPU Service Architecture
 
-Session-based GPU task execution service with SSE streaming support.
+A session-based GPU execution system with bounded queues, automatic model reuse, SSE streaming, and dynamic GPU allocation.  
+This architecture is designed for high-throughput inference workloads where models are expensive to load and long-lived GPU workers significantly reduce latency.
 
-## Architecture
+---
 
-This service manages GPU resources using a **session-based architecture** that keeps models loaded in memory between requests for improved performance.
+## 1. High-Level Architecture
 
-### Key Features
-
-- **Session-based execution**: Long-lived containers that reuse loaded models
-- **One-off tasks**: Ephemeral containers for single-use tasks
-- **Task difficulty routing**: Route tasks to appropriate GPUs (low/high difficulty)
-- **SSE streaming**: Real-time event streaming with structured events
-- **Auto model fetching**: Automatically downloads models from file-service
-- **FIFO queue per session**: 3-5 requests per session with fair queuing
-- **Automatic timeouts**: Idle timeout (5 min) and max lifetime (1 hour)
-- **Docker-outside-of-Docker**: Manages Docker containers from within Docker
-
-## Architecture Documentation
-
-See [SERVER_DESIGN.md](./SERVER_DESIGN.md) for comprehensive architecture documentation including:
-- Session-based architecture deep dive
-- Component diagrams and state machines
-- Request flow decision trees
-- Event streaming protocol
-- Model management system
-- Security boundaries
-
-## Quick Start
-
-### 1. Configuration
-
-Copy `.env.example` to `.env` and configure:
-
-```bash
-cp .env.example .env
-```
-
-Key configuration:
-
-```env
-# GPU Configuration
-GPU_DEVICE_IDS=0,1
-GPU_DEVICE_DIFFICULTY=0:low,1:high
-
-# Session Configuration
-SESSION_IDLE_TIMEOUT_SECONDS=300
-SESSION_MAX_LIFETIME_SECONDS=3600
-SESSION_QUEUE_MAX_SIZE=5
-
-# File Service Integration
-FILE_SERVICE_URL=http://192.168.2.98:8000
-FILE_SERVICE_INTERNAL_KEY=your-internal-secret-key-here
-
-# Authentication
-INTERNAL_API_KEY=your-internal-api-key-here
-```
-
-### 2. Task Configuration
-
-The service uses three YAML files to configure tasks:
-
-#### `app/config/task_definitions.yaml`
-Defines task metadata and defaults:
-
-```yaml
-loading-test:
-  description: "Test worker that simulates GPU loading"
-  task_type: "oneoff"
-  task_difficulty: "low"
-  timeout_seconds: 60
-  metadata:
-    test_mode: true
-  model_id: "test-loading"
-```
-
-#### `app/config/task_actions.yaml`
-Maps model IDs to Docker configurations:
-
-```yaml
-test-loading:
-  source_path: ~/gpu-workers/test/loading-worker
-  dockerfile: Dockerfile
-  docker_image: loading-worker:latest
-  command: ["python", "/app/worker.py"]
-  env_vars:
-    MODEL_NAME: test-loading
-    WORKER_TYPE: test
-  build_args: {}
-```
-
-#### `app/config/model_paths.yaml`
-Specifies model file locations (optional, for tasks requiring model files):
-
-```yaml
-llama-7b:
-  path: /data/models/llama-7b
-  description: "LLaMA 7B model weights"
-  size_gb: 13.5
-```
-
-This three-file structure separates task metadata, Docker execution configuration, and model file paths for better organization and maintainability.
-
-### 3. Local Development
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-```
-
-Run the service:
-
-```bash
-python app/main.py
-```
-
-Service will be available at `http://localhost:8001`
-
-### 4. Deployment to GPU VM
-
-Deploy using the deployment script:
-
-```bash
-# Build and deploy
-./scripts/deploy.sh
-
-# Build only (no deploy)
-./scripts/deploy.sh --build-only
-
-# Deploy without rebuilding
-./scripts/deploy.sh --no-build
-```
-
-## API Endpoints
-
-**Note**: All task and session endpoints use the `/api` prefix.
-
-### Health Check
-
-```bash
-GET /health
-```
-
-Returns service status, GPU devices, active sessions, and active tasks.
-
-```bash
-GET /health/resources
-```
-
-Returns detailed resource allocation including GPU status, running tasks, and session details.
-
-### Task Submission
-
-#### Pre-defined Tasks (Recommended)
-
-```bash
-POST /api/tasks/predefined
-Content-Type: application/json
-X-API-Key: your-internal-api-key-here
-
-{
-  "task_name": "loading-test",
-  "task_difficulty": "low",
-  "timeout_seconds": 300,
-  "metadata": {
-    "custom_param": "value"
-  }
-}
-```
-
-Executes a pre-defined task from `task_definitions.yaml` configuration. The `task_name` field is required and maps to a configured task.
-
-#### Custom Tasks
-
-```bash
-POST /api/tasks/custom
-```
-
-Custom task execution (Not yet implemented - returns 501).
-
-#### Legacy Task Submission
-
-```bash
-POST /api/tasks/submit
-Content-Type: application/json
-X-API-Key: your-internal-api-key-here
-
-{
-  "task_type": "session",
-  "task_difficulty": "low",
-  "model_id": "llama-7b",
-  "task_preset": "inference",
-  "metadata": {
-    "prompt": "Hello, world!",
-    "max_tokens": 100
-  },
-  "timeout_seconds": 300
-}
-```
-
-Legacy endpoint for backward compatibility.
-
-**SSE Stream Response**:
-
-All task endpoints return an SSE stream with events:
-
-- `CONNECTION`: GPU allocated, session ready
-- `WORKER`: Container status (created, working, waiting)
-- `TEXT_DELTA`: Streaming text output
-- `TEXT`: Complete text output
-- `LOGS`: Container logs
-- `TASK_FINISH`: Task completed/failed/timeout
-
-### Session Management
-
-```bash
-# List all sessions
-GET /api/sessions
-
-# Get session details
-GET /api/sessions/{session_id}
-
-# Kill session
-DELETE /api/sessions/{session_id}
-
-# Keep session alive (reset idle timeout)
-POST /api/sessions/{session_id}/keepalive
-```
-
-## Request Flow
-
-### Pre-defined Task Pipeline (Recommended)
-
-The service uses a 7-step pipeline for executing pre-defined tasks:
-
-1. **Config Load**: `ConfigLoader` loads task configuration from YAML files
-   - `task_definitions.yaml` → Task metadata (type, difficulty, timeout)
-   - `task_actions.yaml` → Docker configuration (image, command, env vars)
-   - `model_paths.yaml` → Model file paths (if applicable)
-
-2. **Model Prepare**: `ModelDownloader` ensures model availability
-   - Checks if model exists on host (`/data/models/{model_id}`)
-   - Downloads from file-service if missing and `AUTO_FETCH_MODELS=true`
-   - Returns host path for volume mounting
-
-3. **GPU Allocate**: `GPUManager` allocates GPU based on difficulty
-   - Routes to low-difficulty GPU (RTX 4060 Ti) or high-difficulty GPU (RTX 5090)
-   - Returns device ID or rejects with 503 if all matching GPUs busy
-
-4. **Docker Create**: `DockerManager` creates one-off container
-   - Mounts model volume: `-v /host/models:/models:ro`
-   - Sets GPU passthrough: `--gpus device={gpu_id}`
-   - Applies resource limits (memory, CPU)
-
-5. **Instance Create**: `InstanceManager` tracks worker and streams logs
-   - Monitors container stdout/stderr via thread-pooled streaming
-   - Parses log output into structured SSE events
-   - Enforces task timeout
-
-6. **Task Register**: `TaskManager` tracks running task globally
-   - Registers task_id → InstanceManager mapping
-   - Enables monitoring and forced shutdown if needed
-
-7. **Stream Execution**: Client receives SSE stream with real-time events
-   - CONNECTION, WORKER, TEXT_DELTA, TEXT, LOGS, TASK_FINISH
-
-**Cleanup**: GPU released, task unregistered, container auto-removed
-
-### Session-based Task (Legacy/TODO)
-
-**First Request:**
-1. Client submits task with `task_type: "session"`
-2. Server allocates GPU and creates long-lived container
-3. Server loads model into container memory
-4. Server executes task and streams events
-5. Container stays alive, session enters WAITING state
-
-**Subsequent Requests:**
-1. Client submits task with `session_id` from first request
-2. Server enqueues task to existing session (if queue not full)
-3. Server executes task in same container (model already loaded)
-4. Session idle timer resets on each request
-
-**Session Termination:**
-- Idle timeout (300s): No activity for 5 minutes
-- Max lifetime (3600s): Session running for 1 hour
-- Manual kill: `DELETE /api/sessions/{session_id}`
-- Service shutdown: All sessions terminated
-
-## Event Streaming Protocol
-
-The service streams structured events via Server-Sent Events (SSE):
-
-```javascript
-// CONNECTION event
-event: connection
-data: {"status": "session_ready", "gpu_id": 0, "session_id": "abc123"}
-
-// WORKER event
-event: worker
-data: {"status": "working", "container_id": "def456"}
-
-// TEXT_DELTA event (streaming output)
-event: text_delta
-data: {"delta": "Hello"}
-
-// TASK_FINISH event
-event: task_finish
-data: {"status": "completed", "elapsed_seconds": 12}
-```
-
-## Model Management
-
-Models are automatically fetched from file-service if not found in local cache:
-
-1. Client requests task with `model_id: "llama-7b"`
-2. Server checks `MODEL_CACHE_DIR/llama-7b/`
-3. If not found and `AUTO_FETCH_MODELS=true`:
-   - Fetch from file-service: `POST /api/models/download`
-   - Download to `MODEL_CACHE_DIR/llama-7b/`
-4. Mount model to container: `-v /host/path:/models:ro`
-5. Set environment variable: `MODEL_PATH=/models`
-
-## GPU Workers
-
-GPU workers are Docker containers that execute tasks on GPUs. Worker images are stored in the `python/workers/` directory.
-
-### Worker Structure
+The GPU Service acts as a central coordinator, scheduler, and router for all GPU tasks.  
+It manages session workers (long-lived GPU containers), one-off workers (ephemeral execution), model caching, and request routing.
 
 ```
-python/workers/
-└── gpu-server/
-    └── test/
-        └── loading-worker/
-            ├── Dockerfile
-            ├── worker.py
-            └── build.sh
+┌─────────────────────────────────────────────────────────┐
+│                   Client (Web Server)                   │
+└────────────────────┬────────────────────────────────────┘
+                     │ POST /api/tasks/predefined (SSE)
+                     │ POST /api/tasks/oneoff (SSE)
+                     ↓
+┌────────────────────────────────────────────────────────┐
+│                   API Layer (FastAPI)                  │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐ │
+│  │ tasks.py    │  │ sessions.py  │  │ health.py      │ │
+│  └──────┬──────┘  └──────┬───────┘  └────────┬───────┘ │
+└─────────┼─────────────────┼──────────────────┼─────────┘
+          │                 │                  │
+          ↓                 ↓                  ↓
+┌─────────────────────────────────────────────────────────┐
+│            Singleton Managers (app/core/manager/)       │
+│            Global instances, one per service            │
+│                                                         │
+│  ┌────────────────────────────────────────────────┐     │
+│  │          Task Manager (State Tracker)          │     │
+│  │  • Track running tasks (task_id → metadata)    │     │
+│  │  • Provides monitoring and status queries      │     │
+│  │  • No orchestration logic (that's in handlers) │     │
+│  └────────────────┬───────────────────────────────┘     │
+│                   │                                     │
+│  ┌────────────────┼───────────────────────────────┐     │
+│  │  GPU Manager   │                               │     │
+│  │  • Allocate GPU by difficulty (low/high)       │     │
+│  │  • Track availability (is_available flag)      │     │
+│  │  • Monitor metrics (memory, temp, utilization) │     │
+│  └────────────────┼───────────────────────────────┘     │
+│                   │                                     │
+│  ┌────────────────┼───────────────────────────────┐     │
+│  │ Session Mgr    │                               │     │
+│  │  • Track sessions (id → Session mapping)       │     │
+│  │  • Find idle sessions (model + task matching)  │     │
+│  │  • Manage FIFO queues (per session)            │     │
+│  │  • SessionDispatcher: Background task dequeue  │     │
+│  └────────────────┼───────────────────────────────┘     │
+│                   │                                     │
+│  ┌────────────────┼───────────────────────────────┐     │
+│  │ Docker Mgr     │                               │     │
+│  │  • Create containers (session/one-off)         │     │
+│  │  • Stream logs via thread pool (one-off)       │     │
+│  │  • Monitor health checks (session)             │     │
+│  └────────────────┼───────────────────────────────┘     │
+│                   │                                     │
+│  ┌────────────────┼───────────────────────────────┐     │
+│  │ Model Download │                               │     │
+│  │  • Check local cache (/data/models/{id})       │     │
+│  │  • Fetch from file-service if missing          │     │
+│  │  • Extract tar.gz archives                     │     │
+│  │  • Return host path for volume mount           │     │
+│  └────────────────┼───────────────────────────────┘     │
+└───────────────────┼─────────────────────────────────────┘
+                    │
+                    ↓
+┌─────────────────────────────────────────────────────────┐
+│       Per-Request Instances (app/core/instance/)        │
+│       One instance per task request                     │
+│                                                         │
+│  ┌────────────────────────────────────────────────┐     │
+│  │     Session Task Handler (session tasks)       │     │
+│  │  1. Load config → ConfigLoader                 │     │
+│  │  2. Find/create session → SessionManager       │     │
+│  │  3. Download model → ModelDownloader (if new)  │     │
+│  │  4. Allocate GPU → GPUManager (if new)         │     │
+│  │  5. Create container → DockerManager (if new)  │     │
+│  │  6. Wait for health → WorkerHealthClient       │     │
+│  │  7. Enqueue task → SessionManager              │     │
+│  │  8. Wait for dispatcher to dequeue             │     │
+│  │  9. Send task → SessionWorkerClient (HTTP)     │     │
+│  │  10. Stream SSE events back to client          │     │
+│  │  11. Mark session WAITING when done            │     │
+│  └────────────────────────────────────────────────┘     │
+│                                                         │
+│  ┌────────────────────────────────────────────────┐     │
+│  │     OneOff Task Handler (one-off tasks)        │     │
+│  │  1. Load config → ConfigLoader                 │     │
+│  │  2. Download model → ModelDownloader           │     │
+│  │  3. Allocate GPU → GPUManager                  │     │
+│  │  4. Create container → DockerManager           │     │
+│  │  5. Stream docker logs (stdout/stderr parsing) │     │
+│  │  6. Parse events and stream to client          │     │
+│  │  7. Stop container when done                   │     │
+│  │  8. Release GPU                                │     │
+│  └────────────────────────────────────────────────┘     │
+│                                                         │
+│  ┌────────────────────────────────────────────────┐     │
+│  │ Config Loader (used by both handlers)          │     │
+│  │  • Load YAML files (definitions/actions/paths) │     │
+│  │  • Merge task definition + action + model path │     │
+│  │  • Apply request overrides                     │     │
+│  └────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────┘
+                    │
+                    ↓
+┌────────────────────────────────────────────────────────┐
+│              HTTP Clients (app/clients/)               │
+│              Used by session task handler only         │
+│                                                        │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  WorkerHealthClient                            │    │
+│  │  • Poll /health endpoint until 200             │    │
+│  │  • DNS: http://gpu-session-{id}:8000/health    │    │
+│  └────────────────────────────────────────────────┘    │
+│                                                        │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  SessionWorkerClient                           │    │
+│  │  • POST /task with task payload                │    │
+│  │  • Stream SSE events from worker response      │    │
+│  │  • DNS: http://gpu-session-{id}:8000/task      │    │
+│  └────────────────────────────────────────────────┘    │
+└───────────────────┼────────────────────────────────────┘
+                    │
+                    ↓
+┌────────────────────────────────────────────────────────┐
+│          Worker Containers (Docker)                    │
+│          Two types: Session vs One-Off                 │
+│                                                        │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  Session Workers (Long-lived, HTTP servers)    │    │
+│  │  • FastAPI HTTP server on port 8000            │    │
+│  │  • Endpoints: GET /health, POST /task          │    │
+│  │  • Named: gpu-session-{container_id[:12]}      │    │
+│  │  • Network: gpu-network (DNS resolution)       │    │
+│  │  • GPU: --gpus device=N                        │    │
+│  │  • Model: /data/models/{id} → /models (ro)     │    │
+│  │  • Env: MODEL_PATH=/models                     │    │
+│  │  • Outputs: SSE events over HTTP response      │    │
+│  │  • Lifecycle: Reused across multiple requests  │    │
+│  └────────────────────────────────────────────────┘    │
+│                                                        │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  One-Off Workers (Ephemeral, stdout)           │    │
+│  │  • Single-use container per request            │    │
+│  │  • No HTTP server, writes to stdout            │    │
+│  │  • GPU: --gpus device=N                        │    │
+│  │  • Model: /data/models/{id} → /models (ro)     │    │
+│  │  • Env: MODEL_PATH=/models                     │    │
+│  │  • Outputs: JSON events to stdout              │    │
+│  │  • Lifecycle: Created, run, stopped            │    │
+│  └────────────────────────────────────────────────┘    │
+└────────────────────────────────────────────────────────┘
 ```
 
-### Creating a Worker
 
-1. Create a directory under `python/workers/gpu-server/`
-2. Add a `Dockerfile` with your worker image
-3. Add a `build.sh` script:
+## 2. Key Features
 
-```bash
-#!/bin/bash
-docker build -t my-worker:latest .
-```
+### Session-Based Execution
+Workers are long-lived GPU containers with loaded models.  
+Tasks for the same `model_id` reuse the session to avoid repeated loading costs.
 
-4. Reference the image in `task_actions.yaml`:
-
-```yaml
-my-task:
-  docker_image: my-worker:latest
-  command: ["python", "/app/worker.py"]
-```
-
-### Worker Event Protocol
-
-Workers communicate with the service by emitting JSON events to stdout:
-
-```python
-import json
-
-def emit_event(event_type: str, data: dict):
-    event = {"event": event_type, **data}
-    print(json.dumps(event), flush=True)
-
-# Connection event
-emit_event("connection", {"status": "connected", "worker": "my-worker"})
-
-# Worker status
-emit_event("worker", {"status": "ready", "message": "Initialized"})
-
-# Streaming output
-emit_event("text_delta", {"delta": "Hello "})
-emit_event("text_delta", {"delta": "world!"})
-
-# Completion
-emit_event("finish", {"status": "completed"})
-```
-
-### Deployment
-
-Worker images are automatically built during deployment:
-
-```bash
-./scripts/deploy.sh
-```
-
-The deployment script:
-1. Syncs `python/workers/` to GPU server (Step 3.5)
-2. Finds all `build.sh` scripts
-3. Executes each `build.sh` to build worker images
-4. Images are available on the GPU server for task execution
-
-## Docker Configuration
-
-### Prerequisites on GPU VM
-
-- Docker with nvidia-docker support
-- NVIDIA drivers and CUDA
-- Docker socket accessible at `/var/run/docker.sock`
-
-### Container Permissions
-
-The service container needs:
-- Docker socket mounted: `-v /var/run/docker.sock:/var/run/docker.sock`
-- GPU access: `--gpus all`
-- Model cache directory: `-v $MODEL_CACHE_DIR:$MODEL_CACHE_DIR`
-
-### Worker Container Configuration
-
-Worker containers created by the service get:
-- Specific GPU: `--gpus device=0`
-- Model volume: `-v /host/models:/models:ro`
-- Environment variables: `MODEL_PATH=/models`
-- Resource limits: `--memory=16g`, `--cpu-quota=100000`
-
-## Monitoring
-
-### View Service Logs
-
-```bash
-ssh $VM_HOST 'docker logs -f gpu-service'
-```
-
-### Check GPU Status
-
-```bash
-curl http://localhost:8001/health | jq '.gpus'
-```
-
-### List Active Sessions
-
-```bash
-curl -H "X-API-Key: your-key" http://localhost:8001/api/sessions
-```
-
-### Container Management
-
-```bash
-# List all containers (including workers)
-ssh $VM_HOST 'docker ps -a'
-
-# View worker logs
-ssh $VM_HOST 'docker logs <container_id>'
-
-# Stop worker manually
-ssh $VM_HOST 'docker stop <container_id>'
-```
-
-## Development
-
-### Project Structure
+### Bounded Queue per Session
+Each session maintains a FIFO queue with a configurable maximum:
 
 ```
-gpu-server/
-├── app/
-│   ├── api/              # API endpoints
-│   │   ├── health.py     # Health check
-│   │   ├── tasks.py      # Task submission
-│   │   └── sessions.py   # Session management
-│   ├── config/           # Configuration
-│   │   ├── task_definitions.yaml  # Task metadata
-│   │   ├── task_actions.yaml      # Docker configs
-│   │   └── model_paths.yaml       # Model file paths
-│   ├── core/
-│   │   ├── manager/      # Singleton managers
-│   │   │   ├── docker_manager.py   # Container orchestration
-│   │   │   ├── gpu_manager.py      # GPU allocation
-│   │   │   ├── session_manager.py  # Session lifecycle
-│   │   │   ├── task_manager.py     # Task state tracker
-│   │   │   └── model_downloader.py # Model caching
-│   │   ├── instance/     # Per-request instances
-│   │   │   ├── instance_manager.py   # Log streaming
-│   │   │   ├── config_loader.py      # YAML loading
-│   │   │   └── task_request_handler.py  # Pipeline executor
-│   │   ├── config.py     # Settings
-│   │   └── dependencies.py
-│   ├── models/           # Data models
-│   │   ├── events.py
-│   │   ├── session.py
-│   │   ├── task.py
-│   │   └── gpu.py
-│   └── main.py           # FastAPI application
-├── scripts/
-│   └── deploy.sh         # Deployment script
-├── .env.example
-├── Dockerfile
-├── requirements.txt
-├── README.md
-└── SERVER_DESIGN.md
+max_queue: configurable
 ```
 
-The core is organized into two subdirectories:
-- **`manager/`**: Singleton managers (one per service)
-- **`instance/`**: Per-request instances (one per task)
+### One Active Task per Session
+A session never executes more than one task simultaneously, ensuring GPU memory stability.
 
-### Running Tests
+### Automatic Model Fetching
+Models are downloaded from file-service on demand and cached locally.
 
-```bash
-pytest tests/
+### Server-Sent Events (SSE)
+The GPU service relays all worker output through a unified SSE channel.
+
+### Task Difficulty Routing
+Tasks can target specific GPUs (e.g., low difficulty vs. high difficulty) using `GPU_DEVICE_DIFFICULTY`.
+
+---
+
+## 3. Session State Machine
+
+```
+INITIALIZING
+      ↓
+    READY
+      │
+      │ new task arrives
+      ▼
+ ENQUEUE (queue_len ≤ max_queue)
+      │
+      │ dequeue next
+      ▼
+  WORKING  ─────────────► ENQUEUE
+      │                     ▲
+      │                     │ queue_len ≤ max_queue
+      ▼                     │
+    READY ◄─────────────────┘
+      ↓
+ TERMINATED
 ```
 
-### Code Style
+### Guarantees
 
-```bash
-black app/
-isort app/
-flake8 app/
+✔ Never more than one active task  
+✔ Queue never exceeds `max_queue`  
+✔ If queue is full:  
+- GPU free → new session  
+- GPU busy → reject with `503`
+
+---
+
+## 4. Dispatch Logic
+
+```
+task arrives
+  │
+  ▼
+find existing session for model
+  │
+  ├── if queue_len < max_queue → enqueue
+  │
+  └── if queue_full:
+  │         ├─ if gpu free → create new session
+  │         └─ else → 503 reject
+  │
+  ▼
+Session Dispatcher executes tasks sequentially
 ```
 
-## Troubleshooting
+### Behavior Summary
 
-### Service won't start
+- Reuse a session if possible  
+- Only one active execution per session  
+- Sessions scale horizontally when needed  
+- System rejects overload instead of creating unlimited queues  
 
-Check logs:
-```bash
-ssh $VM_HOST 'docker logs gpu-service'
+---
+
+## 5. Concurrency Rules
+
+| Behavior | Allowed | Not Allowed |
+|---------|---------|-------------|
+| Queue tasks inside a session | ✔ | — |
+| Parallel execution inside a single session | ❌ | GPU memory unsafe |
+| Create new session when queue full & GPU free | ✔ | — |
+| Create new session when queue full & GPU busy | ❌ | 503 |
+
+---
+
+## 6. SSE Routing
+
+Workers never stream directly to clients.
+
+```
+Worker → GPU Service → Client
 ```
 
-Common issues:
-- Docker socket not mounted
-- GPU not accessible (check nvidia-docker)
-- Model cache directory doesn't exist
-- Invalid configuration in .env
+This ensures:
+- stable SSE protocol  
+- unified logging  
+- secure routing  
+- consistent event formatting  
 
-### Task fails with "No available GPU"
+---
 
-- Check GPU allocation: `curl http://localhost:8001/health | jq '.gpus'`
-- Verify `task_difficulty` matches GPU difficulty in config
-- Check if all GPUs are occupied by sessions
+## 7. DNS & Addressing
 
-### Session queue full
+Session workers are addressed by container name, not IP:
 
-- Check session queue: `curl http://localhost:8001/api/sessions/{session_id}`
-- Increase `SESSION_QUEUE_MAX_SIZE` in .env
-- Kill idle sessions manually
+```
+gpu-session-{uuid}.internal:8000
+```
 
-### Model not found
+DNS is provided by a custom Docker network.
 
-- Check `MODEL_CACHE_DIR` exists on host
-- Verify `AUTO_FETCH_MODELS=true` in .env
-- Check file-service connectivity
-- Verify `FILE_SERVICE_INTERNAL_KEY` is correct
+---
 
-### Container creation fails
+## 8. Health Readiness
 
-- Check Docker socket permissions
-- Verify allowed images in `ALLOWED_DOCKER_IMAGES`
-- Check Docker logs: `ssh $VM_HOST 'journalctl -u docker'`
+Workers must return:
 
-## Security Considerations
+```
+{ "status": "READY" }
+```
 
-- API key authentication on all endpoints (except health)
-- Docker image whitelist: `ALLOWED_DOCKER_IMAGES`
-- Resource limits on worker containers (memory, CPU)
-- Read-only model volume mounts
-- No host network access for workers
-- Internal-only file-service communication
+HTTP 200 alone is not sufficient; the service waits for a READY status before scheduling tasks.
 
-## Performance Tuning
+---
 
-### Async I/O Optimization
+## 9. Configuration
 
-The service uses thread-pooled log streaming to prevent event loop blocking:
+```
+session:
+  max_queue: configurable
+  allow_model_reuse: true
+  enforce_single_exec: true
+  health_ready_required: true
+  idle_timeout_seconds: 300
+  max_lifetime_seconds: 3600
+```
 
-- **Problem**: Docker-py's `container.logs()` is synchronous, blocks the event loop
-- **Solution**: `loop.run_in_executor()` runs blocking I/O in thread pool
-- **Benefit**: Health checks respond quickly even during active log streaming
-- **Implementation**: See `docker_manager.stream_logs()` (line 282-333)
+---
 
-### Concurrency Settings
+## 10. Session Task Flow
 
-The service runs as a single Uvicorn worker with high concurrency limits:
+### Cold Start
+1. No existing session found  
+2. Model downloaded if missing  
+3. GPU allocated  
+4. Worker container started  
+5. Wait for /health to return READY  
+6. Session enters READY state  
+7. First task enqueued  
 
-- `--workers 1`: Single process (manager state is in-memory, not Redis)
-- `--limit-concurrency 1000`: Supports 1000 concurrent connections
-- `--backlog 2048`: Queue size for burst traffic
+### Subsequent Requests
+- If queue < max_queue → enqueue  
+- If queue = max_queue:  
+  - GPU free → create new session  
+  - GPU busy → reject  
 
-**Why single worker?** GPU Manager, Task Manager, and Session Manager maintain in-memory state. Multiple workers would require Redis for shared state (future enhancement).
+### Execution
+- Worker processes tasks one-by-one  
+- GPU Service relays SSE to client  
 
-### Session Configuration
+### Termination
+- Idle timeout  
+- Max lifetime  
+- Manual deletion  
 
-- `SESSION_IDLE_TIMEOUT_SECONDS`: Lower = less memory usage, higher = better reuse
-- `SESSION_MAX_LIFETIME_SECONDS`: Prevent memory leaks from long-lived containers
-- `SESSION_QUEUE_MAX_SIZE`: Higher = more concurrent tasks per session
+---
 
-### Task Configuration
+## 11. Request Flow Diagram
 
-- `DEFAULT_TASK_TIMEOUT`: Balance between allowing long tasks and preventing hangs
-- `MAX_TASK_TIMEOUT`: Hard limit to prevent abuse
+```
+Client  
+  │ task
+  ▼
+GPU Service  
+  │
+  ├─ Find matching session
+  │     ├─ queue < max_queue → enqueue
+  │     └─ queue full:
+  │            ├─ GPU free → new session
+  │            └─ reject (503)
+  │
+  ▼
+Session Dispatcher  
+  │
+  └→ POST /task to session worker  
+        │
+        └→ stream SSE back to client
+```
 
-### GPU Configuration
+---
 
-- `GPU_METRICS_REFRESH_INTERVAL`: Lower = more accurate status, higher = less overhead
+## 12. Worker Types
 
-## License
+### Session Workers (long-lived)
+- Expose /health and /task  
+- Handle multiple sequential tasks  
+- Use bounded queues  
 
-See main repository license.
+### One-Off Workers (ephemeral)
+- No queue  
+- Execute a single task and exit  
+- Use stdout JSON event streaming  
+
+---
+
+## 13. Summary
+
+This GPU service architecture provides:
+- Efficient model reuse  
+- Deterministic and safe execution (1 active task per session)  
+- Horizontal scaling controlled by GPU availability  
+- Bounded queues for fairness and overload protection  
+- Clean SSE streaming via a central coordinator  
+- Automatic model fetching and caching  
+- Unified DNS-based addressing for session workers  
+
+This combined system forms a robust, scalable GPU inference backend suitable for LLMs, multimodal models, fine-tuning pipelines, and high-throughput GPU workloads.

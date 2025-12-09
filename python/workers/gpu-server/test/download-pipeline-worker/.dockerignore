@@ -1,0 +1,39 @@
+# Exclude services directory (not needed for worker builds)
+services/
+
+# Exclude Python cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+
+# Exclude virtual environments
+**/venv/
+**/env/
+**/.venv/
+
+# Exclude git
+**/.git/
+**/.gitignore
+
+# Exclude IDE
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/~
+
+# Exclude test files
+**/*_test.py
+**/tests/
+**/test_*.py
+
+# Exclude documentation
+**/*.md
+!README.md
+
+# Exclude build artifacts
+**/*.egg-info/
+**/dist/
+**/build/

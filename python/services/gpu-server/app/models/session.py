@@ -24,6 +24,9 @@ class Session:
     # Optional: predefined task name (for session reuse optimization)
     predefined_task_name: Optional[str] = None
 
+    # Scheduler type (centralized or distributed)
+    scheduler_type: str = "centralized"
+
     # Status
     status: WorkerStatus = WorkerStatus.INITIALIZING
 
@@ -38,6 +41,12 @@ class Session:
     # Request queue (FIFO, max 3-5 requests)
     request_queue: asyncio.Queue = field(default_factory=lambda: asyncio.Queue(maxsize=5))
 
+    # Task completion events (task_id -> Event)
+    _task_events: dict = field(default_factory=dict)
+
+    # Ready event - signaled when worker is ready (health check passes)
+    _ready_event: Optional[asyncio.Event] = None
+
     # Metadata
     current_task_id: Optional[str] = None
 
@@ -49,8 +58,10 @@ class Session:
         model_id: str,
         task_difficulty: str,
         predefined_task_name: Optional[str] = None,
+        scheduler_type: str = "centralized",
         idle_timeout_seconds: int = 300,
-        max_lifetime_seconds: int = 3600
+        max_lifetime_seconds: int = 3600,
+        session_id: Optional[str] = None
     ) -> "Session":
         """
         Create a new session.
@@ -61,19 +72,22 @@ class Session:
             model_id: Model identifier
             task_difficulty: Task difficulty level
             predefined_task_name: Optional predefined task name (for session reuse)
+            scheduler_type: Scheduler type (centralized or distributed)
             idle_timeout_seconds: Idle timeout
             max_lifetime_seconds: Max lifetime
+            session_id: Optional pre-generated session ID (if None, generates new UUID)
 
         Returns:
             New Session instance
         """
         return cls(
-            session_id=str(uuid.uuid4()),
+            session_id=session_id if session_id else str(uuid.uuid4()),
             container_id=container_id,
             gpu_device_id=gpu_device_id,
             model_id=model_id,
             task_difficulty=task_difficulty,
             predefined_task_name=predefined_task_name,
+            scheduler_type=scheduler_type,
             idle_timeout_seconds=idle_timeout_seconds,
             max_lifetime_seconds=max_lifetime_seconds
         )
@@ -84,7 +98,7 @@ class Session:
 
     def is_idle_timeout_exceeded(self) -> bool:
         """Check if session has been idle too long."""
-        if self.status != WorkerStatus.WAITING:
+        if self.status == WorkerStatus.WORKING:
             return False
         idle_time = (datetime.utcnow() - self.last_activity).total_seconds()
         return idle_time > self.idle_timeout_seconds
@@ -103,6 +117,36 @@ class Session:
     def is_queue_full(self) -> bool:
         """Check if request queue is full."""
         return self.request_queue.full()
+
+    def create_task_event(self, task_id: str) -> asyncio.Event:
+        """Create an event for a task to wait on."""
+        event = asyncio.Event()
+        self._task_events[task_id] = event
+        return event
+
+    def get_task_event(self, task_id: str) -> Optional[asyncio.Event]:
+        """Get the event for a task."""
+        return self._task_events.get(task_id)
+
+    def complete_task(self, task_id: str):
+        """Mark a task as completed and signal its event."""
+        event = self._task_events.pop(task_id, None)
+        if event:
+            event.set()
+
+    def create_ready_event(self) -> asyncio.Event:
+        """Create ready event for waiting on worker health check."""
+        self._ready_event = asyncio.Event()
+        return self._ready_event
+
+    def get_ready_event(self) -> Optional[asyncio.Event]:
+        """Get the ready event."""
+        return self._ready_event
+
+    def signal_ready(self):
+        """Signal that worker is ready (health check passed)."""
+        if self._ready_event:
+            self._ready_event.set()
 
     def to_dict(self) -> dict:
         """Convert to dictionary for API response."""

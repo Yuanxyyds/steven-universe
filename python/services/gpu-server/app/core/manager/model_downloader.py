@@ -5,12 +5,15 @@ Model downloader with automatic fetching from file-service.
 import os
 import logging
 import asyncio
+import tarfile
+import shutil
 from pathlib import Path
 from typing import Optional, Dict
 
 import httpx
 
 from app.core.config import settings
+from app.clients.file_service_client import file_service_client
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +57,13 @@ class ModelDownloader:
         logger.info(f"Model Downloader initialized with {len(self._cache_registry)} cached models")
 
     async def _scan_existing_models(self):
-        """Scan cache directory for existing models."""
+        """Scan cache directory for existing models (directories only, as tar.gz are extracted)."""
         try:
             for item in self._cache_dir.iterdir():
-                if item.is_dir() or item.is_file():
+                if item.is_dir():
                     model_id = item.name
                     self._cache_registry[model_id] = str(item)
-                    logger.debug(f"Found cached model: {model_id}")
+                    logger.debug(f"Found cached model directory: {model_id}")
         except Exception as e:
             logger.error(f"Error scanning existing models: {e}")
 
@@ -103,14 +106,18 @@ class ModelDownloader:
         http_client: httpx.AsyncClient
     ) -> Optional[str]:
         """
-        Fetch model from file-service and save to cache.
+        Fetch model tar.gz from file-service, extract, and save to cache.
+
+        Downloads from: GET /internal/download/models/{model_id}.tar.gz
+        Expected format: {model_id}.tar.gz
+        Extracts to: {cache_dir}/{model_id}/
 
         Args:
-            model_id: Model identifier
+            model_id: Model identifier (without .tar.gz extension)
             http_client: HTTP client for file-service requests
 
         Returns:
-            Local path to downloaded model, or None if failed
+            Local path to extracted model directory, or None if failed
         """
         # Prevent concurrent fetches of same model
         if model_id not in self._fetch_locks:
@@ -123,40 +130,80 @@ class ModelDownloader:
 
             logger.info(f"Fetching model {model_id} from file-service...")
 
+            tar_path = self._cache_dir / f"{model_id}.tar.gz"
+            model_dir = self._cache_dir / model_id
+
             try:
-                # Request model from file-service
-                # Assuming file-service has an internal API for model access
-                response = await http_client.get(
-                    f"{settings.FILE_SERVICE_URL}/internal/models/{model_id}",
-                    headers={"X-Internal-Key": settings.FILE_SERVICE_INTERNAL_KEY},
-                    timeout=300.0  # 5 minute timeout for large models
+                # Download tar.gz from file-service
+                success = await file_service_client.download_model(
+                    model_id=model_id,
+                    destination_path=tar_path,
+                    http_client=http_client
                 )
 
-                if response.status_code != 200:
-                    logger.error(f"Failed to fetch model {model_id}: HTTP {response.status_code}")
+                if not success:
+                    logger.error(f"Failed to download model {model_id}")
                     return None
 
-                # Save model to cache
-                model_path = self._cache_dir / model_id
-                model_path.parent.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Extracting model {model_id} to {model_dir}...")
 
-                # Write model data
-                with open(model_path, 'wb') as f:
-                    f.write(response.content)
+                # Create model directory
+                model_dir.mkdir(parents=True, exist_ok=True)
 
-                # Register in cache
-                model_path_str = str(model_path)
-                self._cache_registry[model_id] = model_path_str
+                # Extract tar.gz with path traversal validation
+                with tarfile.open(tar_path, 'r:gz') as tar:
+                    # Validate all paths to prevent traversal attacks
+                    for member in tar.getmembers():
+                        member_path = model_dir / member.name
+                        try:
+                            resolved = member_path.resolve()
+                            if not str(resolved).startswith(str(model_dir.resolve())):
+                                raise ValueError(f"Path traversal attempt detected: {member.name}")
+                        except Exception as e:
+                            logger.error(f"Invalid path in tar: {member.name} - {e}")
+                            raise ValueError(f"Invalid archive member: {member.name}")
 
-                logger.info(f"Successfully cached model {model_id} at {model_path_str}")
-                return model_path_str
+                    # Extract all files
+                    tar.extractall(path=model_dir)
 
-            except httpx.TimeoutException:
-                logger.error(f"Timeout fetching model {model_id} from file-service")
+                logger.info(f"Extraction complete to {model_dir}")
+
+                # Cleanup tar.gz after successful extraction
+                if tar_path.exists():
+                    tar_path.unlink()
+                    logger.debug(f"Cleaned up tar.gz: {tar_path}")
+
+                # Register extracted directory in cache
+                model_dir_str = str(model_dir)
+                self._cache_registry[model_id] = model_dir_str
+
+                logger.info(f"Successfully cached model {model_id} at {model_dir_str}")
+                return model_dir_str
+
+            except tarfile.TarError as e:
+                logger.error(f"Failed to extract tar.gz for model {model_id}: {e}")
+                self._cleanup_failed_download(tar_path, model_dir)
                 return None
             except Exception as e:
-                logger.error(f"Error fetching model {model_id}: {e}")
+                logger.error(f"Error fetching/extracting model {model_id}: {e}", exc_info=True)
+                self._cleanup_failed_download(tar_path, model_dir)
                 return None
+
+    def _cleanup_failed_download(self, tar_path: Path, model_dir: Path):
+        """Cleanup partial downloads on failure."""
+        try:
+            if tar_path.exists():
+                tar_path.unlink()
+                logger.debug(f"Cleaned up partial tar.gz: {tar_path}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup tar.gz: {e}")
+
+        try:
+            if model_dir.exists():
+                shutil.rmtree(model_dir)
+                logger.debug(f"Cleaned up partial extraction: {model_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup model directory: {e}")
 
     def get_cached_models(self) -> Dict[str, str]:
         """Get dictionary of all cached models."""

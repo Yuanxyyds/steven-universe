@@ -239,10 +239,20 @@ ssh "$VM_HOST" << EOF
     # Load environment variables
     export \$(grep -v '^#' .env | xargs)
 
-    # Run container with GPU support
+    # Create custom Docker network for container DNS resolution
+    if ! docker network inspect gpu-network >/dev/null 2>&1; then
+        echo "Creating gpu-network..."
+        docker network create gpu-network
+        echo "✓ Network created"
+    else
+        echo "✓ Network gpu-network already exists"
+    fi
+
+    # Run container with GPU support on custom network
     docker run -d \
         --name gpu-service \
         --restart unless-stopped \
+        --network gpu-network \
         --gpus all \
         -p 8001:8000 \
         -v /var/run/docker.sock:/var/run/docker.sock \

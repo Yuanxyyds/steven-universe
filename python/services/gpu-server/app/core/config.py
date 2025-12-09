@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     SESSION_IDLE_TIMEOUT_SECONDS: int = 300  # 5 minutes
     SESSION_MAX_LIFETIME_SECONDS: int = 3600  # 1 hour
     SESSION_QUEUE_MAX_SIZE: int = 5
-    SESSION_MONITOR_INTERVAL: int = 30
+    SESSION_MONITOR_INTERVAL: int = 2
 
     # Task Configuration
     DEFAULT_TASK_TIMEOUT: int = 300  # 5 minutes

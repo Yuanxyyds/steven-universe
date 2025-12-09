@@ -32,3 +32,13 @@ loading-test:
     MODEL_NAME: test-loading
     WORKER_TYPE: test
   build_args: {}
+
+download-pipeline-test:
+  source_path: ~/gpu-workers/test/download-pipeline-worker
+  dockerfile: Dockerfile
+  docker_image: download-pipeline-worker:latest
+  command: ["python", "/app/worker.py"]
+  env_vars:
+    WORKER_TYPE: session
+    SERVER_PORT: "8000"
+  build_args: {}

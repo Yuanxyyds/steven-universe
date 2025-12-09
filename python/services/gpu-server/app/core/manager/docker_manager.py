@@ -123,28 +123,39 @@ class DockerManager:
                 )
             ]
 
-            # Create container
-            container = self._client.containers.run(
-                image=docker_image,
-                command=command,
-                environment=env,
-                volumes=volumes,
-                device_requests=device_requests,
-                detach=True,
-                remove=False,  # Do NOT auto-remove (session is long-lived)
-                stdin_open=True,  # Keep stdin open for commands
-                tty=False,
-                mem_limit=settings.TASK_MEMORY_LIMIT,
-                cpu_quota=settings.TASK_CPU_QUOTA,
-                name=f"gpu-session-{session_id[:8]}",
-                labels={
-                    "gpu-service.session_id": session_id,
-                    "gpu-service.model_id": model_id,
-                    "gpu-service.gpu_id": str(gpu_id)
-                }
-            )
+            # Create container (blocking operation - run in thread pool)
+            def _create_container_sync():
+                """Synchronous container creation - runs in thread pool."""
+                container = self._client.containers.run(
+                    image=docker_image,
+                    command=command,
+                    environment=env,
+                    volumes=volumes,
+                    device_requests=device_requests,
+                    network="gpu-network",  # Custom network for container DNS resolution
+                    detach=True,
+                    remove=False,  # Do NOT auto-remove (session is long-lived)
+                    stdin_open=True,  # Keep stdin open for commands
+                    tty=False,
+                    mem_limit=settings.TASK_MEMORY_LIMIT,
+                    cpu_quota=settings.TASK_CPU_QUOTA,
+                    labels={
+                        "gpu-service.session_id": session_id,
+                        "gpu-service.model_id": model_id,
+                        "gpu-service.gpu_id": str(gpu_id)
+                    }
+                )
+                # Set container name after creation using container ID
+                container.rename(f"gpu-session-{container.id[:12]}")
+                return container
+
+            container = await asyncio.to_thread(_create_container_sync)
 
             logger.info(f"Created session container {container.id[:12]} for session {session_id}")
+
+            # Start background health monitoring for this container (docker manager responsibility)
+            asyncio.create_task(self._monitor_container_health(container.id, session_id))
+
             return container.id
 
         except docker.errors.ImageNotFound:
@@ -156,6 +167,51 @@ class DockerManager:
         except Exception as e:
             logger.error(f"Unexpected error creating session container: {e}", exc_info=True)
             raise
+
+    async def _monitor_container_health(self, container_id: str, session_id: str, startup_timeout: int = 30):
+        """
+        Monitor container health during startup.
+
+        Polls /health endpoint until ready, then updates session status.
+        Session lifecycle monitoring (idle/lifetime) is handled by SessionManager.
+
+        Args:
+            container_id: Container to monitor
+            session_id: Session ID to update
+            startup_timeout: Max seconds to wait for initial health check
+        """
+        from app.core.manager.session_manager import session_manager
+        from app.clients.worker_health_client import worker_health_client
+        from shared_schemas.gpu_service import WorkerStatus
+
+        container_name = f"gpu-session-{container_id[:12]}"
+        logger.info(f"Starting health monitoring for {container_name}")
+
+        # Wait for container to become healthy
+        is_healthy = await worker_health_client.wait_until_healthy(
+            container_id=container_id,
+            timeout=startup_timeout,
+            retry_interval=1.0
+        )
+
+        if is_healthy:
+            # Worker is ready, update session status and get updated session
+            session = await session_manager.update_session_status(session_id, WorkerStatus.WAITING)
+
+            # Signal ready event if handler is waiting
+            if session:
+                session.signal_ready()
+
+            logger.info(f"Container {container_name} is healthy, session status updated to WAITING")
+        else:
+            # Health check failed
+            logger.error(f"Container {container_name} failed health check")
+            session = await session_manager.update_session_status(session_id, WorkerStatus.KILLED)
+
+            # Signal ready event with failure (so handler doesn't hang)
+            if session:
+                session.signal_ready()
+
 
     async def create_oneoff_container(
         self,
@@ -208,24 +264,28 @@ class DockerManager:
                 )
             ]
 
-            # Create container
-            container = self._client.containers.run(
-                image=docker_image,
-                command=command,
-                environment=env,
-                volumes=volumes,
-                device_requests=device_requests,
-                detach=True,
-                remove=True,  # Auto-remove after completion
-                mem_limit=settings.TASK_MEMORY_LIMIT,
-                cpu_quota=settings.TASK_CPU_QUOTA,
-                name=f"gpu-task-{task_id[:8]}",
-                labels={
-                    "gpu-service.task_id": task_id,
-                    "gpu-service.gpu_id": str(gpu_id),
-                    "gpu-service.type": "oneoff"
-                }
-            )
+            # Create container (blocking operation - run in thread pool)
+            def _create_container_sync():
+                """Synchronous container creation - runs in thread pool."""
+                return self._client.containers.run(
+                    image=docker_image,
+                    command=command,
+                    environment=env,
+                    volumes=volumes,
+                    device_requests=device_requests,
+                    detach=True,
+                    remove=True,  # Auto-remove after completion
+                    mem_limit=settings.TASK_MEMORY_LIMIT,
+                    cpu_quota=settings.TASK_CPU_QUOTA,
+                    name=f"gpu-task-{task_id[:8]}",
+                    labels={
+                        "gpu-service.task_id": task_id,
+                        "gpu-service.gpu_id": str(gpu_id),
+                        "gpu-service.type": "oneoff"
+                    }
+                )
+
+            container = await asyncio.to_thread(_create_container_sync)
 
             logger.info(f"Created one-off container {container.id[:12]} for task {task_id}")
             return container.id
@@ -340,15 +400,24 @@ class DockerManager:
             container_id: Container ID
             timeout: Timeout in seconds before force kill
         """
-        try:
-            container = self._client.containers.get(container_id)
-            container.stop(timeout=timeout)
-            logger.info(f"Stopped container {container_id[:12]}")
+        def _stop_sync():
+            """Synchronous stop operation - runs in thread pool."""
+            try:
+                container = self._client.containers.get(container_id)
+                container.stop(timeout=timeout)
+                logger.info(f"Stopped container {container_id[:12]}")
+            except docker.errors.NotFound:
+                logger.warning(f"Container {container_id} not found (already removed?)")
+            except Exception as e:
+                logger.error(f"Error stopping container {container_id}: {e}")
+                raise
 
-        except docker.errors.NotFound:
-            logger.warning(f"Container {container_id} not found (already removed?)")
-        except Exception as e:
-            logger.error(f"Error stopping container {container_id}: {e}")
+        # Run blocking Docker operation in thread pool
+        try:
+            await asyncio.to_thread(_stop_sync)
+        except Exception:
+            # Exception already logged in _stop_sync
+            pass
 
     async def remove_container(self, container_id: str, force: bool = False):
         """
