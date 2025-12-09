@@ -18,7 +18,7 @@ from app.models.session import Session
 from app.models.task import Task
 from app.core.config import settings
 from app.core.manager.gpu_manager import gpu_manager
-from shared_schemas.gpu_service import SessionStatus
+from shared_schemas.gpu_service import WorkerStatus
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,8 @@ class SessionManager:
         container_id: str,
         gpu_device_id: int,
         model_id: str,
-        task_difficulty: str
+        task_difficulty: str,
+        predefined_task_name: Optional[str] = None
     ) -> Session:
         """
         Create a new session.
@@ -81,6 +82,7 @@ class SessionManager:
             gpu_device_id: Allocated GPU device ID
             model_id: Model identifier
             task_difficulty: Task difficulty level
+            predefined_task_name: Optional predefined task name (for session reuse)
 
         Returns:
             Created Session instance
@@ -91,12 +93,18 @@ class SessionManager:
                 gpu_device_id=gpu_device_id,
                 model_id=model_id,
                 task_difficulty=task_difficulty,
+                predefined_task_name=predefined_task_name,
                 idle_timeout_seconds=settings.SESSION_IDLE_TIMEOUT_SECONDS,
                 max_lifetime_seconds=settings.SESSION_MAX_LIFETIME_SECONDS
             )
 
             self._sessions[session.session_id] = session
-            logger.info(f"Created session {session.session_id} on GPU {gpu_device_id} for model {model_id}")
+
+            task_info = f"predefined task '{predefined_task_name}'" if predefined_task_name else "custom task"
+            logger.info(
+                f"Created session {session.session_id} on GPU {gpu_device_id} "
+                f"for model {model_id} ({task_info})"
+            )
 
             return session
 
@@ -124,10 +132,60 @@ class SessionManager:
         """
         async with self._lock:
             for session in self._sessions.values():
-                if (session.status == SessionStatus.WAITING and
+                if (session.status == WorkerStatus.WAITING and
                     session.model_id == model_id and
                     not session.is_queue_full):
                     logger.info(f"Found idle session {session.session_id} for model {model_id} (reuse optimization)")
+                    return session
+
+            return None
+
+    async def find_idle_session(
+        self,
+        model_id: str,
+        predefined_task_name: Optional[str] = None
+    ) -> Optional[Session]:
+        """
+        Find an IDLE session for reuse based on model_id and optional predefined_task_name.
+
+        Matching logic:
+        - If predefined_task_name provided: match BOTH predefined_task_name AND model_id
+        - If no predefined_task_name: match model_id only
+
+        This allows:
+        - Multiple instances of same predefined task with different models (no conflict)
+        - Session reuse for same predefined task + model combination
+
+        Args:
+            model_id: Model identifier (required)
+            predefined_task_name: Optional predefined task name
+
+        Returns:
+            Session if found and reusable, None otherwise
+        """
+        async with self._lock:
+            for session in self._sessions.values():
+                # Skip if not WAITING or queue is full
+                if session.status != WorkerStatus.WAITING or session.is_queue_full:
+                    continue
+
+                # Check model_id match (always required)
+                if session.model_id != model_id:
+                    continue
+
+                # If predefined_task_name provided, must match
+                if predefined_task_name is not None:
+                    if session.predefined_task_name == predefined_task_name:
+                        logger.info(
+                            f"Found idle session {session.session_id} for predefined task "
+                            f"'{predefined_task_name}' with model {model_id} (reuse)"
+                        )
+                        return session
+                else:
+                    # No predefined task requirement, just model_id match
+                    logger.info(
+                        f"Found idle session {session.session_id} for model {model_id} (reuse)"
+                    )
                     return session
 
             return None
@@ -197,7 +255,7 @@ class SessionManager:
         if session:
             session.mark_activity()
 
-    async def update_session_status(self, session_id: str, status: SessionStatus):
+    async def update_session_status(self, session_id: str, status: WorkerStatus):
         """
         Update session status.
 
@@ -228,7 +286,7 @@ class SessionManager:
             logger.info(f"Killing session {session_id} (reason={reason})")
 
             # Update status
-            session.status = SessionStatus.KILLED
+            session.status = WorkerStatus.KILLED
 
             # Release GPU
             await gpu_manager.release_gpu(session.gpu_device_id)

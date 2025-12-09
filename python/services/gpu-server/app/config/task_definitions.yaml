@@ -33,13 +33,6 @@ loading-test:
   timeout_seconds: 60
   metadata: {}
 
-loading-test-session:
-  description: "Session-based model loading test"
-  task_type: session
-  task_difficulty: low
-  timeout_seconds: 300
-  metadata: {}
-
 # =============================================================================
 # LLM Tasks
 # =============================================================================

@@ -8,7 +8,7 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Optional
 
-from shared_schemas.gpu_service import SessionStatus
+from shared_schemas.gpu_service import WorkerStatus
 
 
 @dataclass
@@ -21,8 +21,11 @@ class Session:
     model_id: str
     task_difficulty: str
 
+    # Optional: predefined task name (for session reuse optimization)
+    predefined_task_name: Optional[str] = None
+
     # Status
-    status: SessionStatus = SessionStatus.INITIALIZING
+    status: WorkerStatus = WorkerStatus.INITIALIZING
 
     # Timestamps
     created_at: datetime = field(default_factory=datetime.utcnow)
@@ -45,6 +48,7 @@ class Session:
         gpu_device_id: int,
         model_id: str,
         task_difficulty: str,
+        predefined_task_name: Optional[str] = None,
         idle_timeout_seconds: int = 300,
         max_lifetime_seconds: int = 3600
     ) -> "Session":
@@ -56,6 +60,7 @@ class Session:
             gpu_device_id: Allocated GPU device ID
             model_id: Model identifier
             task_difficulty: Task difficulty level
+            predefined_task_name: Optional predefined task name (for session reuse)
             idle_timeout_seconds: Idle timeout
             max_lifetime_seconds: Max lifetime
 
@@ -68,6 +73,7 @@ class Session:
             gpu_device_id=gpu_device_id,
             model_id=model_id,
             task_difficulty=task_difficulty,
+            predefined_task_name=predefined_task_name,
             idle_timeout_seconds=idle_timeout_seconds,
             max_lifetime_seconds=max_lifetime_seconds
         )
@@ -78,7 +84,7 @@ class Session:
 
     def is_idle_timeout_exceeded(self) -> bool:
         """Check if session has been idle too long."""
-        if self.status != SessionStatus.WAITING:
+        if self.status != WorkerStatus.WAITING:
             return False
         idle_time = (datetime.utcnow() - self.last_activity).total_seconds()
         return idle_time > self.idle_timeout_seconds
@@ -106,6 +112,7 @@ class Session:
             "gpu_device_id": self.gpu_device_id,
             "container_id": self.container_id,
             "model_id": self.model_id,
+            "predefined_task_name": self.predefined_task_name,
             "created_at": self.created_at.isoformat(),
             "last_activity": self.last_activity.isoformat(),
             "queue_size": self.queue_size,

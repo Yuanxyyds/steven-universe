@@ -26,8 +26,8 @@ class TaskStatus(str, Enum):
     FAILED = "failed"
 
 
-class SessionStatus(str, Enum):
-    """Session lifecycle status."""
+class WorkerStatus(str, Enum):
+    """Worker container lifecycle status (applies to both oneoff and session workers)."""
     INITIALIZING = "initializing"  # Container starting, model loading
     WAITING = "waiting"            # Idle, ready for requests
     WORKING = "working"            # Processing a request
@@ -42,12 +42,11 @@ class TaskDifficulty(str, Enum):
 
 class EventType(str, Enum):
     """Streaming event types for SSE."""
-    CONNECTION = "connection"      # GPU allocation status
-    WORKER = "worker"              # Worker container status
-    TEXT_DELTA = "text_delta"      # Streaming text piece
-    TEXT = "text"                  # Final complete text
-    LOGS = "logs"                  # Debug/info logs
-    TASK_FINISH = "task_finish"    # Task completion
+    CONNECTED = "connected"        # Connection established, GPU allocated
+    TEXT_DELTA = "text_delta"      # Streaming text output (chunk)
+    TEXT = "text"                  # Final complete text output
+    LOGS = "logs"                  # Debug/info/worker status logs
+    COMPLETED = "completed"        # Task completion
 
 
 # ============================================================================
@@ -112,7 +111,7 @@ class StreamEvent(BaseModel):
 class SessionResponse(BaseModel):
     """Session information."""
     session_id: str
-    status: SessionStatus
+    status: WorkerStatus
     gpu_device_id: int
     container_id: str
     model_id: Optional[str] = None

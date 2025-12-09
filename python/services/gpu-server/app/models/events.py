@@ -32,14 +32,14 @@ class StreamEvent:
         return f"event: {self.event_type.value}\ndata: {json.dumps(self.data)}\n\n"
 
     @classmethod
-    def connection(
+    def connected(
         cls,
         status: str,
         gpu_id: Optional[int] = None,
         session_id: Optional[str] = None,
         message: Optional[str] = None
     ) -> "StreamEvent":
-        """Create CONNECTION event."""
+        """Create CONNECTED event."""
         data = {"status": status}
         if gpu_id is not None:
             data["gpu_id"] = gpu_id
@@ -48,23 +48,18 @@ class StreamEvent:
         if message:
             data["message"] = message
 
-        return cls(event_type=EventType.CONNECTION, data=data)
+        return cls(event_type=EventType.CONNECTED, data=data)
 
     @classmethod
-    def worker(
+    def connection(
         cls,
         status: str,
-        container_id: Optional[str] = None,
-        error: Optional[str] = None
+        gpu_id: Optional[int] = None,
+        session_id: Optional[str] = None,
+        message: Optional[str] = None
     ) -> "StreamEvent":
-        """Create WORKER event."""
-        data = {"status": status}
-        if container_id:
-            data["container_id"] = container_id
-        if error:
-            data["error"] = error
-
-        return cls(event_type=EventType.WORKER, data=data)
+        """Create CONNECTION event (deprecated - use connected() instead)."""
+        return cls.connected(status=status, gpu_id=gpu_id, session_id=session_id, message=message)
 
     @classmethod
     def text_delta(cls, delta: str) -> "StreamEvent":
@@ -91,20 +86,20 @@ class StreamEvent:
         return cls(event_type=EventType.LOGS, data=data)
 
     @classmethod
-    def task_finish(
+    def completed(
         cls,
         status: str,
         elapsed_seconds: Optional[int] = None,
         error: Optional[str] = None
     ) -> "StreamEvent":
-        """Create TASK_FINISH event."""
+        """Create COMPLETED event."""
         data = {"status": status}
         if elapsed_seconds is not None:
             data["elapsed_seconds"] = elapsed_seconds
         if error:
             data["error"] = error
 
-        return cls(event_type=EventType.TASK_FINISH, data=data)
+        return cls(event_type=EventType.COMPLETED, data=data)
 
 
 class EventParser:

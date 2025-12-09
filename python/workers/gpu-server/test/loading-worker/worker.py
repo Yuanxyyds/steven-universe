@@ -13,7 +13,7 @@ import os
 
 def emit_event(event_type: str, data: dict):
     """Emit a structured JSON event to stdout."""
-    event = {"event": event_type, **data}
+    event = {"type": event_type, "data": data}
     print(json.dumps(event), flush=True)
 
 
@@ -23,24 +23,24 @@ def main():
     model_path = os.environ.get("MODEL_PATH", "/models")
 
     try:
-        # CONNECTION event
-        emit_event("connection", {
+        # CONNECTED event (was CONNECTION)
+        emit_event("connected", {
             "status": "connected",
             "worker": "loading-worker",
             "model": model_name
         })
 
-        # WORKER event - starting
-        emit_event("worker", {
-            "status": "initializing",
-            "message": "Initializing GPU..."
+        # LOGS event - starting (was WORKER)
+        emit_event("logs", {
+            "log": "Initializing GPU...",
+            "level": "info"
         })
         time.sleep(10)
 
         # Simulate loading model into GPU memory
-        emit_event("worker", {
-            "status": "loading",
-            "message": f"Loading model {model_name} into GPU memory..."
+        emit_event("logs", {
+            "log": f"Loading model {model_name} into GPU memory...",
+            "level": "info"
         })
 
         # Simulate loading time (5 seconds)
@@ -51,9 +51,9 @@ def main():
             })
 
         # Model loaded
-        emit_event("worker", {
-            "status": "ready",
-            "message": "Model loaded successfully"
+        emit_event("logs", {
+            "log": "Model loaded successfully",
+            "level": "info"
         })
 
         # Simulate some GPU computation
@@ -67,9 +67,9 @@ def main():
         })
 
         # Simulate unloading model
-        emit_event("worker", {
-            "status": "cleaning_up",
-            "message": "Unloading model from GPU..."
+        emit_event("logs", {
+            "log": "Unloading model from GPU...",
+            "level": "info"
         })
         time.sleep(1)
 
@@ -77,15 +77,14 @@ def main():
             "delta": "GPU memory freed.\n"
         })
 
-        # FINISH event
-        emit_event("finish", {
-            "status": "completed",
-            "message": "Worker completed successfully"
+        # COMPLETED event (was FINISH)
+        emit_event("completed", {
+            "status": "completed"
         })
 
     except Exception as e:
         # Error event
-        emit_event("finish", {
+        emit_event("completed", {
             "status": "failed",
             "error": str(e)
         })

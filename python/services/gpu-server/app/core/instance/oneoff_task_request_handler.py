@@ -1,5 +1,5 @@
 """
-Task request handler with pipeline execution.
+OneOff task request handler with pipeline execution.
 """
 
 import uuid
@@ -18,14 +18,13 @@ from shared_schemas.gpu_service import TaskType
 logger = logging.getLogger(__name__)
 
 
-class TaskRequestHandler:
+class OneOffTaskRequestHandler:
     """
-    Handles complete execution pipeline for a single task request.
+    Handles complete execution pipeline for a single oneoff task request.
 
     Pipeline:
     0. Simple endpoint creates handler and calls execute()
     1. Load config (ConfigLoader instance per-request)
-    1.5. Check if session type (TODO - raise NotImplementedError for now)
     2. Prepare model (ModelDownloader singleton, only if model_path provided)
     3. Allocate GPU (TaskManager.gpu_manager singleton)
     4. Create instance manager (InstanceManager instance per-request)
@@ -78,13 +77,6 @@ class TaskRequestHandler:
             logger.info(f"[{self.task_id}] Step 1: Loading config for task {self.task_name}")
             await self._load_config()
 
-            # Step 1.5: Check if session type (TODO - skip for now)
-            if self.task_def.task_type == TaskType.SESSION.value:
-                raise NotImplementedError(
-                    "Session tasks not yet implemented in new pipeline. "
-                    "Use task_type='oneoff' for now."
-                )
-
             # Step 2: Prepare model (only if model_path provided)
             logger.info(f"[{self.task_id}] Step 2: Preparing model")
             await self._prepare_model()
@@ -93,8 +85,8 @@ class TaskRequestHandler:
             logger.info(f"[{self.task_id}] Step 3: Allocating GPU (difficulty={self.task_def.task_difficulty})")
             await self._allocate_gpu()
 
-            # Emit CONNECTION event
-            yield StreamEvent.connection(
+            # Emit CONNECTED event
+            yield StreamEvent.connected(
                 status="allocated",
                 gpu_id=self.gpu_id,
                 session_id=None

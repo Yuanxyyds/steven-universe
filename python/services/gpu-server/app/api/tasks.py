@@ -23,7 +23,7 @@ async def run_predefined_task(request: PreDefinedTaskRequest):
     """
     Execute a pre-defined task with SSE streaming.
 
-    Uses clean pipeline pattern with TaskRequestHandler for execution.
+    Uses clean pipeline pattern with OneOffTaskRequestHandler for execution.
 
     Args:
         request: Pre-defined task request
@@ -34,12 +34,12 @@ async def run_predefined_task(request: PreDefinedTaskRequest):
     Raises:
         HTTPException: 404 if task not found, 503 if no resources available
     """
-    from app.core.instance.task_request_handler import TaskRequestHandler
+    from app.core.instance.oneoff_task_request_handler import OneOffTaskRequestHandler
 
     logger.info(f"Pre-defined task submission: task_name={request.task_name}")
 
     # Create handler
-    handler = TaskRequestHandler(
+    handler = OneOffTaskRequestHandler(
         task_name=request.task_name,
         request_overrides={
             'task_difficulty': request.task_difficulty,
