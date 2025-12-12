@@ -1,95 +1,195 @@
 #!/usr/bin/env python3
 """
-GPU Loading Worker - Test Worker for GPU Service
+Loading Test Worker - Session-based test worker for GPU Service
 
-Simulates loading and unloading a model from GPU memory.
-Emits structured JSON events that the GPU service parses.
+Simulates loading and unloading a model from GPU memory using FastAPI HTTP server.
+Streams SSE events to GPU service.
 """
 
-import json
-import sys
-import time
 import os
+import asyncio
+import logging
+from typing import AsyncIterator
 
-def emit_event(event_type: str, data: dict):
-    """Emit a structured JSON event to stdout."""
-    event = {"type": event_type, "data": data}
-    print(json.dumps(event), flush=True)
+import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+
+# Import shared schemas
+from shared_schemas.worker.test.loading.schemas import LoadingTestTaskRequest
+from shared_schemas.worker.protocol import WorkerHealthResponse, WorkerStopResponse
+from shared_schemas.gpu_service import StreamEvent
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
-def main():
-    # Get model info from environment
-    model_name = os.environ.get("MODEL_NAME", "test-model")
-    model_path = os.environ.get("MODEL_PATH", "/models")
+# ============================================================================
+# Configuration
+# ============================================================================
 
+SERVER_PORT = int(os.environ.get("SERVER_PORT", "8000"))
+MODEL_NAME = os.environ.get("MODEL_NAME", "test-model")
+MODEL_PATH = os.environ.get("MODEL_PATH", "/models")
+
+logger.info(f"Worker Configuration:")
+logger.info(f"  SERVER_PORT: {SERVER_PORT}")
+logger.info(f"  MODEL_NAME: {MODEL_NAME}")
+logger.info(f"  MODEL_PATH: {MODEL_PATH}")
+
+
+# ============================================================================
+# FastAPI App
+# ============================================================================
+
+app = FastAPI(title="Loading Test Worker")
+
+
+# ============================================================================
+# Task Processing
+# ============================================================================
+
+async def process_task(task: LoadingTestTaskRequest) -> AsyncIterator[str]:
+    """
+    Process task: simulate GPU loading and computation with SSE streaming.
+
+    Emits SSE events:
+    - logs: Status messages
+    - text_delta: Streaming text output
+    - completed: Task completion
+
+    Args:
+        task: Task request
+
+    Yields:
+        SSE event strings
+    """
     try:
-        # CONNECTED event (was CONNECTION)
-        emit_event("connected", {
-            "status": "connected",
-            "worker": "loading-worker",
-            "model": model_name
-        })
+        logger.info(f"Processing task {task.task_id} for model {MODEL_NAME}")
 
-        # LOGS event - starting (was WORKER)
-        emit_event("logs", {
-            "log": "Initializing GPU...",
-            "level": "info"
-        })
-        time.sleep(10)
+        # Log: Initializing GPU (reduced from 10s to 2s)
+        yield StreamEvent.logs(
+            log="Initializing GPU...",
+            level="info"
+        ).to_sse_format()
+        await asyncio.sleep(2)
 
-        # Simulate loading model into GPU memory
-        emit_event("logs", {
-            "log": f"Loading model {model_name} into GPU memory...",
-            "level": "info"
-        })
+        # Log: Loading model (reduced from 15s to 3s total)
+        yield StreamEvent.logs(
+            log=f"Loading model {MODEL_NAME} into GPU memory...",
+            level="info"
+        ).to_sse_format()
 
-        # Simulate loading time (5 seconds)
-        for i in range(1, 6):
-            time.sleep(3)
-            emit_event("text_delta", {
-                "delta": f"Loading progress: {i * 20}%\n"
-            })
+        # Simulate loading progress (3 iterations instead of 5, 1s each instead of 3s)
+        for i in range(1, 4):
+            await asyncio.sleep(1)
+            yield StreamEvent.text_delta(
+                delta=f"Loading progress: {i * 33}%\n"
+            ).to_sse_format()
 
         # Model loaded
-        emit_event("logs", {
-            "log": "Model loaded successfully",
-            "level": "info"
-        })
+        yield StreamEvent.logs(
+            log="Model loaded successfully",
+            level="info"
+        ).to_sse_format()
 
-        # Simulate some GPU computation
-        emit_event("text_delta", {
-            "delta": "\nPerforming GPU computation...\n"
-        })
-        time.sleep(2)
+        # Simulate GPU computation (reduced from 2s to 1s)
+        yield StreamEvent.text_delta(
+            delta="\nPerforming GPU computation...\n"
+        ).to_sse_format()
+        await asyncio.sleep(1)
 
-        emit_event("text", {
-            "content": f"Model {model_name} computation complete!\nGPU memory allocated: ~2GB\n"
-        })
+        yield StreamEvent.text_delta(
+            delta=f"Model {MODEL_NAME} computation complete!\nGPU memory allocated: ~2GB\n"
+        ).to_sse_format()
 
-        # Simulate unloading model
-        emit_event("logs", {
-            "log": "Unloading model from GPU...",
-            "level": "info"
-        })
-        time.sleep(1)
+        # Simulate unloading model (1s, unchanged)
+        yield StreamEvent.logs(
+            log="Unloading model from GPU...",
+            level="info"
+        ).to_sse_format()
+        await asyncio.sleep(1)
 
-        emit_event("text_delta", {
-            "delta": "GPU memory freed.\n"
-        })
+        yield StreamEvent.text_delta(
+            delta="GPU memory freed.\n"
+        ).to_sse_format()
 
-        # COMPLETED event (was FINISH)
-        emit_event("completed", {
-            "status": "completed"
-        })
+        # Completed event
+        yield StreamEvent.completed(
+            status="completed",
+            model=MODEL_NAME
+        ).to_sse_format()
+
+        logger.info(f"Task {task.task_id} completed successfully")
 
     except Exception as e:
-        # Error event
-        emit_event("completed", {
-            "status": "failed",
-            "error": str(e)
-        })
-        sys.exit(1)
+        logger.error(f"Error processing task {task.task_id}: {e}", exc_info=True)
+        yield StreamEvent.completed(
+            status="failed",
+            error=str(e)
+        ).to_sse_format()
 
+
+# ============================================================================
+# Endpoints
+# ============================================================================
+
+@app.get("/health", response_model=WorkerHealthResponse)
+async def health():
+    """Health check endpoint."""
+    return WorkerHealthResponse(status="healthy")
+
+
+@app.post("/stop", response_model=WorkerStopResponse)
+async def stop():
+    """
+    Stop current task execution gracefully (async, returns immediately).
+
+    Returns 200 immediately while task stops in background.
+    """
+    logger.info("Stop signal received, stopping current task...")
+    # TODO: Implement task cancellation logic
+    # For now, just return stopping status
+    return WorkerStopResponse(status="stopping")
+
+
+@app.post("/task")
+async def submit_task(task: LoadingTestTaskRequest):
+    """
+    Submit task for processing with SSE streaming.
+
+    Args:
+        task: Task request
+
+    Returns:
+        StreamingResponse with SSE events
+    """
+    logger.info(f"Task endpoint called: {task.task_id}")
+
+    return StreamingResponse(
+        process_task(task),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
+
+
+# ============================================================================
+# Main
+# ============================================================================
 
 if __name__ == "__main__":
-    main()
+    logger.info(f"Starting Loading Test Worker on port {SERVER_PORT}...")
+
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=SERVER_PORT,
+        log_level="info"
+    )

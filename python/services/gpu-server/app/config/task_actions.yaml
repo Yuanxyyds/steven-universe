@@ -7,6 +7,7 @@
 #   - Define which Docker image to use
 #   - Specify build context and Dockerfile location
 #   - Configure runtime command and environment variables
+#   - Specify worker client for GPU service communication
 #
 # Structure:
 #   {task_name}:
@@ -16,6 +17,7 @@
 #     command: Command to run in container
 #     env_vars: Environment variables to set
 #     build_args: Docker build arguments (optional)
+#     worker_client_path: Import path to worker client class
 #
 # Note: The service will mount the model path automatically if model_id is specified in task_definitions.yaml
 
@@ -30,8 +32,10 @@ loading-test:
   command: ["python", "/app/worker.py"]
   env_vars:
     MODEL_NAME: test-loading
-    WORKER_TYPE: test
+    WORKER_TYPE: session
+    SERVER_PORT: "8000"
   build_args: {}
+  worker_client_path: "app.clients.worker.test.loading.LoadingTestClient"
 
 download-pipeline-test:
   source_path: ~/gpu-workers/test/download-pipeline-worker
@@ -42,3 +46,4 @@ download-pipeline-test:
     WORKER_TYPE: session
     SERVER_PORT: "8000"
   build_args: {}
+  worker_client_path: "app.clients.worker.test.download_pipeline.DownloadPipelineClient"

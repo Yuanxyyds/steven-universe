@@ -78,9 +78,10 @@ class ConfigLoader:
         return TaskDefinition(
             task_name=task_name,
             description=task_data.get("description", ""),
-            task_type=task_data.get("task_type", "oneoff"),
+            task_type=task_data.get("task_type", "session"),
             task_difficulty=task_data.get("task_difficulty", "low"),
             timeout_seconds=task_data.get("timeout_seconds", 300),
+            idle_timeout_seconds=task_data.get("idle_timeout_seconds", 300),
             metadata=task_data.get("metadata", {}),
             model_id=task_data.get("model_id"),
             scheduler_type=task_data.get("scheduler_type", "centralized")
@@ -104,6 +105,11 @@ class ConfigLoader:
 
         action_data = config[task_name]
 
+        # Validate worker_client_path is present
+        if "worker_client_path" not in action_data:
+            logger.error(f"Missing worker_client_path for task: {task_name}")
+            return None
+
         return TaskAction(
             task_name=task_name,
             source_path=action_data.get("source_path", ""),
@@ -111,7 +117,8 @@ class ConfigLoader:
             docker_image=action_data.get("docker_image", ""),
             command=action_data.get("command", []),
             env_vars=action_data.get("env_vars", {}),
-            build_args=action_data.get("build_args", {})
+            build_args=action_data.get("build_args", {}),
+            worker_client_path=action_data.get("worker_client_path", "")
         )
 
     def get_model_path(self, model_id: str) -> Optional[ModelPath]:

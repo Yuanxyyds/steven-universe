@@ -23,8 +23,7 @@ from app.core.manager.model_downloader import model_downloader
 from app.core.manager.session_manager import session_manager
 from app.core.manager.gpu_manager import gpu_manager
 from app.core.manager.docker_manager import docker_manager
-from app.models.events import StreamEvent
-from shared_schemas.gpu_service import WorkerStatus
+from shared_schemas.gpu_service import StreamEvent, WorkerStatus
 
 logger = logging.getLogger(__name__)
 
@@ -228,7 +227,8 @@ class SessionTaskHandler:
                 model_id=self.task_def.model_id,
                 task_difficulty=self.task_def.task_difficulty,
                 predefined_task_name=self.task_name,
-                scheduler_type=self.task_def.scheduler_type
+                scheduler_type=self.task_def.scheduler_type,
+                idle_timeout_seconds=self.task_def.idle_timeout_seconds
             )
 
             # Step 2e: Create ready event and wait for worker to be ready
@@ -263,7 +263,8 @@ class SessionTaskHandler:
             docker_image=self.task_action.docker_image,
             command=self.task_action.command,
             env_vars=self.task_action.env_vars,
-            model_host_path=f"/data/models/{self.task_def.model_id}"
+            model_host_path=f"/data/models/{self.task_def.model_id}",
+            worker_client_path=self.task_action.worker_client_path
         )
 
         logger.info(f"[{self.task_id}] Container created: {container_id[:12]}")
@@ -302,7 +303,12 @@ class SessionTaskHandler:
         task_event: asyncio.Event
     ) -> AsyncIterator[StreamEvent]:
         """Process task with centralized scheduling."""
-        from app.clients.session_worker_client import session_worker_client
+        from app.clients.worker.registry import worker_client_registry
+
+        # Get worker client dynamically from registry
+        worker_client = worker_client_registry.get_client(
+            self.task_action.worker_client_path
+        )
 
         try:
             logger.info(f"[{self.task_id}] Waiting for dispatcher to dequeue task")
@@ -327,8 +333,8 @@ class SessionTaskHandler:
 
             logger.info(f"[{self.task_id}] Task dequeued by dispatcher, processing")
 
-            # Send task to worker and stream responses
-            async for event in session_worker_client.send_task_and_stream(
+            # Send task to worker and stream responses using dynamic client
+            async for event in worker_client.send_task_and_stream(
                 container_id=session.container_id,
                 task=task,
                 timeout_seconds=self.task_def.timeout_seconds
@@ -342,9 +348,13 @@ class SessionTaskHandler:
                 error=str(e)
             )
         finally:
-            # Always cleanup: update status, mark activity, clean event
-            # Update session status back to WAITING
-            await session_manager.update_session_status(session.session_id, WorkerStatus.WAITING)
+            # Always cleanup: update status with stop signal, mark activity, clean event
+            # Update session status back to WAITING (sends stop signal to worker)
+            await session_manager.update_session_status_with_cleanup(
+                session_id=session.session_id,
+                new_status=WorkerStatus.WAITING,
+                worker_client_path=self.task_action.worker_client_path
+            )
 
             # Mark session activity
             await session_manager.mark_activity(session.session_id)
@@ -359,7 +369,12 @@ class SessionTaskHandler:
         task_event: asyncio.Event
     ) -> AsyncIterator[StreamEvent]:
         """Process task with distributed scheduling."""
-        from app.clients.session_worker_client import session_worker_client
+        from app.clients.worker.registry import worker_client_registry
+
+        # Get worker client dynamically from registry
+        worker_client = worker_client_registry.get_client(
+            self.task_action.worker_client_path
+        )
 
         # Distributed: Wait for dispatcher to dequeue, then send immediately
         # Session status stays WAITING (worker manages internal queue)
@@ -390,8 +405,8 @@ class SessionTaskHandler:
             # Mark session activity before sending
             await session_manager.mark_activity(session.session_id)
 
-            # Send task to worker and stream responses
-            async for event in session_worker_client.send_task_and_stream(
+            # Send task to worker and stream responses using dynamic client
+            async for event in worker_client.send_task_and_stream(
                 container_id=session.container_id,
                 task=task,
                 timeout_seconds=self.task_def.timeout_seconds

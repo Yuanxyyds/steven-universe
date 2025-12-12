@@ -3,11 +3,10 @@ Docker Manager - Manages Docker containers using DOOD pattern.
 
 Handles:
 - Creating session containers (long-lived)
-- Creating one-off containers (ephemeral)
 - GPU passthrough via --gpus device=N
 - Volume mounts for models
-- Log streaming
 - Container lifecycle management
+- Health monitoring
 """
 
 import asyncio
@@ -77,7 +76,8 @@ class DockerManager:
         docker_image: str,
         command: List[str],
         env_vars: Dict[str, str],
-        model_host_path: str
+        model_host_path: str,
+        worker_client_path: str
     ) -> str:
         """
         Create a long-lived session container.
@@ -90,6 +90,7 @@ class DockerManager:
             command: Command to execute
             env_vars: Environment variables
             model_host_path: Host path to model directory
+            worker_client_path: Import path to worker client (for health checks)
 
         Returns:
             Container ID
@@ -154,7 +155,9 @@ class DockerManager:
             logger.info(f"Created session container {container.id[:12]} for session {session_id}")
 
             # Start background health monitoring for this container (docker manager responsibility)
-            asyncio.create_task(self._monitor_container_health(container.id, session_id))
+            asyncio.create_task(
+                self._monitor_container_health(container.id, session_id, worker_client_path)
+            )
 
             return container.id
 
@@ -168,7 +171,13 @@ class DockerManager:
             logger.error(f"Unexpected error creating session container: {e}", exc_info=True)
             raise
 
-    async def _monitor_container_health(self, container_id: str, session_id: str, startup_timeout: int = 30):
+    async def _monitor_container_health(
+        self,
+        container_id: str,
+        session_id: str,
+        worker_client_path: str,
+        startup_timeout: int = 30
+    ):
         """
         Monitor container health during startup.
 
@@ -178,17 +187,21 @@ class DockerManager:
         Args:
             container_id: Container to monitor
             session_id: Session ID to update
+            worker_client_path: Import path to worker client (for dynamic loading)
             startup_timeout: Max seconds to wait for initial health check
         """
         from app.core.manager.session_manager import session_manager
-        from app.clients.worker_health_client import worker_health_client
+        from app.clients.worker.registry import worker_client_registry
         from shared_schemas.gpu_service import WorkerStatus
 
         container_name = f"gpu-session-{container_id[:12]}"
         logger.info(f"Starting health monitoring for {container_name}")
 
-        # Wait for container to become healthy
-        is_healthy = await worker_health_client.wait_until_healthy(
+        # Get worker client dynamically
+        worker_client = worker_client_registry.get_client(worker_client_path)
+
+        # Wait for container to become healthy using worker-specific client
+        is_healthy = await worker_client.wait_until_healthy(
             container_id=container_id,
             timeout=startup_timeout,
             retry_interval=1.0
@@ -212,93 +225,6 @@ class DockerManager:
             if session:
                 session.signal_ready()
 
-
-    async def create_oneoff_container(
-        self,
-        task_id: str,
-        gpu_id: int,
-        docker_image: str,
-        command: List[str],
-        env_vars: Dict[str, str],
-        volume_mounts: Dict[str, str]
-    ) -> str:
-        """
-        Create an ephemeral one-off container (auto-removed after completion).
-
-        Args:
-            task_id: Task identifier
-            gpu_id: GPU device ID to allocate
-            docker_image: Docker image to use
-            command: Command to execute
-            env_vars: Environment variables
-            volume_mounts: Additional volume mounts (host_path: container_path)
-
-        Returns:
-            Container ID
-
-        Raises:
-            docker.errors.DockerException: If container creation fails
-        """
-        logger.info(f"Creating one-off container for task {task_id} on GPU {gpu_id}")
-
-        try:
-            # Prepare environment variables
-            env = {
-                **env_vars,
-                "TASK_ID": task_id,
-            }
-
-            # Prepare volume mounts
-            volumes = {}
-            for host_path, container_path in volume_mounts.items():
-                volumes[host_path] = {
-                    "bind": container_path,
-                    "mode": "rw"
-                }
-
-            # GPU device request
-            device_requests = [
-                DeviceRequest(
-                    device_ids=[str(gpu_id)],
-                    capabilities=[["gpu"]]
-                )
-            ]
-
-            # Create container (blocking operation - run in thread pool)
-            def _create_container_sync():
-                """Synchronous container creation - runs in thread pool."""
-                return self._client.containers.run(
-                    image=docker_image,
-                    command=command,
-                    environment=env,
-                    volumes=volumes,
-                    device_requests=device_requests,
-                    detach=True,
-                    remove=True,  # Auto-remove after completion
-                    mem_limit=settings.TASK_MEMORY_LIMIT,
-                    cpu_quota=settings.TASK_CPU_QUOTA,
-                    name=f"gpu-task-{task_id[:8]}",
-                    labels={
-                        "gpu-service.task_id": task_id,
-                        "gpu-service.gpu_id": str(gpu_id),
-                        "gpu-service.type": "oneoff"
-                    }
-                )
-
-            container = await asyncio.to_thread(_create_container_sync)
-
-            logger.info(f"Created one-off container {container.id[:12]} for task {task_id}")
-            return container.id
-
-        except docker.errors.ImageNotFound:
-            logger.error(f"Docker image not found: {docker_image}")
-            raise
-        except docker.errors.APIError as e:
-            logger.error(f"Docker API error creating one-off container: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error creating one-off container: {e}", exc_info=True)
-            raise
 
     async def execute_command_in_container(
         self,

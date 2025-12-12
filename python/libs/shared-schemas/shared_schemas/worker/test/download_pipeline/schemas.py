@@ -1,7 +1,9 @@
 """
-Download Pipeline Worker Schemas
+Download Pipeline Test Worker Schemas
 
-Shared schemas for GPU service <-> download-pipeline-worker communication.
+Shared schemas for GPU service <-> download-pipeline test worker communication.
+
+Note: Health and stop endpoints use shared protocol schemas from worker.protocol
 """
 
 from typing import Dict, Any
@@ -9,7 +11,7 @@ from pydantic import BaseModel, Field
 
 
 # ============================================================================
-# Request/Response
+# Task Request/Response (Worker-Specific)
 # ============================================================================
 
 class DownloadPipelineTaskRequest(BaseModel):
@@ -27,20 +29,13 @@ class DownloadPipelineTaskRequest(BaseModel):
     )
 
 
-class DownloadPipelineHealthResponse(BaseModel):
-    """
-    Worker health check response.
-
-    Returned from: GET /health
-    """
-    status: str = Field(..., description="Health status: healthy, unhealthy")
-    worker: str = Field(..., description="Worker name")
-    model_path: str = Field(..., description="Base model path")
-
+# ============================================================================
+# Status Response (Worker-Specific, Optional)
+# ============================================================================
 
 class DownloadPipelineStatusResponse(BaseModel):
     """
-    Worker detailed status response.
+    Worker detailed status response (worker-specific).
 
     Returned from: GET /status
     """

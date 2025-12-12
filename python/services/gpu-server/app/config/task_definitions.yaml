@@ -16,10 +16,12 @@
 # Structure:
 #   {task_name}:
 #     description: Human-readable description
-#     task_type: oneoff | session (default, can be overridden)
+#     task_type: session (oneoff removed)
 #     task_difficulty: low | high (default, can be overridden)
 #     model_id: Model identifier (optional, can be overridden)
-#     timeout_seconds: Default timeout (can be overridden)
+#     timeout_seconds: Task execution timeout (can be overridden)
+#     idle_timeout_seconds: Session idle timeout before termination
+#     scheduler_type: centralized | distributed
 #     metadata: Default parameters (merged with client metadata)
 
 # =============================================================================
@@ -28,9 +30,11 @@
 
 loading-test:
   description: "Test task that simulates GPU model loading and unloading"
-  task_type: oneoff
+  task_type: session
   task_difficulty: low
-  timeout_seconds: 60
+  timeout_seconds: 10
+  idle_timeout_seconds: 5
+  scheduler_type: centralized
   metadata: {}
 
 download-pipeline-test:
@@ -38,7 +42,8 @@ download-pipeline-test:
   task_type: session
   task_difficulty: low
   model_id: Qwen3-4B-Instruct
-  timeout_seconds: 300
+  timeout_seconds: 10
+  idle_timeout_seconds: 30
   scheduler_type: centralized
   metadata: {}
 

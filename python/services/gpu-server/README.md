@@ -7,15 +7,14 @@ This architecture is designed for high-throughput inference workloads where mode
 
 ## 1. High-Level Architecture
 
-The GPU Service acts as a central coordinator, scheduler, and router for all GPU tasks.  
-It manages session workers (long-lived GPU containers), one-off workers (ephemeral execution), model caching, and request routing.
+The GPU Service acts as a central coordinator, scheduler, and router for all GPU tasks.
+It manages session workers (long-lived GPU containers), model caching, and request routing.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                   Client (Web Server)                   │
 └────────────────────┬────────────────────────────────────┘
                      │ POST /api/tasks/predefined (SSE)
-                     │ POST /api/tasks/oneoff (SSE)
                      ↓
 ┌────────────────────────────────────────────────────────┐
 │                   API Layer (FastAPI)                  │
@@ -53,9 +52,8 @@ It manages session workers (long-lived GPU containers), one-off workers (ephemer
 │                   │                                     │
 │  ┌────────────────┼───────────────────────────────┐     │
 │  │ Docker Mgr     │                               │     │
-│  │  • Create containers (session/one-off)         │     │
-│  │  • Stream logs via thread pool (one-off)       │     │
-│  │  • Monitor health checks (session)             │     │
+│  │  • Create session containers                   │     │
+│  │  • Monitor health checks                       │     │
 │  └────────────────┼───────────────────────────────┘     │
 │                   │                                     │
 │  ┌────────────────┼───────────────────────────────┐     │
@@ -88,18 +86,6 @@ It manages session workers (long-lived GPU containers), one-off workers (ephemer
 │  └────────────────────────────────────────────────┘     │
 │                                                         │
 │  ┌────────────────────────────────────────────────┐     │
-│  │     OneOff Task Handler (one-off tasks)        │     │
-│  │  1. Load config → ConfigLoader                 │     │
-│  │  2. Download model → ModelDownloader           │     │
-│  │  3. Allocate GPU → GPUManager                  │     │
-│  │  4. Create container → DockerManager           │     │
-│  │  5. Stream docker logs (stdout/stderr parsing) │     │
-│  │  6. Parse events and stream to client          │     │
-│  │  7. Stop container when done                   │     │
-│  │  8. Release GPU                                │     │
-│  └────────────────────────────────────────────────┘     │
-│                                                         │
-│  ┌────────────────────────────────────────────────┐     │
 │  │ Config Loader (used by both handlers)          │     │
 │  │  • Load YAML files (definitions/actions/paths) │     │
 │  │  • Merge task definition + action + model path │     │
@@ -129,12 +115,12 @@ It manages session workers (long-lived GPU containers), one-off workers (ephemer
                     ↓
 ┌────────────────────────────────────────────────────────┐
 │          Worker Containers (Docker)                    │
-│          Two types: Session vs One-Off                 │
+│          Session-based workers only                    │
 │                                                        │
 │  ┌────────────────────────────────────────────────┐    │
 │  │  Session Workers (Long-lived, HTTP servers)    │    │
 │  │  • FastAPI HTTP server on port 8000            │    │
-│  │  • Endpoints: GET /health, POST /task          │    │
+│  │  • Endpoints: GET /health, POST /task, POST /stop │
 │  │  • Named: gpu-session-{container_id[:12]}      │    │
 │  │  • Network: gpu-network (DNS resolution)       │    │
 │  │  • GPU: --gpus device=N                        │    │
@@ -142,17 +128,6 @@ It manages session workers (long-lived GPU containers), one-off workers (ephemer
 │  │  • Env: MODEL_PATH=/models                     │    │
 │  │  • Outputs: SSE events over HTTP response      │    │
 │  │  • Lifecycle: Reused across multiple requests  │    │
-│  └────────────────────────────────────────────────┘    │
-│                                                        │
-│  ┌────────────────────────────────────────────────┐    │
-│  │  One-Off Workers (Ephemeral, stdout)           │    │
-│  │  • Single-use container per request            │    │
-│  │  • No HTTP server, writes to stdout            │    │
-│  │  • GPU: --gpus device=N                        │    │
-│  │  • Model: /data/models/{id} → /models (ro)     │    │
-│  │  • Env: MODEL_PATH=/models                     │    │
-│  │  • Outputs: JSON events to stdout              │    │
-│  │  • Lifecycle: Created, run, stopped            │    │
 │  └────────────────────────────────────────────────┘    │
 └────────────────────────────────────────────────────────┘
 ```
@@ -364,14 +339,10 @@ Session Dispatcher
 ## 12. Worker Types
 
 ### Session Workers (long-lived)
-- Expose /health and /task  
-- Handle multiple sequential tasks  
-- Use bounded queues  
-
-### One-Off Workers (ephemeral)
-- No queue  
-- Execute a single task and exit  
-- Use stdout JSON event streaming  
+- Expose /health, /task, and /stop endpoints
+- Handle multiple sequential tasks
+- Use bounded queues
+- Persistent containers with model reuse
 
 ---
 

@@ -232,6 +232,7 @@ class SessionManager:
         task_difficulty: str,
         predefined_task_name: Optional[str] = None,
         scheduler_type: str = "centralized",
+        idle_timeout_seconds: Optional[int] = None,
         session_id: Optional[str] = None
     ) -> Session:
         """
@@ -244,6 +245,7 @@ class SessionManager:
             task_difficulty: Task difficulty level
             predefined_task_name: Optional predefined task name (for session reuse)
             scheduler_type: Scheduler type (centralized or distributed)
+            idle_timeout_seconds: Session idle timeout (uses setting default if None)
             session_id: Optional pre-generated session ID (if None, Session.create generates one)
 
         Returns:
@@ -257,7 +259,7 @@ class SessionManager:
                 task_difficulty=task_difficulty,
                 predefined_task_name=predefined_task_name,
                 scheduler_type=scheduler_type,
-                idle_timeout_seconds=settings.SESSION_IDLE_TIMEOUT_SECONDS,
+                idle_timeout_seconds=idle_timeout_seconds or settings.SESSION_IDLE_TIMEOUT_SECONDS,
                 max_lifetime_seconds=settings.SESSION_MAX_LIFETIME_SECONDS,
                 session_id=session_id
             )
@@ -453,6 +455,52 @@ class SessionManager:
                 await self.kill_session(session_id, reason="status_update")
 
         return session
+
+    async def update_session_status_with_cleanup(
+        self,
+        session_id: str,
+        new_status: WorkerStatus,
+        worker_client_path: Optional[str] = None
+    ) -> Optional[Session]:
+        """
+        Update session status with optional cleanup.
+
+        For centralized scheduler, when transitioning WORKING → WAITING,
+        sends stop signal to worker to cleanly terminate current task.
+
+        Args:
+            session_id: Session to update
+            new_status: New status to set
+            worker_client_path: Worker client path (for stop signal)
+
+        Returns:
+            Updated session or None if not found
+        """
+        session = await self.get_session(session_id)
+        if not session:
+            return None
+
+        old_status = session.status
+
+        # Centralized scheduler: WORKING → WAITING requires cleanup
+        if (
+            session.scheduler_type == "centralized"
+            and old_status == WorkerStatus.WORKING
+            and new_status == WorkerStatus.WAITING
+            and worker_client_path
+        ):
+            # Send stop signal to worker (async, non-blocking)
+            try:
+                from app.clients.worker.registry import worker_client_registry
+                worker_client = worker_client_registry.get_client(worker_client_path)
+                await worker_client.stop(session.container_id)
+                logger.info(f"Sent stop signal to session {session_id} during status transition")
+            except Exception as e:
+                logger.error(f"Failed to send stop signal to session {session_id}: {e}", exc_info=True)
+                # Continue with status update even if stop fails
+
+        # Update status (reuse existing method)
+        return await self.update_session_status(session_id, new_status)
 
     async def kill_session(self, session_id: str, reason: str = "manual"):
         """

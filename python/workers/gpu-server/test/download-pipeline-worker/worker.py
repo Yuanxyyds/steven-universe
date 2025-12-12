@@ -20,11 +20,15 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 
 # Import shared schemas
-from shared_schemas.download_pipeline_worker import (
+from shared_schemas.worker.test.download_pipeline.schemas import (
     DownloadPipelineTaskRequest,
-    DownloadPipelineHealthResponse,
     DownloadPipelineStatusResponse
 )
+from shared_schemas.worker.protocol import (
+    WorkerHealthResponse,
+    WorkerStopResponse
+)
+from shared_schemas.gpu_service import StreamEvent
 
 # Configure logging
 logging.basicConfig(
@@ -54,25 +58,6 @@ app = FastAPI(title="Download Pipeline Worker")
 
 
 # ============================================================================
-# Event Emission
-# ============================================================================
-
-def emit_sse_event(event_type: str, data: dict) -> str:
-    """
-    Format SSE event.
-
-    Args:
-        event_type: Event type (connected, logs, text_delta, text, completed)
-        data: Event data
-
-    Returns:
-        SSE-formatted string
-    """
-    import json
-    return f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
-
-
-# ============================================================================
 # Task Processing
 # ============================================================================
 
@@ -95,13 +80,13 @@ async def process_task(task: DownloadPipelineTaskRequest) -> AsyncIterator[str]:
         logger.info(f"Processing task {task.task_id} for model {task.model_id}")
 
         # Log: Task received
-        yield emit_sse_event("logs", {
-            "log": f"Task {task.task_id} received",
-            "level": "info"
-        })
+        yield StreamEvent.logs(
+            log=f"Task {task.task_id} received",
+            level="info"
+        ).to_sse_format()
 
         # Text delta: Task Received!
-        yield emit_sse_event("text_delta", {"delta": "Task Received!\n"})
+        yield StreamEvent.text_delta(delta="Task Received!\n").to_sse_format()
         await asyncio.sleep(5)
 
         # Check model path
@@ -112,55 +97,51 @@ async def process_task(task: DownloadPipelineTaskRequest) -> AsyncIterator[str]:
             error_msg = f"Model path {model_path} does not exist"
             logger.error(error_msg)
 
-            yield emit_sse_event("completed", {
-                "status": "failed",
-                "error": error_msg
-            })
+            yield StreamEvent.completed(
+                status="failed",
+                error=error_msg
+            ).to_sse_format()
         else:
             # Text delta: Found folder
-            yield emit_sse_event("text_delta", {"delta": "Found file's folder\n"})
+            yield StreamEvent.text_delta(delta="Found file's folder\n").to_sse_format()
             await asyncio.sleep(5)
 
         # Countdown from 20 to 1
         countdown_count = 0
         for count in range(20, 0, -1):
             countdown_count += 1
-            yield emit_sse_event("text_delta", {
-                "delta": f"Counting down: {count}\n"
-            })
+            yield StreamEvent.text_delta(
+                delta=f"Counting down: {count}\n"
+            ).to_sse_format()
             await asyncio.sleep(1)
 
         # Text delta: Completed message
-        yield emit_sse_event("text_delta", {"delta": "Completed\n"})
+        yield StreamEvent.text_delta(delta="Completed\n").to_sse_format()
 
         # Completed event
-        yield emit_sse_event("completed", {
-            "status": "completed",
-            "countdown_steps": countdown_count
-        })
+        yield StreamEvent.completed(
+            status="completed",
+            countdown_steps=countdown_count
+        ).to_sse_format()
 
         logger.info(f"Task {task.task_id} completed successfully ({countdown_count} countdown steps)")
 
     except Exception as e:
         logger.error(f"Error processing task {task.task_id}: {e}", exc_info=True)
-        yield emit_sse_event("completed", {
-            "status": "failed",
-            "error": str(e)
-        })
+        yield StreamEvent.completed(
+            status="failed",
+            error=str(e)
+        ).to_sse_format()
 
 
 # ============================================================================
 # Endpoints
 # ============================================================================
 
-@app.get("/health", response_model=DownloadPipelineHealthResponse)
+@app.get("/health", response_model=WorkerHealthResponse)
 async def health():
     """Health check endpoint."""
-    return DownloadPipelineHealthResponse(
-        status="healthy",
-        worker="download-pipeline-worker",
-        model_path=MODEL_PATH
-    )
+    return WorkerHealthResponse(status="healthy")
 
 
 @app.get("/status", response_model=DownloadPipelineStatusResponse)
@@ -181,6 +162,19 @@ async def status():
         model_path_exists=model_path.exists(),
         total_files=file_count
     )
+
+
+@app.post("/stop", response_model=WorkerStopResponse)
+async def stop():
+    """
+    Stop current task execution gracefully (async, returns immediately).
+
+    Returns 200 immediately while task stops in background.
+    """
+    logger.info("Stop signal received, stopping current task...")
+    # TODO: Implement task cancellation logic
+    # For now, just return stopping status
+    return WorkerStopResponse(status="stopping")
 
 
 @app.post("/task")

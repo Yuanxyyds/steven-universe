@@ -15,9 +15,10 @@ class TaskDefinition:
     """Pre-defined task template configuration."""
     task_name: str
     description: str
-    task_type: str  # "oneoff" or "session"
+    task_type: str  # "session" only (oneoff removed)
     task_difficulty: str  # "low" or "high"
     timeout_seconds: int
+    idle_timeout_seconds: int  # How long session can be idle before termination
     metadata: Dict[str, Any]
     model_id: Optional[str] = None  # Optional for non-LLM tasks
     scheduler_type: str = "centralized"  # "centralized" or "distributed"
@@ -33,6 +34,7 @@ class TaskAction:
     command: List[str]
     env_vars: Dict[str, str]
     build_args: Dict[str, str]
+    worker_client_path: str  # Import path to worker client class
 
 
 @dataclass
@@ -47,7 +49,7 @@ class ModelPath:
 @dataclass
 class Task:
     """
-    Represents a single task (within a session or one-off).
+    Represents a single task within a session.
 
     Configuration data is stored in task_definition, task_action, and model_path.
     This class tracks runtime state and execution metadata.
