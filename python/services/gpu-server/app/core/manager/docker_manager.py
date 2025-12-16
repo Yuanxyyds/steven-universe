@@ -77,7 +77,9 @@ class DockerManager:
         command: List[str],
         env_vars: Dict[str, str],
         model_host_path: str,
-        worker_client_path: str
+        worker_client_path: str,
+        startup_timeout: int = 30,
+        extra_volumes: Dict[str, Dict[str, str]] = None
     ) -> str:
         """
         Create a long-lived session container.
@@ -91,6 +93,8 @@ class DockerManager:
             env_vars: Environment variables
             model_host_path: Host path to model directory
             worker_client_path: Import path to worker client (for health checks)
+            startup_timeout: Max seconds to wait for worker to become healthy
+            extra_volumes: Additional volume mounts beyond model (e.g., caches)
 
         Returns:
             Container ID
@@ -105,6 +109,7 @@ class DockerManager:
             env = {
                 **env_vars,
                 "MODEL_PATH": "/models",  # Container path where model is mounted
+                "MODEL_ID": model_id,     # Model identifier (e.g., Qwen/Qwen2.5-7B-Instruct)
                 "SESSION_ID": session_id,
             }
 
@@ -115,6 +120,10 @@ class DockerManager:
                     "mode": "ro"  # Read-only
                 }
             }
+
+            # Add extra volumes (e.g., compilation caches for vLLM)
+            if extra_volumes:
+                volumes.update(extra_volumes)
 
             # GPU device request
             device_requests = [
@@ -156,7 +165,7 @@ class DockerManager:
 
             # Start background health monitoring for this container (docker manager responsibility)
             asyncio.create_task(
-                self._monitor_container_health(container.id, session_id, worker_client_path)
+                self._monitor_container_health(container.id, session_id, worker_client_path, startup_timeout)
             )
 
             return container.id

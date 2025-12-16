@@ -87,7 +87,7 @@ class GPUWorkerProtocol(ABC):
     async def wait_until_healthy(
         self,
         container_id: str,
-        timeout: int = 30,
+        timeout: int = 60,
         retry_interval: float = 1.0
     ) -> bool:
         """

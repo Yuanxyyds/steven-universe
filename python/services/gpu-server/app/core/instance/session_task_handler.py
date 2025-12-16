@@ -232,9 +232,9 @@ class SessionTaskHandler:
             )
 
             # Step 2e: Create ready event and wait for worker to be ready
-            logger.info(f"[{self.task_id}] Waiting for worker to be ready")
+            logger.info(f"[{self.task_id}] Waiting for worker to be ready (timeout={self.task_def.startup_timeout_seconds}s)")
             ready_event = session.create_ready_event()
-            await self._wait_for_worker_ready(session, ready_event)
+            await self._wait_for_worker_ready(session, ready_event, timeout=self.task_def.startup_timeout_seconds)
 
             # Mark session activity after successful creation
             await session_manager.mark_activity(session.session_id)
@@ -255,16 +255,25 @@ class SessionTaskHandler:
             gpu_id: GPU device ID
             session_id: Pre-generated session ID (shared with session_manager)
         """
+        # Determine model path (only for tasks that require models)
+        if self.task_def.model_id:
+            model_host_path = f"/data/models/{self.task_def.model_id}"
+        else:
+            # For non-LLM tasks, use empty placeholder path
+            model_host_path = "/tmp/no-model"
+
         # Create container using docker_manager
         container_id = await docker_manager.create_session_container(
             session_id=session_id,
             gpu_id=gpu_id,
-            model_id=self.task_def.model_id,
+            model_id=self.task_def.model_id or "none",
             docker_image=self.task_action.docker_image,
             command=self.task_action.command,
             env_vars=self.task_action.env_vars,
-            model_host_path=f"/data/models/{self.task_def.model_id}",
-            worker_client_path=self.task_action.worker_client_path
+            model_host_path=model_host_path,
+            worker_client_path=self.task_action.worker_client_path,
+            startup_timeout=self.task_def.startup_timeout_seconds,
+            extra_volumes=self.task_action.extra_volumes
         )
 
         logger.info(f"[{self.task_id}] Container created: {container_id[:12]}")

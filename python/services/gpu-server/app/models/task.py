@@ -20,6 +20,7 @@ class TaskDefinition:
     timeout_seconds: int
     idle_timeout_seconds: int  # How long session can be idle before termination
     metadata: Dict[str, Any]
+    startup_timeout_seconds: int = 30  # How long to wait for worker to become healthy
     model_id: Optional[str] = None  # Optional for non-LLM tasks
     scheduler_type: str = "centralized"  # "centralized" or "distributed"
 
@@ -35,6 +36,11 @@ class TaskAction:
     env_vars: Dict[str, str]
     build_args: Dict[str, str]
     worker_client_path: str  # Import path to worker client class
+    extra_volumes: Dict[str, Dict[str, str]] = None  # Additional volume mounts {host_path: {bind, mode}}
+
+    def __post_init__(self):
+        if self.extra_volumes is None:
+            self.extra_volumes = {}
 
 
 @dataclass

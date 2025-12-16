@@ -82,6 +82,7 @@ class ConfigLoader:
             task_difficulty=task_data.get("task_difficulty", "low"),
             timeout_seconds=task_data.get("timeout_seconds", 300),
             idle_timeout_seconds=task_data.get("idle_timeout_seconds", 300),
+            startup_timeout_seconds=task_data.get("startup_timeout_seconds", 30),
             metadata=task_data.get("metadata", {}),
             model_id=task_data.get("model_id"),
             scheduler_type=task_data.get("scheduler_type", "centralized")
@@ -118,7 +119,8 @@ class ConfigLoader:
             command=action_data.get("command", []),
             env_vars=action_data.get("env_vars", {}),
             build_args=action_data.get("build_args", {}),
-            worker_client_path=action_data.get("worker_client_path", "")
+            worker_client_path=action_data.get("worker_client_path", ""),
+            extra_volumes=action_data.get("extra_volumes", {})
         )
 
     def get_model_path(self, model_id: str) -> Optional[ModelPath]:
@@ -182,6 +184,8 @@ class ConfigLoader:
                 task_def.task_difficulty = request_overrides['task_difficulty']
             if request_overrides.get('timeout_seconds'):
                 task_def.timeout_seconds = request_overrides['timeout_seconds']
+            if request_overrides.get('model_id'):
+                task_def.model_id = request_overrides['model_id']
             if request_overrides.get('metadata'):
                 task_def.metadata.update(request_overrides['metadata'])
 

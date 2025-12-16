@@ -77,30 +77,14 @@ class PreDefinedTaskRequest(BaseModel):
         le=1800,
         description="Override task timeout in seconds"
     )
+    model_id: Optional[str] = Field(
+        default=None,
+        description="Override model identifier (e.g., 'meta-llama/Llama-3.1-8B-Instruct')"
+    )
     metadata: Dict[str, Any] = Field(
         default_factory=dict,
         description="Task-specific parameters merged with task definition defaults"
     )
-
-    # Session control (for future session support)
-    session_id: Optional[str] = Field(
-        default=None,
-        description="Existing session ID to reuse (for session tasks)"
-    )
-    create_session: bool = Field(
-        default=False,
-        description="Create new session for this task (for session tasks)"
-    )
-
-
-class CustomTaskRequest(BaseModel):
-    """
-    Request for custom task execution (TODO).
-
-    Placeholder for future implementation where users can specify
-    arbitrary docker images, commands, and configurations.
-    """
-    pass
 
 
 @dataclass

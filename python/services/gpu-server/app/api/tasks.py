@@ -4,14 +4,11 @@ Task submission and execution endpoints.
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from sse_starlette.sse import EventSourceResponse
 
 from app.core.dependencies import verify_api_key
-from shared_schemas.gpu_service import (
-    PreDefinedTaskRequest,
-    CustomTaskRequest,
-)
+from shared_schemas.gpu_service import PreDefinedTaskRequest
 
 logger = logging.getLogger(__name__)
 
@@ -44,29 +41,10 @@ async def run_predefined_task(request: PreDefinedTaskRequest):
         request_overrides={
             'task_difficulty': request.task_difficulty,
             'timeout_seconds': request.timeout_seconds,
+            'model_id': request.model_id,
             'metadata': request.metadata,
         }
     )
 
     # Execute pipeline and stream
     return EventSourceResponse(handler.execute())
-
-
-@router.post("/tasks/custom")
-async def run_custom_task(_request: CustomTaskRequest):
-    """
-    Execute a custom task (TODO).
-
-    Placeholder for future custom task implementation where users can specify
-    arbitrary docker images, commands, and configurations.
-
-    Args:
-        request: Custom task request
-
-    Raises:
-        HTTPException: 501 Not Implemented
-    """
-    raise HTTPException(
-        status_code=501,
-        detail="Custom tasks not yet implemented"
-    )

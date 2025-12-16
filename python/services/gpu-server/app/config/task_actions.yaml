@@ -47,3 +47,30 @@ download-pipeline-test:
     SERVER_PORT: "8000"
   build_args: {}
   worker_client_path: "app.clients.worker.test.download_pipeline.DownloadPipelineClient"
+
+# =============================================================================
+# LLM Workers
+# =============================================================================
+
+vllm-chat:
+  source_path: ~/gpu-workers/vllm-worker
+  dockerfile: Dockerfile
+  docker_image: vllm-worker:latest
+  command: ["/app/entrypoint.sh"]
+  env_vars:
+    SERVER_PORT: "8000"
+    VLLM_PORT: "8001"
+    DTYPE: auto
+    GPU_MEMORY_UTILIZATION: "0.90"
+    MAX_MODEL_LEN: "4096"
+    DISABLE_CUDAGRAPH: "true"  # Tier 3: Disable CUDA graphs for fastest startup
+    WORKER_TYPE: session
+  build_args: {}
+  worker_client_path: "app.clients.worker.llm.vllm.VLLMClient"
+  extra_volumes:
+    "/data/cache/vllm":
+      bind: "/root/.cache/vllm"
+      mode: "rw"
+    "/data/cache/torch":
+      bind: "/root/.cache/torch"
+      mode: "rw"

@@ -21,6 +21,7 @@
 #     model_id: Model identifier (optional, can be overridden)
 #     timeout_seconds: Task execution timeout (can be overridden)
 #     idle_timeout_seconds: Session idle timeout before termination
+#     startup_timeout_seconds: Worker startup timeout (default: 30s)
 #     scheduler_type: centralized | distributed
 #     metadata: Default parameters (merged with client metadata)
 
@@ -50,3 +51,17 @@ download-pipeline-test:
 # =============================================================================
 # LLM Tasks
 # =============================================================================
+
+vllm-chat:
+  description: "LLM chat inference using vLLM with Qwen/Qwen2.5-7B-Instruct"
+  task_type: session
+  task_difficulty: high
+  model_id: Qwen3-4B-Instruct
+  timeout_seconds: 120
+  idle_timeout_seconds: 300
+  startup_timeout_seconds: 120  # vLLM model loading can take 30-180s
+  scheduler_type: distributed
+  metadata:
+    temperature: 0.7
+    max_tokens: 512
+    top_p: 1.0
