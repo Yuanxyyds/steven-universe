@@ -5,8 +5,8 @@
   --color-primary: #ab31de;
   --color-primary-dark: #590aa8;
   --color-primary-light: #c351f5;
-  --color-background: #09000e;
-  --color-background-card: #0a0a23;
+  --color-background: #000000;
+  --color-background-card: #000000;
 }
 
 @keyframes fadeIn {
@@ -17,6 +17,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes neonColorFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
   }
 }
 
@@ -37,7 +46,289 @@
 
   body {
     margin: 0;
-    background-color: #09000e;
+    background-color: #000000;
     color: whitesmoke;
+  }
+
+  /* Default: largest (xl and up) */
+  h1 {
+    color: white;
+    font-size: 54pt;
+    letter-spacing: -1.5px;
+    line-height: 1.2;
+  }
+
+  h2 {
+    color: white;
+    font-size: 42pt;
+    letter-spacing: -1.5px;
+    line-height: 1.2;
+  }
+
+  h3 {
+    color: white;
+    font-weight: 600;
+    font-size: 32pt;
+    letter-spacing: -1.2px;
+    line-height: 1.2;
+  }
+
+  h4 {
+    color: white;
+    font-size: 16pt;
+    line-height: 1.2;
+  }
+
+  h5 {
+    color: white;
+    font-size: 15pt;
+    line-height: 1.2;
+  }
+
+  p {
+    color: gainsboro;
+    font-weight: 400;
+    font-size: 14pt;
+    line-height: 1.3;
+  }
+
+  p.md {
+    font-size: 13pt;
+  }
+
+  p.small {
+    font-size: 12pt;
+  }
+
+  /* lg (≤1199px) */
+  @media (max-width: 1199.98px) {
+    h1 {
+      font-size: 52pt;
+      letter-spacing: -1.45px;
+    }
+
+    h2 {
+      font-size: 40pt;
+    }
+
+    h3 {
+      font-size: 30pt;
+    }
+
+    h4 {
+      font-size: 16pt;
+    }
+
+    h5 {
+      font-size: 15pt;
+    }
+
+    p {
+      font-size: 14pt;
+    }
+
+    p.md {
+      font-size: 13pt;
+    }
+
+    p.small {
+      font-size: 12pt;
+    }
+  }
+
+  /* md (≤991px) */
+  @media (max-width: 991.98px) {
+    h1 {
+      font-size: 48pt;
+      letter-spacing: -1.4px;
+    }
+
+    h2 {
+      font-size: 36pt;
+    }
+
+    h3 {
+      font-size: 26pt;
+    }
+
+    h4 {
+      font-size: 15.5pt;
+    }
+
+    h5 {
+      font-size: 14.5pt;
+    }
+
+    p {
+      font-size: 13.5pt;
+    }
+
+    p.md {
+      font-size: 12.5pt;
+    }
+
+    p.small {
+      font-size: 11.5pt;
+    }
+  }
+
+  /* sm (≤767px) */
+  @media (max-width: 767.98px) {
+    h1 {
+      font-size: 44pt;
+      letter-spacing: -1.3px;
+    }
+
+    h2 {
+      font-size: 32pt;
+    }
+
+    h3 {
+      font-size: 24pt;
+    }
+
+    h4 {
+      font-size: 16pt;
+    }
+
+    h5 {
+      font-size: 14pt;
+    }
+
+    p {
+      font-size: 12.5pt;
+    }
+
+    p.md {
+      font-size: 12pt;
+    }
+
+    p.small {
+      font-size: 11.5pt;
+    }
+  }
+
+  /* xs (≤575px) */
+  @media (max-width: 575.98px) {
+    h1 {
+      font-size: 40pt;
+      letter-spacing: -1.2px;
+    }
+
+    h2 {
+      font-size: 28pt;
+    }
+
+    h3 {
+      font-size: 20pt;
+    }
+
+    h4 {
+      font-size: 14.5pt;
+    }
+
+    h5 {
+      font-size: 13.5pt;
+    }
+
+    p {
+      font-size: 12pt;
+    }
+
+    p.md {
+      font-size: 11.5pt;
+    }
+
+    p.small {
+      font-size: 11pt;
+    }
+  }
+
+  /* xxs (≤440px) */
+  @media (max-width: 440px) {
+    h1 {
+      font-size: 32pt;
+      letter-spacing: -1.2px;
+    }
+
+    h2 {
+      font-size: 24pt;
+    }
+
+    h3 {
+      font-size: 18pt;
+    }
+
+    h4 {
+      font-size: 14pt;
+    }
+
+    h5 {
+      font-size: 12pt;
+    }
+
+    p {
+      font-size: 11pt;
+    }
+
+    p.md {
+      font-size: 10.5pt;
+    }
+
+    p.small {
+      font-size: 10pt;
+    }
+  }
+
+  /* xxxs (≤350px) */
+  @media (max-width: 350px) {
+    h1 {
+      font-size: 28pt;
+      letter-spacing: -1.2px;
+    }
+
+    h2 {
+      font-size: 20pt;
+    }
+
+    h3 {
+      font-size: 16pt;
+    }
+  }
+
+  /* Short screens */
+  @media (max-height: 400px) {
+    h1 {
+      font-size: 35pt;
+      letter-spacing: -1.2px;
+    }
+
+    h2 {
+      font-size: 24pt;
+    }
+
+    h3 {
+      font-size: 18pt;
+    }
+
+    h4 {
+      font-size: 14pt;
+    }
+
+    h5 {
+      font-size: 12pt;
+    }
+
+    p {
+      font-size: 11pt;
+    }
+
+    p.md {
+      font-size: 10.5pt;
+    }
+
+    p.small {
+      font-size: 10pt;
+    }
   }
 }

@@ -45,7 +45,7 @@ function NavBar() {
   return (
     <nav className={
       clsx("fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out px-[8vw] py-5 text-xl",
-        navColour ? "bg-[rgb(9,0,14)] backdrop-blur-[15px] shadow-[0_0_20px_rgba(89,4,168,0.3)]" : "")}>
+        navColour ? "bg-[rgb(9,0,14)] backdrop-blur-[15px]" : "")}>
 
       <div className="flex items-center justify-between w-full">
         {/* Brand */}
