@@ -3,6 +3,7 @@ import "./globals.css";
 import NavBar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import Loader from "@/components/common/Loader";
+import ChatbotWrapper from "@/components/common/ChatbotWrapper";
 
 export const metadata: Metadata = {
   title: "Hongyuan (Steven) Liu | AI Developer",
@@ -49,6 +50,7 @@ export default function RootLayout({
         <NavBar />
         {children}
         <Footer />
+        <ChatbotWrapper />
       </body>
     </html>
   );
