@@ -7,17 +7,17 @@ import { StackCard } from "@/components/skills/StackCard";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
-    DiPython, DiJava, DiDart, DiSwift, DiReact, DiHtml5, DiCss3, DiDjango, DiBootstrap,
+    DiPython, DiJava, DiDart, DiSwift, DiReact,
 } from "react-icons/di";
 import { TbBrandKotlin, TbCircleLetterCFilled, TbDeviceVisionProFilled, TbSql } from "react-icons/tb";
 import {
     SiNextdotjs, SiFirebase, SiGooglecloud, SiTailwindcss,
-    SiPandas, SiNumpy, SiTensorflow, SiPytorch, SiProxmox,
+    SiPytorch, SiProxmox,
     SiFastapi,
     SiKubernetes,
 } from "react-icons/si";
-import { FaAws, FaChartBar, FaCloudflare, FaDocker, FaFigma, FaGithub, FaLinux, FaRProject, FaYCombinator } from "react-icons/fa";
-import { AiFillAppstore, AiOutlineRobot } from "react-icons/ai";
+import { FaAws, FaCloudflare, FaDocker, FaFigma, FaGithub, FaLinux, FaRProject, FaYCombinator } from "react-icons/fa";
+import { AiFillAppstore } from "react-icons/ai";
 import { RiJavascriptFill } from "react-icons/ri";
 import { BiLogoCPlusPlus, BiLogoTypescript, BiLogoFlutter, BiLogoNodejs } from "react-icons/bi";
 import { FaDebian } from "react-icons/fa6";
@@ -223,11 +223,11 @@ export default function Project() {
                                     title="Great Lakes Pollution"
                                     description="This project explores Great Lakes water quality with a focus on phosphorus levels. It uses data from the Canadian Open Data Portal and city web scraping, featuring visualizations like time series plots, boxplots, and interactive maps."
                                     shortDescription="Analyzed Great Lakes water quality using public and scraped data, focusing on phosphorus levels. Visualized trends through time series plots, boxplots, and interactive maps."
-                                    githubLink="https://github.com/Yuanxyyds/Analyzing-Great-Lakes-Polution"
+                                    githubLink="https://github.com/Yuanxyyds/great-lakes-pollution-research"
                                     detailText="Visit"
                                     tags={['Data Science', 'Data Wrangling']}
                                     onDetailClick={() => {
-                                        window.open("https://yuanxyyds.github.io/Analyzing-Great-Lakes-Polution/");
+                                        window.open("https://yuanxyyds.github.io/great-lakes-pollution-research/");
                                     }}
                                 />
                             </FadeIn>
@@ -325,7 +325,7 @@ export default function Project() {
                     <FadeIn>
                         <StackCard
                             skills={[
-                                { icon: <GiArtificialIntelligence className="text-[5em]"/>, name: "AI Software Agents", stars: 6 },
+                                { icon: <GiArtificialIntelligence className="text-[5em]" />, name: "AI Software Agents", stars: 6 },
                                 { icon: <AiFillAppstore className="text-[5em]" />, name: "Full-Stack Engineer", stars: 6 },
                                 { icon: <div className="text-[3em]">ML</div>, name: "Machine Learning", stars: 6 },
                                 { icon: <TbDeviceVisionProFilled className="text-[5em]" />, name: "Computer Vision", stars: 4 },
