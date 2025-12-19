@@ -197,7 +197,7 @@ export default function Home() {
                                     </FadeIn>
                                     <FadeIn>
                                         <h4 className="mt-3">
-                                            <strong className="text-primary">Phone:</strong> +1 (647)-309-9649
+                                            <strong className="text-primary">Phone:</strong> {"+1 (647)-309-9649"}
                                         </h4>
                                     </FadeIn>
 
