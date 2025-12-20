@@ -27,44 +27,16 @@ else
     exit 1
 fi
 
-# Check required environment variables
-REQUIRED_VARS=(
-    "LXC_HOST"
-    "APP_NAME"
-    "APP_VERSION"
-    "LOG_LEVEL"
-    "CORS_ORIGINS"
-    "PROXMOX_API_URL"
-    "PROXMOX_API_TOKEN"
-    "PROXMOX_VERIFY_SSL"
-    "STEVENAI_SERVICE_URL"
-    "FOOD101_SERVICE_URL"
-    "LANDSINK_SERVICE_URL"
-    "FILE_SERVICE_URL"
-    "FILE_SERVICE_API_KEY"
-)
-
-for var in "${REQUIRED_VARS[@]}"; do
-    if [ -z "${!var}" ]; then
-        echo -e "${RED}❌ Error: Required variable $var is not set${NC}"
-        echo -e "${YELLOW}Please set all required variables in .env or export them${NC}"
-        exit 1
-    fi
-done
-
-echo -e "${GREEN}✅ Environment variables validated${NC}"
-
 # Sync files to LXC
 echo -e "${YELLOW}📦 Syncing files to LXC...${NC}"
 DEPLOY_PATH="${LXC_DEPLOY_PATH:-~/web-server}"
 
-# Sync service directory
+# Sync service directory (including .env and status-config.yaml)
 rsync -avz --delete \
   --exclude '.git' \
   --exclude '.github' \
   --exclude '__pycache__' \
   --exclude '*.pyc' \
-  --exclude '.env' \
   --exclude 'venv' \
   --exclude '.pytest_cache' \
   --exclude 'scripts' \
@@ -86,23 +58,7 @@ ssh "$LXC_HOST" bash <<ENDSSH
 set -e
 cd $DEPLOY_PATH
 
-# Create .env file from environment variables
-cat > .env << 'EOF'
-APP_NAME=$APP_NAME
-APP_VERSION=$APP_VERSION
-LOG_LEVEL=${LOG_LEVEL:-INFO}
-CORS_ORIGINS=$CORS_ORIGINS
-PROXMOX_API_URL=$PROXMOX_API_URL
-PROXMOX_API_TOKEN=$PROXMOX_API_TOKEN
-PROXMOX_VERIFY_SSL=${PROXMOX_VERIFY_SSL:-false}
-STEVENAI_SERVICE_URL=${STEVENAI_SERVICE_URL:-http://localhost:8001}
-FOOD101_SERVICE_URL=${FOOD101_SERVICE_URL:-http://localhost:8002}
-LANDSINK_SERVICE_URL=${LANDSINK_SERVICE_URL:-http://localhost:8003}
-FILE_SERVICE_URL=$FILE_SERVICE_URL
-FILE_SERVICE_API_KEY=$FILE_SERVICE_API_KEY
-EOF
-
-echo "✅ Environment file created"
+echo "✅ Environment and config files synced"
 
 # Build Docker image
 echo "🔨 Building Docker image..."

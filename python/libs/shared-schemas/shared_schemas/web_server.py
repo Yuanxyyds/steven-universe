@@ -3,50 +3,17 @@ Web Server API schemas.
 Type-safe contracts for all web-server endpoints.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 
 
 # ============================================================================
 # Health Check
 # ============================================================================
-
-class ServiceStatus(BaseModel):
-    """Status of a downstream service."""
-    name: str
-    url: str
-    status: str  # "online", "offline", "unknown"
-    response_time_ms: Optional[float] = None
-
-
 class HealthResponse(BaseModel):
     """Health check response."""
     status: str  # "healthy", "degraded", "unhealthy"
     version: str
-    services: Optional[List[ServiceStatus]] = None
-
-
-# ============================================================================
-# Server Stats (Proxmox)
-# ============================================================================
-
-class ServerNode(BaseModel):
-    """Single Proxmox server node stats."""
-    name: str
-    status: str  # "online", "offline"
-    memory_used_gb: Optional[float] = None
-    memory_total_gb: Optional[float] = None
-    memory_usage_percent: Optional[float] = None
-    cpu_usage_percent: Optional[float] = None
-    cpu_cores: Optional[int] = None
-    cpu_temp_celsius: Optional[float] = None  # Only for local node
-
-
-class ServerStatsResponse(BaseModel):
-    """Response with server statistics."""
-    success: bool
-    nodes: List[ServerNode]
-
 
 # ============================================================================
 # LandSink Prediction
@@ -115,3 +82,43 @@ class ChatQueryResponse(BaseModel):
     model_used: str
     context_used: List[ChatContextSource]
     is_follow_up: bool
+
+
+# ============================================================================
+# Unified Status (Combines Health + Stats)
+# ============================================================================
+
+class ServiceInfo(BaseModel):
+    """Information about a service running on a node."""
+    name: str
+    online: bool
+    response_time_ms: Optional[float] = None
+
+
+class NodeInfo(BaseModel):
+    """Information about a node within a server."""
+    name: str
+    online: bool
+    # Proxmox node stats (optional, only if available)
+    memory_used_gb: Optional[float] = None
+    memory_total_gb: Optional[float] = None
+    memory_usage_percent: Optional[float] = None
+    cpu_usage_percent: Optional[float] = None
+    cpu_cores: Optional[int] = None
+    cpu_temp_celsius: Optional[float] = None
+    # Services running on this node
+    services: Dict[str, ServiceInfo] = Field(default_factory=dict)
+
+
+class ServerInfo(BaseModel):
+    """Information about a server (e.g., Proxmox host)."""
+    name: str
+    online: bool
+    # Nodes within this server
+    nodes: Dict[str, NodeInfo] = Field(default_factory=dict)
+
+
+class UnifiedStatusResponse(BaseModel):
+    """Unified status response combining health and stats."""
+    status: str  # "healthy", "degraded", "unhealthy"
+    servers: Dict[str, ServerInfo]

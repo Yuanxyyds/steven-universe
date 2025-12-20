@@ -1,0 +1,22 @@
+# Status Configuration
+# Defines the hierarchical structure of servers, nodes, and services
+
+servers:
+  # Main Proxmox server (host)
+  us-west:
+    # List of nodes in this server
+    nodes:
+      - local2
+    # Services mapped to specific nodes in this server
+    services:
+      file-service:
+        node: local2
+      gpu-service:
+        node: local2
+
+  # Backup Proxmox server
+  us-east:
+    nodes:
+      - local
+    # No services running directly on backup server
+    services: {}

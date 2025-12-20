@@ -22,6 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY app/ ./app/
 
+# Copy status configuration
+COPY status-config.yaml ./
+
 # Expose port
 EXPOSE 8000
 

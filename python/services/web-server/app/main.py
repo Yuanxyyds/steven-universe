@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.dependencies import close_http_client
-from app.api import health, stats, landsink, food, chat
+from app.api import health, status, landsink, food, chat
 
 # Configure logging
 logging.basicConfig(
@@ -61,7 +61,7 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(health.router)
-app.include_router(stats.router)
+app.include_router(status.router)
 app.include_router(landsink.router)
 app.include_router(food.router)
 app.include_router(chat.router)
@@ -79,8 +79,8 @@ async def root():
                 "GET /health": "Service health check",
                 "GET /health/services": "Downstream services status"
             },
-            "stats": {
-                "GET /stats/servers": "Proxmox server statistics"
+            "status": {
+                "GET /status": "Proxmox server status"
             },
             "predictions": {
                 "GET /predictions/landsink?year=YYYY": "Climate prediction (Phase 4)"
