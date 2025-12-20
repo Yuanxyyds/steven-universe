@@ -26,7 +26,7 @@ export default function Home() {
         <section>
             {/* Home Section */}
             <div id="home" className="w-full text-left text-[whitesmoke] m-0 p-0">
-                <div className="relative h-screen w-screen m-0 p-0 overflow-hidden">
+                <div className="relative h-screen w-full m-0 p-0 overflow-hidden">
                     <video
                         className="absolute top-0 left-0 w-full h-full object-cover -z-10 pointer-events-none"
                         src="/home/bg.mp4"

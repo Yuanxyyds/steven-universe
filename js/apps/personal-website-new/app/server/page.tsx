@@ -192,7 +192,7 @@ export default function Server() {
             )}
 
             {/* 3D Canvas Section */}
-            <div className="relative w-screen h-screen m-0 p-0">
+            <div className="relative w-full h-screen m-0 p-0">
                 <ModelCanvas />
             </div>
         </section>

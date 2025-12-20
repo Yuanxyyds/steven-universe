@@ -89,7 +89,7 @@ export default function Project() {
                 </div>
             ) : (
                 // Horizontal (Desktop) Layout
-                <div className="relative h-screen w-screen m-0 p-0 overflow-hidden bg-black/60">
+                <div className="relative h-screen w-full m-0 p-0 overflow-hidden bg-black/60">
                 <video
                     className="absolute top-0 left-0 w-full h-full object-cover -z-10 pointer-events-none"
                     src="/project/project.mp4"

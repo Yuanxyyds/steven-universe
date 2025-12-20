@@ -86,10 +86,6 @@ export default function NeonTrail() {
             trail.style.position = "fixed";
             trail.style.left = `${posX}px`;
             trail.style.top = `${posY}px`;
-            trail.style.width = "6px";
-            trail.style.height = "6px";
-            trail.style.borderRadius = "50%";
-            trail.style.backgroundColor = color;
             trail.style.pointerEvents = "none";
             trail.style.zIndex = "9999";
             document.body.appendChild(trail);

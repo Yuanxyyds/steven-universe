@@ -9,6 +9,25 @@
   --color-background-card: #000000;
 }
 
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0a0e1a;
+  border-radius: 12px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(34, 44, 71);
+  border-radius: 12px;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
