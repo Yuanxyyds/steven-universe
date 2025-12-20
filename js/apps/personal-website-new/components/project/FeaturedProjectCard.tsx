@@ -86,13 +86,13 @@ const FeaturedProjectCard: React.FC<FeaturedProjectCardProps> = ({
                                 />
                             </div>
                         )}
-                        <p className={clsx("m-0", isMobile ? "text-[12pt]" : "text-[13pt]")}>
+                        <p className="m-0 text-[11pt] sm:text-sm md:text-md xl:text-[14.5px]">
                             {isMobile ? (shortDescription ?? description) : description}
                         </p>
                         <div className="flex gap-x-2.5 gap-y-1.5 justify-start flex-wrap mt-4">
                             {tags.map((tag, i) => (
                                 <p
-                                    className="bg-white text-black rounded-full px-3.5 py-1.5 text-[12pt] m-0"
+                                    className="bg-white text-black rounded-full px-2 py-1 sm:px-3.5 sm:py-1.5 text-[11pt] sm:text-sm md:text-md xl:text-[14.5px] m-0"
                                     key={i}
                                 >
                                     {tag}
@@ -105,11 +105,11 @@ const FeaturedProjectCard: React.FC<FeaturedProjectCardProps> = ({
 
             <div className="px-5 py-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                    <h4 className="m-0 font-bold">{title}</h4>
+                    <h4 className="m-0 font-bold text-base sm:text-lg md:text-xl">{title}</h4>
                     {githubLink && (
                         <a
                             href={githubLink}
-                            className="text-white mb-0.5 hover:text-gray-300"
+                            className="text-white mb-0.5 hover:text-gray-300 text-base"
                             onClick={(e) => e.stopPropagation()}
                             target="_blank"
                             rel="noopener noreferrer"

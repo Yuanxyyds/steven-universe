@@ -30,7 +30,7 @@ export default function Server() {
     const [isVertical, setIsVertical] = useState(false);
 
     const checkLayout = useCallback(() => {
-        setIsVertical(window.innerWidth < 992);
+        setIsVertical(window.innerWidth < 764);
     }, []);
 
     useResizeManager(checkLayout);
@@ -126,7 +126,7 @@ export default function Server() {
                             3D SERVER ROOM
                         </h1>
                         <h5 className={clsx(
-                            "mb-4 font-bold",
+                            "mb-6 font-bold",
                             "opacity-0 animate-[fadeIn_0.6s_ease-in-out_forwards] [animation-delay:500ms]"
                         )}>
                             Discover how I manage, automate, and deploy projects from my custom-built home server.

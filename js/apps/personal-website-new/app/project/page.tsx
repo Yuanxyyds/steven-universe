@@ -1,10 +1,12 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import FadeIn from "@/components/effects/FadeIn";
 import AnimatedUnderline from "@/components/effects/AnimatedUnderline";
 import FeaturedProjectCard from "@/components/project/FeaturedProjectCard";
 import { StackCard } from "@/components/skills/StackCard";
 import { useRouter } from "next/navigation";
+import { useResizeManager } from "@/hooks/useResizeManager";
 import clsx from "clsx";
 import {
     DiPython, DiJava, DiDart, DiSwift, DiReact,
@@ -26,11 +28,68 @@ import { GiArtificialIntelligence } from "react-icons/gi";
 
 export default function Project() {
     const router = useRouter();
+    const [isVertical, setIsVertical] = useState(false);
+
+    const checkLayout = useCallback(() => {
+        const ratio = window.innerHeight / window.innerWidth;
+        setIsVertical(ratio > 1.3);
+    }, []);
+
+    useResizeManager(checkLayout);
+
+    // Check layout on mount
+    useEffect(() => {
+        checkLayout();
+    }, [checkLayout]);
 
     return (
         <section>
             {/* Hero Section */}
-            <div className="relative h-screen w-screen m-0 p-0 overflow-hidden bg-black/60">
+            {isVertical ? (
+                // Vertical (Mobile) Layout
+                <div className="h-screen m-0 p-0 text-white">
+                    <div className="pt-[20vh] px-[5vw]">
+                        <h1 className={clsx(
+                            "font-light mb-0 flex items-center",
+                            "opacity-0 animate-[fadeIn_0.6s_ease-in-out_forwards] [animation-delay:0ms]",
+                            "after:content-[''] after:w-20 after:h-1 after:bg-primary after:ml-5"
+                        )}>
+                            EXPLORE MY
+                        </h1>
+                        <h1 className={clsx(
+                            "mb-2 text-primary",
+                            "opacity-0 animate-[fadeIn_0.6s_ease-in-out_forwards] [animation-delay:300ms]"
+                        )}>
+                            WORKS & SKILLS
+                        </h1>
+                        <h5 className={clsx(
+                            "mb-6 font-bold",
+                            "opacity-0 animate-[fadeIn_0.6s_ease-in-out_forwards] [animation-delay:500ms]"
+                        )}>
+                            A curated collection of what I've designed, built, and deployed — from backend systems to interactive UIs.
+                        </h5>
+                    </div>
+
+                    <div className="p-0 m-0 bg-black/60 opacity-0 animate-[fadeIn_0.6s_ease-in-out_forwards] [animation-delay:700ms]">
+                        <video
+                            src="/project/project.mp4"
+                            className="w-full"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                        />
+                    </div>
+
+                    <div className="pt-4 px-[5vw]">
+                        <h4 className="underline cursor-pointer opacity-0 animate-[fadeIn_0.6s_ease-in-out_forwards] [animation-delay:700ms]">
+                            Let's Go
+                        </h4>
+                    </div>
+                </div>
+            ) : (
+                // Horizontal (Desktop) Layout
+                <div className="relative h-screen w-screen m-0 p-0 overflow-hidden bg-black/60">
                 <video
                     className="absolute top-0 left-0 w-full h-full object-cover -z-10 pointer-events-none"
                     src="/project/project.mp4"
@@ -41,7 +100,7 @@ export default function Project() {
                 />
 
                 <div className="w-full h-full px-[8vw] pb-[15vh] flex items-center">
-                    <div className="w-full md:w-1/2">
+                    <div className="w-full md:w-11/15 lg:w-3/5">
                         <FadeIn>
                             <h1 className={clsx(
                                 "font-light mb-0 flex items-center",
@@ -62,10 +121,11 @@ export default function Project() {
                         </FadeIn>
                     </div>
                 </div>
-            </div>
+                </div>
+            )}
 
             {/* Projects Section */}
-            <div className="px-[8vw] py-[15vh] text-white">
+            <div className={clsx("px-[8vw] text-white", isVertical ? "pt-0 pb-[15vh]" : "py-[15vh]")}>
                 <div className="m-0 p-0">
                     <FadeIn>
                         <AnimatedUnderline className="mb-4 inline-block">
@@ -166,7 +226,7 @@ export default function Project() {
                                     detailText="App Store"
                                     tags={['Mobile App', 'Flutter', 'Website']}
                                     onDetailClick={() => {
-                                        window.open("https://apps.apple.com/us/app/lock-in-focus-app-blocker/id6472232979");
+                                        window.open("https://apps.apple.com/ca/app/lockbox-screentime-tool/id6740202232");
                                     }}
                                 />
                             </FadeIn>
@@ -179,7 +239,7 @@ export default function Project() {
                                     title="Mentor AI"
                                     description="MentorAI is a research project that uses YouTube links and user data to generate personalized mentorship advice. It guides researchers using LLMs and NLP on transcripts from mentorship-related videos."
                                     shortDescription="MentorAI generates personalized mentorship advice from YouTube videos and user data, helping aspiring researchers find mentors, review literature, and prepare for PhD applications."
-                                    detailText="Demo"
+                                    detailText="TEP Unavailable"
                                     tags={['Machine Learning', 'RAG', 'Research']}
                                     onDetailClick={() => {
                                         router.push('/mentorAi');
@@ -252,7 +312,7 @@ export default function Project() {
             </div>
 
             {/* Skills Section */}
-            <div className="px-[8vw] mb-20 text-white">
+            <div className="px-[8vw] text-white">
                 <FadeIn>
                     <AnimatedUnderline className="mb-0 inline-block">
                         <h2 className="mb-0">SKILLS</h2>

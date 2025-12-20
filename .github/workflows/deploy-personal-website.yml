@@ -4,16 +4,16 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'js/apps/personal-website/**'
+      - 'js/apps/personal-website-new/**'
       - '.github/workflows/deploy-personal-website.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'js/apps/personal-website/**'
+      - 'js/apps/personal-website-new/**'
       - '.github/workflows/deploy-personal-website.yml'
 
 env:
-  WORKING_DIRECTORY: ./js/apps/personal-website
+  WORKING_DIRECTORY: ./js/apps/personal-website-new
 
 jobs:
   deploy:

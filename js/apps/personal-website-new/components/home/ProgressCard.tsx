@@ -74,19 +74,19 @@ export default function ProgressCard() {
             ref={cardRef}
             onClick={handleRestart}
             className={clsx(
-                "m-0 p-6.25 w-[90%] max-sm:w-full rounded-[20px]",
+                "m-0 p-6.25 w-[90%] max-lg:w-full rounded-[20px]",
                 "border-4 border-[#380b4a] cursor-pointer",
                 "text-[#cfe9ff] bg-[#0a0a23]",
                 "transition-all duration-300 ease-in-out hover:scale-105"
             )}
         >
             <div className="flex justify-between items-center font-medium mb-5">
-                <h4>
+                <h4 className="text-base sm:text-lg md:text-xl">
                     &lt;&nbsp;&gt; {progress === 100
                         ? 'Project Completed!'
                         : 'Coding in Progress...'}
                 </h4>
-                <span><h4>{progress.toFixed(0)}%</h4></span>
+                <span><h4 className="text-base sm:text-lg md:text-xl">{progress.toFixed(0)}%</h4></span>
             </div>
 
             <div className="h-3 bg-[#333] rounded-md overflow-hidden my-1.5 mb-6">
@@ -109,12 +109,12 @@ export default function ProgressCard() {
                     "bg-size-[400%_100%] animate-[neonColorFlow_6s_linear_infinite]"
                 )}>
                     <div className="h-full relative bg-slate-900 rounded-xl p-3.75 overflow-hidden z-10">
-                        <p className="mb-1.5 text-[13pt]">✎ Design</p>
+                        <p className="mb-1.5 text-sm sm:text-base md:text-lg">✎ Design</p>
                         {designTasks.map((task) => (
                             <p
                                 key={task}
                                 className={clsx(
-                                    "mb-1 text-[12pt] transition-opacity duration-400",
+                                    "mb-1 text-[13px] sm:text-sm md:text-base transition-opacity duration-400",
                                     isCompleted(task) ? "text-[#d2e7facd] font-bold" : "text-gray-500"
                                 )}
                             >
@@ -129,12 +129,12 @@ export default function ProgressCard() {
                     "bg-size-[400%_100%] animate-[neonColorFlow_6s_linear_infinite]"
                 )}>
                     <div className="h-full relative bg-slate-900 rounded-xl p-[15px] overflow-hidden z-10">
-                        <p className="mb-1.5 text-[13pt]">&lt;&nbsp;&gt; Develop</p>
+                        <p className="mb-1.5 text-sm sm:text-base md:text-lg">&lt;&nbsp;&gt; Develop</p>
                         {devTasks.map((task) => (
                             <p
                                 key={task}
                                 className={clsx(
-                                    "mb-1 text-[12pt] transition-opacity duration-400",
+                                    "mb-1 text-[13px] sm:text-sm md:text-base transition-opacity duration-400",
                                     isCompleted(task) ? "text-[#d2e7facd] font-bold" : "text-gray-500"
                                 )}
                             >
