@@ -15,6 +15,7 @@ steven-universe/
 │   ├── services/
 │   │   ├── file-management/      # File management microservice (MinIO/S3)
 │   │   ├── web-server/           # Backend API server
+│   │   ├── stevenai-service/     # RAG-powered AI chatbot
 │   │   └── gpu-server/           # GPU task execution service
 │   └── workers/
 │       └── gpu-server/           # GPU worker container images
@@ -65,7 +66,7 @@ FastAPI-based API Gateway that routes requests to specialized microservices.
 
 **Current Migration Status:**
 - ✅ Phase 1: Proxmox stats API (completed)
-- 🚧 Phase 2: StevenAI chatbot service (planned)
+- ✅ Phase 2: StevenAI chatbot service (completed)
 - 🚧 Phase 3: Food101 classification service (planned)
 - 🚧 Phase 4: Landsink prediction service (planned)
 
@@ -78,6 +79,51 @@ Frontend → Web Server (Gateway) → Specialized Microservices
 ```
 
 **Path:** `python/services/web-server/`
+
+---
+
+### StevenAI Service
+
+RAG-powered AI chatbot that answers questions about Steven using semantic search over personal documents and Q&A pairs.
+
+**Main Features:**
+- FAISS vector search with BGE-large-en-v1.5 embeddings
+- Multiple models: OpenAI GPT-4o-mini, Qwen, Llama (via GPU service)
+- SSE streaming responses with character buffering
+- Follow-up question rewriting for contextual queries
+- Two RAG datasets: documents and Q&A pairs
+
+**Example Usage:**
+```bash
+# Query with GPT-4o-mini
+curl -X POST http://localhost:8002/chat/stream \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-key" \
+  -d '{
+    "query": "What projects has Steven worked on?",
+    "use_docs_of_fact": true,
+    "use_qa_pairs": true
+  }'
+
+# Use Qwen model for local inference
+curl -X POST http://localhost:8002/chat/stream \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-key" \
+  -d '{
+    "query": "Tell me about Steven",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "use_docs_of_fact": true
+  }'
+```
+
+**Technology Stack:**
+- FastAPI with SSE streaming
+- OpenAI API (GPT-4o-mini)
+- SentenceTransformers for embeddings
+- FAISS for vector similarity search
+- GPU Service integration for Qwen/Llama
+
+**Path:** `python/services/stevenai-service/`
 
 ---
 

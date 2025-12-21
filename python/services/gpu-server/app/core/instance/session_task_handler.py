@@ -349,7 +349,7 @@ class SessionTaskHandler:
                 task=task,
                 timeout_seconds=self.task_def.timeout_seconds
             ):
-                yield event
+                yield event.to_dict()
 
         except Exception as e:
             logger.error(f"[{self.task_id}] Error in centralized processing: {e}", exc_info=True)
@@ -421,7 +421,7 @@ class SessionTaskHandler:
                 task=task,
                 timeout_seconds=self.task_def.timeout_seconds
             ):
-                yield event
+                yield event.to_dict()
 
         except Exception as e:
             logger.error(f"[{self.task_id}] Error in distributed processing: {e}", exc_info=True)

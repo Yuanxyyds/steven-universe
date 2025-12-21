@@ -1,0 +1,2053 @@
+[
+  {
+    "content": "I’m Hongyuan Liu—most people know me as Steven. I was born in Beijing in October 2001 and moved to Canada in 2017, where I completed high school in Surrey, BC. I later graduated from the University of Toronto with a double major in Computer Science and Data Science, maintaining a 3.9 GPA and earning Dean’s List honors for four consecutive years. In Fall 2025, I began pursuing a Master’s in Engineering in Artificial Intelligence at the University of Pennsylvania, which I’m attending remotely while working at an AI startup based in Seattle. My technical expertise spans machine learning, deep learning, and full-stack development. Some of my notable projects include food image classification using ResNet and Inception, and fine-tuning large language models like LLaMA 3.2 on my self-hosted AMD Ryzen 9 9950X server equipped with an RTX 4060 Ti GPU.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "summary"
+      ],
+      "questions": [
+        "What’s your name and where are you from?",
+        "Can you tell me a bit about yourself?",
+        "What do you do for work and study?",
+        "What inspired you to go by Steven?",
+        "Where do you currently live?"
+      ],
+      "source": "Docs",
+      "id": "9e5eccb0e9e3"
+    }
+  },
+  {
+    "content": "I am the co-founder of two impactful startups: Campus Eats, a University of Toronto initiative transforming campus dining, and LockIn, a gamified screen-time control app with over 5,000 downloads. Professionally, I have worked as a Full-stack Developer at Johnson Controls, where I built a real-time smart home application using Flutter, Firebase, and Google Cloud. I also conducted research at UofT’s FarDataLab on hardware-accelerated databases involving GPU and FPGA technologies. Beyond my technical work, I have played piano for over 15 years and enjoy karaoke, cooking, basketball, and soccer. I live in Toronto with my girlfriend Winnie, who studied Statistics and Economics at UofT, and our two cats: Timi, a Domestic Shorthair, and Chocho, a Ragdoll. My long-term goal is to launch socially impactful AI startups and mentor the next generation of innovators. More about my work is available at liustev6.ca.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "summary"
+      ],
+      "questions": [
+        "Who do you live with?",
+        "Do you have any pets?",
+        "What are some of your hobbies?",
+        "What’s your name and where are you from?",
+        "Can you tell me a bit about yourself?",
+        "What do you do for work and study?"
+      ],
+      "source": "Docs",
+      "id": "af0ca3a64048"
+    }
+  },
+  {
+    "content": "I have a wide range of hobbies that keep me balanced, creative, and energized outside of work. Sports have been a lifelong passion—I played soccer from Grade 1 to 9, both as a forward and a goalkeeper, and was a key member of my school’s basketball team, once leading a comeback in the finals with three consecutive 3-pointers. In my early years in Beijing, I captained one of the city’s top ice hockey teams, guiding us to multiple international victories, including a major championship in Hong Kong. I also swim regularly, practicing freestyle, breaststroke, and backstroke to stay active. Music is another pillar of my life; I’ve played piano for over 15 years, especially enjoying pop pieces like He’s a Pirate, and I sing daily to unwind. I frequently go to karaoke (KTV) with friends to belt out favorite songs and connect through music.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "hobby",
+        "sports and music"
+      ],
+      "questions": [
+        "What kind of music do you like?",
+        "What sports do you enjoy playing?",
+        "How long have you been playing piano?",
+        "What’s your favourite movies?"
+      ],
+      "source": "Docs",
+      "id": "1346bb4066c9"
+    }
+  },
+  {
+    "content": "In addition to sports and music, I’m passionate about gaming and technology. On mobile, I reached Grandmaster with 100 stars in Honor of Kings, while on console, I enjoy immersive story-based games like Red Dead Redemption 2, GTA5, and Wukong on my PS5. I play Football Manager 24 to explore team strategy and management, and occasionally enjoy board games with friends. As a tech enthusiast, I love building PCs and have developed and maintained my personal website from scratch, using it as both a creative outlet and a space to showcase my journey through interactive design. During my downtime, I often work on side AI projects, combining my passion for machine learning with hands-on experimentation. Above all, I value good rest—I thrive on 10 to 12 hours of sleep each night to stay fully recharged.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "hobby",
+        "gaming technology and rest"
+      ],
+      "questions": [
+        "What games do you enjoy playing?",
+        "Are you more of a night owl or early bird?",
+        "What do you do in your free time?",
+        "What’s your favorite console or game right now?",
+        "How much sleep do you usually get?"
+      ],
+      "source": "Docs",
+      "id": "ea6aeb85649f"
+    }
+  },
+  {
+    "content": "My preferences span values, learning styles, leadership, and lifestyle—each shaping my personality and approach to life. One of my favorite quotes is, “Work hard, be kind, and amazing things will happen,” by Conan O’Brien. This motto grounds me in purpose, reminding me to stay humble, driven, and compassionate. I thrive in leadership roles, especially in startups and AI projects, where I enjoy steering both the technical and strategic direction of product development—from design to deployment. I’m energized by problem-solving, whether debugging, optimizing, or architecting clean systems, and I find deep satisfaction in turning ideas into reality through engineering. While I’m equally comfortable working independently or with others, my extensive startup and full-stack experience often places me in leadership positions.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "preference",
+        "overview"
+      ],
+      "questions": [
+        "What’s a quote that inspires you?",
+        "How would you describe your personality?",
+        "Do you enjoy leading teams or working independently?",
+        "What motivates you to keep solving problems?",
+        "How do you approach your work and life values?"
+      ],
+      "source": "Docs",
+      "id": "c20657fd7dde"
+    }
+  },
+  {
+    "content": "When it comes to learning and productivity, I prefer active, exploratory methods. I ask ChatGPT over 100 questions daily, watch YouTube tutorials, and frequently turn to Stack Overflow for guidance. I take detailed notes, start tasks early, and stay organized using tools like GitHub Projects and TickTick to manage my responsibilities across multiple projects. One of my favorite hobbies is building my home lab—my current setup features an AMD Ryzen 9950X, and I plan to upgrade to server-grade hardware like the RTX 5090 or RTX 6000 Pro. My aesthetic tastes reflect a blend of minimalism and futurism: I favor black-and-white fashion and RGB neon design elements, a style evident in the cyberpunk-themed design of my personal website.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "preference",
+        "learning productivity and color"
+      ],
+      "questions": [
+        "How do you like to learn new things?",
+        "Are you more of a visual or hands-on learner?",
+        "What kind of design style do you like?",
+        "Do you have a favorite color scheme or fashion aesthetic?",
+        "What’s something unique about your workspace setup?"
+      ],
+      "source": "Docs",
+      "id": "6991cb5423d8"
+    }
+  },
+  {
+    "content": "I’m a passionate foodie with a strong preference for bold, flavorful dishes. I especially enjoy Chinese cuisine such as dumplings, roasted duck, Zhajiangmian, and Sichuan hotpot—spicy meals inspired by my mother, a graduate of Sichuan University. I’m also a fan of Japanese dishes like sushi and ramen, as well as Western favorites like fish and chips and steak. My favorite number is 7, the jersey number I wore in soccer, and I also hold a fondness for 10 (Messi), 15 (my ice hockey number), and 30 (Stephen Curry). I am a loyal basketball fan, I support the Golden State Warriors and the Toronto Raptors, and admire players like Curry, Jordan Poole, Victor Wembanyama, and Yang Hansen.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "preference",
+        "food and number",
+        "NBA basketball"
+      ],
+      "questions": [
+        "What’s your favorite kind of food?",
+        "Are you more into spicy or mild dishes?",
+        "Do you have a favorite number or lucky number?",
+        "Which NBA teams or players do you support?",
+        "Do you enjoy cooking or just eating great food?"
+      ],
+      "source": "Docs",
+      "id": "d51c3292032a"
+    }
+  },
+  {
+    "content": "When it comes to lifestyle and entertainment, I prefer city life and urban exploration, though I also enjoy peaceful getaways to beaches or nature. Some of my favorite cities include Beijing for its rich history, Toronto and Markham for food and culture, and Vancouver and Shawnigan Lake for their natural beauty and connection to family. I’m also a devoted cat lover—I currently live with my two cats, Timi and Chocho—but I grew up around golden retrievers and huskies, which gave me a soft spot for dogs as well. My favorite movie is Pirates of the Caribbean, which I love for its adventurous spirit, memorable characters like Jack Sparrow and Barbossa, and the emotional arc between Will Turner and Elizabeth Swann. I also enjoy epic, sci-fi, and emotionally rich films like The Avengers, Léon, The Shawshank Redemption, Inception, and Interstellar.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "preference",
+        "lifestyle and entertainment"
+      ],
+      "questions": [
+        "Do you prefer city life or nature getaways?",
+        "What are some of your favorite cities?",
+        "Are you a cat person or a dog person?",
+        "What’s your favorite movie or movie genre?",
+        "Which characters or stories really resonate with you?"
+      ],
+      "source": "Docs",
+      "id": "023a3ae16099"
+    }
+  },
+  {
+    "content": "My habits reflect a structured yet curious mindset shaped by years of balancing startups, academic pursuits, and personal development. I use tools like Google Calendar and Notion for time-blocking, allocating focused sessions for startup work, classes, and research to ensure nothing falls behind. I begin tasks early, break complex goals into manageable steps, and leverage delegation effectively—particularly when leading teams like Campus Eats. My leadership style blends architecture-level guidance with collaborative input, motivation, and mentorship, encouraging autonomy and open dialogue among teammates. I practice clean coding, write modular code, and lead regular code reviews with clear documentation. I reinforce learning through hands-on debugging, detailed note-taking, and side projects. Every day, I engage in over 100 questions with ChatGPT, watch full-length YouTube tutorials, and browse Stack Overflow as part of my self-directed learning workflow.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "habits",
+        "workstyle"
+      ],
+      "questions": [
+        "How do you usually stay organized and on track?",
+        "What tools do you use to plan your day?",
+        "Would you say you’re more of an early starter or a last-minute type?",
+        "How do you like to learn new things?",
+        "What’s your leadership style like?"
+      ],
+      "source": "Docs",
+      "id": "33b3e33ff43e"
+    }
+  },
+  {
+    "content": "To stay productive and inspired, I dedicate over two hours daily to research or creative side work outside of my core responsibilities. I focus on both short-term execution and long-term impact, staying adaptive by building foundational knowledge while exploring new trends in tech. Maintaining work-life balance is equally important to me: I take breaks—such as a recent trip to Cuba—visit family in British Columbia during holidays, and protect my mental wellness through rest and reflection. I value personal time and make sleep a priority to recharge. In high-pressure or fast-paced environments, I remain grounded by relying on data-driven decisions, clear communication, and a constant drive for improvement.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "habits",
+        "workstyle"
+      ],
+      "questions": [
+        "How do you stay productive outside of work?",
+        "What do you like to do on your breaks or holidays?",
+        "How do you maintain work-life balance?",
+        "Do you consider yourself more spontaneous or structured?",
+        "What helps you stay calm under pressure?"
+      ],
+      "source": "Docs",
+      "id": "3437fff70350"
+    }
+  },
+  {
+    "content": "In the short term, I’m focused on enhancing both my hardware infrastructure and professional trajectory to align with my ambitions in AI and startup innovation. I’ve recently upgraded my home lab with an AMD Ryzen 9950X CPU and am currently evaluating high-performance GPUs like the upcoming Nvidia RTX 5090 and the RTX 6000 Pro with 96GB VRAM to support medium-to-large-scale LLM training and inference. My long-term hardware plan includes expanding into a multi-node compute cluster using top-tier components such as AMD Threadripper or Intel Platinum CPUs. These technical upgrades are deeply integrated with my work in AI fine-tuning and system-level optimization. Geographically, I’m considering post-graduation relocation to Vancouver, Seattle, or Toronto, with Seattle—especially Bellevue—being my top choice due to its proximity to Canada and its concentration of major tech firms like Google, Amazon, Microsoft, Meta, and TikTok.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "short term plan",
+        "Hardware and Geograpy"
+      ],
+      "questions": [
+        "Where are you thinking of moving after graduation?",
+        "What kind of places do you enjoy living in?",
+        "Do you like building computers or upgrading tech?",
+        "Why are you interested in cities like Seattle or Vancouver?",
+        "What are you currently working on in your home lab?"
+      ],
+      "source": "Docs",
+      "id": "260a49b567bd"
+    }
+  },
+  {
+    "content": "At the same time, I aim to bridge academic research with real-world innovation through startup ventures. While much of the AI industry continues to scale model sizes, I believe the future lies in building efficient, domain-specific models capable of running on local hardware without compromising performance. My vision is to lead the next generation of AI productization by transforming cutting-edge research into accessible, impactful solutions. Through this approach, I hope to shape a more sustainable and widely deployable future for AI technologies.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "short term plan",
+        "industry"
+      ],
+      "questions": [
+        "What’s your vision for the future of AI?",
+        "How do you think AI should evolve in the next few years?",
+        "Do you prefer working on big models or efficient ones?",
+        "What excites you most about AI innovation?",
+        "How do you want your work to make an impact?"
+      ],
+      "source": "Docs",
+      "id": "d98db2908b6e"
+    }
+  },
+  {
+    "content": "My beliefs are rooted in a blend of entrepreneurial drive, leadership values, cultural openness, and a strong commitment to personal growth and balance. My passion for tech startups stems from the opportunity to build meaningful solutions from the ground up. Campus Eats was my first major venture, offering hands-on experience in product development, team leadership, and delivering tangible user impact. I’m particularly inspired by the shift toward verticalized AI—domain-specific models that solve real-world problems with efficiency and precision. I see the future of AI at the intersection of research and practical innovation, and I’m committed to building startups that lead in this space.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "belief",
+        "overview"
+      ],
+      "questions": [
+        "What do you believe makes a good startup founder?",
+        "What motivates you to keep building new things?",
+        "How do your beliefs shape your work?",
+        "Why are you passionate about startups?",
+        "What kind of future do you see for AI?"
+      ],
+      "source": "Docs",
+      "id": "b51d0bb8c209"
+    }
+  },
+  {
+    "content": "As a leader, I value both technical depth and business intuition. I enjoy identifying meaningful problems, guiding full-stack development, and aligning products with a larger mission. I believe passion is the most important soft skill for any developer—it fuels curiosity, continuous learning, and the exploration of new tools and frameworks. I evaluate project success not just through technical metrics or benchmarks, but also through creativity, user feedback, and personal growth. My entrepreneurial mindset thrives on wearing multiple hats—from coding and UI/UX design to customer interaction—and I find fulfillment in seeing an idea turn into a product that positively impacts lives. Mentoring brings me equal joy, and I frequently advise students to stay curious, keep building, and pursue their goals with intention. That mindset enabled me to complete three major projects, one internship, two research roles, and four university courses within a single year.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "belief",
+        "mentor and advice"
+      ],
+      "questions": [
+        "What’s your biggest advice to students or junior developers?",
+        "What do you think makes someone a good leader?",
+        "How do you define success in your projects?",
+        "Do you enjoy mentoring others?",
+        "What keeps you motivated when you're juggling so many things?"
+      ],
+      "source": "Docs",
+      "id": "77260c69fca1"
+    }
+  },
+  {
+    "content": "I also understand the importance of balance. To recharge, I visit family in British Columbia, take scenic trips—like my 2025 photography tour in China—and relax with my girlfriend in places like Cuba. Activities such as walking, enjoying good food, playing games, or embracing a slower pace of life help me reset and return with renewed energy. My upbringing in Beijing’s Chaoyang Wangjing neighborhood provided me with a rich cultural foundation, while my years in Toronto and Vancouver broadened my global perspective. China taught me tradition, speed, and creative expression; Canada taught me equality, openness, and sustainability. These dual cultural experiences have made me adaptable and globally minded. Whether I’m building startups, mentoring others, or exploring new cultures, I strive to stay curious, stay kind, and build things that truly matter.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "belief",
+        "worklife balance"
+      ],
+      "questions": [
+        "What does work-life balance mean to you?",
+        "How has growing up in both China and Canada shaped you?",
+        "What kind of things help you recharge?",
+        "What do you enjoy most about exploring new places?",
+        "How do you stay grounded when life gets busy?"
+      ],
+      "source": "Docs",
+      "id": "645ad0f3caf5"
+    }
+  },
+  {
+    "content": "Vacation and personal time play an essential role in my life, helping me recharge, explore, and reflect. I maintain grounding traditions, such as visiting my family in British Columbia every Christmas—a practice that keeps family ties strong and provides a sense of continuity amid a busy schedule. I love to travel and immerse myself in different cultures, cuisines, and landscapes. In recent years, I’ve enjoyed memorable trips, including a relaxing getaway to Cuba with my girlfriend and two extensive journeys through China in 2021 and 2025. These trips took me to nearly every region, with stops in Beijing, Nanjing, Yangzhou, Suzhou, Shanghai, Zhejiang, Guangdong, Shenzhen, Wuhan, Chongqing, Chengdu, Yunnan, Gansu, and Qinghai. Each city offered unique cultural experiences that deepened my appreciation for China’s regional diversity, rich cuisine, and rapid modern development.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "life",
+        "Vocation and travel"
+      ],
+      "questions": [
+        "Do you enjoy traveling? What kind of places do you like most?",
+        "What’s been one of your most memorable trips?",
+        "Do you have any yearly traditions with your family?",
+        "Which city in China left the biggest impression on you?",
+        "How does travel help you reflect or recharge?"
+      ],
+      "source": "Docs",
+      "id": "5d5083fbca9f"
+    }
+  },
+  {
+    "content": "Photography has become a central way for me to engage with the world while traveling. I use a Nikon Z30 and a variety of lenses to capture both visual beauty and emotional moments from each location. My photography helps me preserve meaningful memories and has become a creative outlet that complements my technical work. Even during the workweek, I set aside at least two hours each day for personal projects or relaxation, which helps me maintain creativity and avoid burnout.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "life",
+        "photography"
+      ],
+      "questions": [
+        "How did you get into photography?",
+        "What kind of moments do you like to capture?",
+        "What camera gear do you use when you travel?",
+        "Do you find photography relaxing or creative—or both?",
+        "How do you make time for hobbies during the workweek?"
+      ],
+      "source": "Docs",
+      "id": "581c2dddd0fd"
+    }
+  },
+  {
+    "content": "In terms of long-term goals, I aspire to live and work in innovation-driven cities with strong tech and AI ecosystems. My top choices include Toronto, where I studied and built deep academic and professional ties; Seattle—especially the Bellevue area—for its modern infrastructure and proximity to tech leaders like Amazon and Microsoft; and San Francisco, a global hub for startups and cutting-edge AI research. I’m drawn to cities with dense founder communities and vibrant venture capital networks, where I can collaborate with ambitious teams and continue growing as a developer and entrepreneur.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "life",
+        "city"
+      ],
+      "questions": [
+        "Which cities would you like to live and work in?",
+        "Why are places like Seattle and Toronto special to you?",
+        "What kind of environment do you find inspiring?",
+        "Do you prefer big cities or smaller towns?",
+        "What makes a city feel like home for you?"
+      ],
+      "source": "Docs",
+      "id": "bb5a8a41241b"
+    }
+  },
+  {
+    "content": "At the core of my journey is Beijing, where I spent the first 16 years of my life. I attended Huajiadi Elementary, Chenjinglun Junior High, and Beijing No. 80 High School, and I still cherish memories of influential teachers like Mr. Zhang. Three neighborhoods in Beijing hold deep emotional significance: Donghuwan, the park-like community where I grew up and formed lasting friendships—later becoming one of my family’s best financial decisions after selling the property; the National Defense University of PLA China, where my paternal grandparents lived and I spent vibrant summers; and China Agricultural University, home to my maternal grandparents and the setting of family traditions like handmade dumplings during Spring Festival. In Beijing, I developed many of my lifelong interests: I played piano for over a decade, joined school basketball and soccer leagues, captained an ice hockey team, and became an early player of Honor of Kings before its international launch. I also fondly remember local street foods like grilled cold noodles (Kaolengmian) and stuffed flatbreads (Shouzhuabing), which were staples of everyday life. Altogether, my past, present, and future are tied together by a deep appreciation for culture, travel, innovation, and the meaningful relationships that anchor it all.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "life",
+        "Beijing"
+      ],
+      "questions": [
+        "Where did you grow up?",
+        "What are some of your favorite memories from Beijing?",
+        "Which neighborhood felt most like home to you?",
+        "What local food do you miss the most?",
+        "How did your childhood shape who you are today?"
+      ],
+      "source": "Docs",
+      "id": "a67e8899bf69"
+    }
+  },
+  {
+    "content": "I have been fortunate to travel across a wide range of countries and regions, each of which has shaped my worldview in meaningful ways. In China, I have explored nearly every major region, including Beijing, Nanjing, Hangzhou, Suzhou, Shanghai, Zhejiang, Guangdong, Shenzhen, Wuhan, Chongqing, Chengdu, Yunnan, Gansu, and Qinghai. Each city left a unique impression—whether through its rich history, breathtaking landscapes, or diverse local cuisines. In Canada, I have visited Vancouver, Calgary, Banff, Montreal, and Quebec, where I enjoyed the contrast between vibrant city life and the stunning natural beauty of places like Banff. In 2024, I took one of my most relaxing trips to Cuba with my girlfriend Winnie, spending time on sunlit beaches and exploring local culture. I also traveled with my parents to Indonesia and the Maldives, cherishing memories of crystal-clear waters, flavorful food, and meaningful family time.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "travel",
+        "overview"
+      ],
+      "questions": [
+        "What are some of your favorite places you’ve traveled to?",
+        "Which trip stands out the most to you?",
+        "Do you prefer city travel or nature escapes?",
+        "What’s your most relaxing vacation so far?",
+        "How has travel influenced your perspective?"
+      ],
+      "source": "Docs",
+      "id": "33225cd3ad01"
+    }
+  },
+  {
+    "content": "Photography plays a central role in how I engage with travel. Using my Nikon Z30 and a variety of lenses, I capture scenic landscapes and candid human moments, especially during my extended trips to China in 2021 and 2025—where I took over 2,000 photos. Travel has given me a deeper appreciation for cultural diversity, offered me new perspectives, and provided space to disconnect from routine. Looking ahead, Europe is next on my travel list, as I continue to explore the world and seek inspiration from new places and experiences.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "travel",
+        "photography"
+      ],
+      "questions": [
+        "What got you into photography?",
+        "What kind of photos do you enjoy taking the most?",
+        "Do you travel with a specific camera setup?",
+        "What’s your dream travel destination?",
+        "Why is photography meaningful to you?"
+      ],
+      "source": "Docs",
+      "id": "fc475de441fe"
+    }
+  },
+  {
+    "content": "My passion for computer science, data science, and machine learning stems from a deep belief that intelligent, interactive software can solve real-world problems and improve lives. I pursued a double major in Computer Science and Data Science at the University of Toronto to combine software engineering with predictive modeling. This foundation empowered me to build practical tools, from launching applications like Campus Eats to fine-tuning deep learning models such as ResNet, Inception, VGG, and LLaMA 3.2 for food classification and personalized chatbots. Courses like CSC311 (Intro to ML) and CSC413 (Neural Networks and Deep Learning) solidified my technical skills, and I am now continuing this path through the MSE-AI master’s program at the University of Pennsylvania.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "career",
+        "overview"
+      ],
+      "questions": [
+        "What got you interested in computer science and AI?",
+        "How did your university studies shape your career?",
+        "What’s one project you’re especially proud of?",
+        "Do you enjoy building tools that help people?",
+        "How do you stay motivated in such a fast-moving field?"
+      ],
+      "source": "Docs",
+      "id": "3def1f780235"
+    }
+  },
+  {
+    "content": "My career vision lies at the intersection of software, AI, and business. I am motivated by the desire to scale innovation with purpose—whether by leading startups, contributing to industry research and development, or teaching in academia. Becoming a professor remains a dream for me, as I enjoy continuous learning, mentorship, and teaching. Academia would allow me to engage in cutting-edge AI research while shaping the next generation of innovators. At the same time, I am equally excited about the prospect of leading a machine learning startup focused on impactful domains like automation, healthcare, and personalization.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "career",
+        "future plan"
+      ],
+      "questions": [
+        "What’s your dream job in the future?",
+        "Would you rather teach or build your own company?",
+        "What kind of impact do you want to make in your career?",
+        "Why does mentorship matter to you?",
+        "Do you see yourself staying in AI long-term?"
+      ],
+      "source": "Docs",
+      "id": "370673e4f013"
+    }
+  },
+  {
+    "content": "My entrepreneurial journey, most notably through founding Campus Eats, has fueled a long-term goal to build ethical, efficient, and accessible AI systems. I am particularly interested in developing verticalized models that maintain high performance while requiring fewer computational resources. I enjoy designing full-stack infrastructures, leading technical teams, and ensuring that engineering aligns with product vision and strategic objectives. Whether in industry or academia, my mission is to push boundaries, democratize machine intelligence, and create practical tools that make a real difference in people’s lives.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "career",
+        "entrepreneurship and leadership"
+      ],
+      "questions": [
+        "What inspired you to become an entrepreneur?",
+        "What kind of AI projects are you most passionate about?",
+        "Do you enjoy leading teams or working solo?",
+        "How do you want your work to impact others?",
+        "What kind of problems do you hope to solve with AI?"
+      ],
+      "source": "Docs",
+      "id": "5db6feeb3bbf"
+    }
+  },
+  {
+    "content": "For internships and full-time roles, I am especially drawn to companies like Google, Amazon, OpenAI, and Meta due to their leadership in AI research, open-source contributions, and global influence. I admire Google’s advancements in TensorFlow and Google Cloud, Amazon’s work in AWS, logistics, and Alexa, OpenAI’s breakthroughs in AGI and fine-tuning large language models, and Meta’s efforts in scalable personalization. In terms of location, Toronto remains a natural home base due to its vibrant AI ecosystem and the strong personal network I have built there, including my girlfriend and mentors. Vancouver also appeals to me for its work-life balance and family proximity—ideal for long-term projects or startup ventures. Seattle offers proximity to Vancouver and access to major tech companies like Amazon, Microsoft, Google, and TikTok, making it one of my top choices. Ultimately, whether I become a professor, startup founder, or AI researcher at a leading company, my goal is to create intelligent systems that are research-driven, user-focused, and widely accessible—tools that not only solve problems but inspire meaningful progress.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "career",
+        "future jobs or plans"
+      ],
+      "questions": [
+        "Which companies would you love to work for?",
+        "What makes Toronto, Vancouver, or Seattle appealing to you?",
+        "Do you prefer working in industry or academia?",
+        "What kind of team or company culture do you enjoy?",
+        "What do you hope to achieve in your future career?"
+      ],
+      "source": "Docs",
+      "id": "4c0eede2272b"
+    }
+  },
+  {
+    "content": "I’m always happy to support others—whether it’s answering technical questions, discussing projects, or exploring collaboration ideas. You can reach me by email or phone, both of which are listed on my personal website: [https://liustev6.ca](https://liustev6.ca). I’m also active on professional and social platforms, including LinkedIn ([https://www.linkedin.com/in/liustev6/](https://www.linkedin.com/in/liustev6/)), Instagram, and WeChat, and I welcome connections on any of those channels. For those interested in my technical work, my GitHub profile at [https://github.com/Yuanxyyds](https://github.com/Yuanxyyds) features many of my projects, including open-source contributions and research-driven tools. Whether you’re nearby and want to meet for coffee, or simply want to chat online, I’m always open to meaningful conversations and new connections.",
+    "metadata": {
+      "section": "section about me",
+      "tags": [
+        "contact"
+      ],
+      "questions": [
+        "What’s the best way to contact you?",
+        "Are you open to new connections or collaborations?",
+        "Where can I find your technical projects?",
+        "Can I reach out to you on LinkedIn or GitHub?",
+        "Do you enjoy meeting new people through your work?"
+      ],
+      "source": "Docs",
+      "id": "7f3e7045d8c9"
+    }
+  },
+  {
+    "content": "I began my educational journey at Huajiadi Elementary School in Beijing, where I studied from Grade 1 to 6. During these formative years, I developed a strong foundation in Mandarin, Math, and English—quickly favoring Mandarin and Math thanks to my mentor, Mr. Zhang, whose engaging teaching style ignited my lifelong passion for learning. This period also marked the beginning of many of my enduring hobbies, including playing the piano, joining school soccer and ice hockey teams, and learning to balance academics with extracurriculars. These early experiences instilled a sense of discipline and time management that continues to shape how I approach challenges today.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "past education",
+        "Elementary School or Primary School in Beijing China"
+      ],
+      "questions": [
+        "Where did your education journey begin?",
+        "Did you have a favorite subject growing up?",
+        "What kind of student were you in elementary school?",
+        "How did your early education influence your interests?",
+        "Do you still remember any teachers who inspired you?"
+      ],
+      "source": "Docs",
+      "id": "a8c5edab8d4d"
+    }
+  },
+  {
+    "content": "After completing middle school at Chenjinglun and attending part of high school at Beijing No. 80, I moved to Canada at age 16 and completed my secondary education at Semiahmoo Secondary School in Surrey, BC. I then enrolled at the University of Toronto, where I graduated in June 2025 with an Honours Bachelor of Science in Computer Science and Data Science, earning High Distinction and a cumulative GPA of 3.9/4.0. I was named to the Dean’s List for five consecutive years (2020–2025) and received notable awards such as the New College In-Course Scholarship and the U of T Hatchery Fellowship.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "past education",
+        "Transition from Beijing China to Canada"
+      ],
+      "questions": [
+        "When did you move to Canada?",
+        "What was the transition like between Beijing and Canada?",
+        "Where did you go to high school and university?",
+        "Did you enjoy your time at the University of Toronto?",
+        "What’s one academic achievement you’re proud of?"
+      ],
+      "source": "Docs",
+      "id": "fd17cc23cce8"
+    }
+  },
+  {
+    "content": "My undergraduate experience was deeply enriching, extending well beyond coursework. I conducted AI research at FarDataLab under Professor Qizhen Zhang, co-founded Campus Eats under the mentorship of Professor Jack Sun, and completed a full-year co-op at Johnson Controls. I also served as President of the U of T Tutoring Club, demonstrating my dedication to leadership and community engagement. My academic coursework blended theory with application—I earned A’s in machine learning courses like CSC311 (Intro to ML), CSC412 (Probabilistic Learning), CSC413 (Neural Networks), and CSC320 (Computer Vision), applying these skills to projects such as food classification with ResNet, Inception, and VGG, as well as fine-tuning LLaMA 3.2 for chatbot development.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "past education",
+        "undergraduate"
+      ],
+      "questions": [
+        "What was your undergraduate experience like?",
+        "What kinds of projects did you work on in university?",
+        "Were you involved in any clubs or leadership roles?",
+        "What’s one highlight from your time at U of T?",
+        "Did any professors or mentors have a big impact on you?"
+      ],
+      "source": "Docs",
+      "id": "cad847382da0"
+    }
+  },
+  {
+    "content": "My undergraduate experience was deeply enriching, extending well beyond coursework. I conducted AI research at FarDataLab under Professor Qizhen Zhang, co-founded Campus Eats under the mentorship of Professor Jack Sun, and completed a full-year co-op at Johnson Controls. I also served as President of the U of T Tutoring Club, demonstrating my dedication to leadership and community engagement. My academic coursework blended theory with application—I earned A’s in machine learning courses like CSC311 (Intro to ML), CSC412 (Probabilistic Learning), CSC413 (Neural Networks), and CSC320 (Computer Vision), applying these skills to projects such as food classification with ResNet, Inception, and VGG, as well as fine-tuning LLaMA 3.2 for chatbot development.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "past education",
+        "courses"
+      ],
+      "questions": [
+        "What were your favorite university courses?",
+        "How did your coursework relate to your projects?",
+        "Did any subjects surprise you or become unexpected favorites?",
+        "How did your studies support your outside work?",
+        "What’s a course that helped shape your interests?"
+      ],
+      "source": "Docs",
+      "id": "cad847382da0"
+    }
+  },
+  {
+    "content": "For my master’s studies, I applied to several top-tier U.S. institutions, including MIT, Stanford, Princeton, Harvard, and Yale, focusing specifically on programs specializing in artificial intelligence and machine learning. I also considered remaining in Canada and applied to the University of Toronto, where I had completed my undergraduate degree and developed strong ties within the research community. After a highly competitive admissions cycle, I was admitted to the University of Pennsylvania and chose to pursue the Master of Science in Engineering in Artificial Intelligence (MSE-AI). UPenn stood out for its balance between theoretical rigor and applied research, outstanding faculty, and close industry connections—all of which aligned perfectly with my long-term goals in machine learning.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "Master application"
+      ],
+      "questions": [
+        "Where did you apply for your master’s program?",
+        "What made you choose UPenn for graduate studies?",
+        "Was it a tough decision to stay in Canada or go to the U.S.?",
+        "What do you enjoy most about your program at UPenn?",
+        "What were you looking for in a master’s program?"
+      ],
+      "source": "Docs",
+      "id": "470075641af0"
+    }
+  },
+  {
+    "content": "Although I wasn’t admitted to the other schools, I found the application process to be a valuable experience that further reaffirmed my commitment to building a strong AI research profile. As I embark on my master’s journey at UPenn, I am already looking ahead to potential PhD programs. Institutions such as MIT, Stanford, UofT, Harvard, and Princeton remain top contenders due to their leadership in AI research, strong academic communities, and alignment with my personal and professional goals.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "Master application",
+        "PhD plan"
+      ],
+      "questions": [
+        "Do you plan to pursue a PhD in the future?",
+        "Which schools are on your PhD dream list?",
+        "What draws you toward continuing in academia?",
+        "Did the application process change your perspective?",
+        "What are you hoping to explore in your research?"
+      ],
+      "source": "Docs",
+      "id": "db924543fadd"
+    }
+  },
+  {
+    "content": "MIT remains a dream school for me because of its pioneering work in AI innovation and its interdisciplinary approach to research. I would be excited to contribute to MIT’s transformative work if given the opportunity. Stanford also holds strong appeal for its expertise in deep learning, NLP, and computer vision, as well as its tight integration with the Silicon Valley startup ecosystem—making it an ideal environment for someone interested in both applied research and entrepreneurship. At the University of Toronto, I have already built strong academic roots and see it as an ideal place to conduct impactful doctoral research, especially given its access to top-tier faculty such as Geoffrey Hinton and its proximity to Canadian AI hubs.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "MIT Stanford UofT thoughts"
+      ],
+      "questions": [
+        "Why is MIT one of your dream schools?",
+        "What excites you about Stanford’s environment?",
+        "How does U of T compare for doctoral research?",
+        "Would you prefer staying in Canada or moving to the U.S.?",
+        "What kind of academic environment motivates you most?"
+      ],
+      "source": "Docs",
+      "id": "32a8039f7400"
+    }
+  },
+  {
+    "content": "I also admire Harvard for its ability to bridge technical AI research with social sciences, aligning with my interests in AI ethics and policy. Princeton draws me in for its emphasis on theoretical machine learning and foundational algorithms—areas I value for their focus on rigorous thinking and elegant problem-solving. During my time at UPenn, I aim to deepen my expertise in neural network optimization, AI ethics, and efficient model training. I hope to publish in top-tier conferences, collaborate with leading researchers, and contribute to technologies that deliver social benefit. My long-term vision is to bridge academic research with real-world applications—building a career at the intersection of innovation, leadership, and impactful AI development, whether through academia, industry, or launching my own startup.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "Havard Princeton Upenn thoughts"
+      ],
+      "questions": [
+        "What interests you about Harvard’s AI and ethics work?",
+        "Why does Princeton’s approach appeal to you?",
+        "What areas are you focusing on during your master’s?",
+        "Do you enjoy blending research with real-world impact?",
+        "What’s your dream outcome for your graduate journey?"
+      ],
+      "source": "Docs",
+      "id": "c9e1f0127603"
+    }
+  },
+  {
+    "content": "Mr. Zhang was my Grade 5 Math teacher and the head teacher of my class. He remains my favorite teacher and had a profound influence on my personal and academic development. What set Mr. Zhang apart was not only his exceptional ability to teach Math but also his deep empathy and attentiveness to students’ emotional well-being. He consistently observed how students were feeling—if they seemed tired or stressed, he would take us outside to play and recharge. His thoughtful and compassionate approach made learning both engaging and meaningful, and it taught me that education is as much about nurturing students as it is about delivering content. Mr. Zhang’s creativity and care left a lasting impression on me and played a significant role in shaping my values. He is one of the key reasons I have seriously considered becoming a teacher myself. Over the years, we have stayed in touch, and Mr. Zhang’s ongoing mentorship remains one of the most formative and cherished aspects of my early education.",
+    "metadata": {
+      "section": "section about education",
+      "tags": [
+        "favourite teacher",
+        "Mr. Zhang"
+      ],
+      "questions": [
+        "Who was your favorite teacher growing up?",
+        "What made Mr. Zhang so special to you?",
+        "Do you still keep in touch with any of your teachers?",
+        "Have you ever thought about becoming a teacher?",
+        "How did Mr. Zhang influence your learning or values?"
+      ],
+      "source": "Docs",
+      "id": "28a3efbe2acf"
+    }
+  },
+  {
+    "content": "I have a well-rounded and versatile technical skill set that spans mobile, web, backend, machine learning, and data engineering. In mobile app development, I primarily use Flutter to build cross-platform apps that deliver native performance and intuitive UI. I also work with Kotlin and Swift for native Android and iOS development and have past experience using React Native. For UI/UX design, I start with Figma to prototype user-friendly interfaces. In web development, I am proficient in HTML, CSS, JavaScript, and TypeScript, and use modern frameworks like React and Next.js to build responsive, interactive applications.",
+    "metadata": {
+      "section": "section about skills",
+      "tags": [
+        "mobile app development",
+        "UI/UX design",
+        "web development"
+      ],
+      "questions": [
+        "What kind of apps do you enjoy building?",
+        "Which tools do you usually use for mobile or web development?",
+        "Do you prefer working on frontend or backend?",
+        "How do you usually design your user interfaces?",
+        "What’s your go-to framework for web projects?"
+      ],
+      "source": "Docs",
+      "id": "f54c6f181494"
+    }
+  },
+  {
+    "content": "On the backend, I frequently work with Firebase—my preferred platform for its seamless integration of Firestore and Cloud Functions—and have used it extensively in projects like Campus Eats, LockIn, and DTC. I also build scalable APIs with Django and Flask, and deploy them using cloud infrastructure tools such as AWS and Google Cloud Platform. In machine learning, I specialize in both computer vision and NLP using TensorFlow and PyTorch. My workflow involves meticulous data preparation, model training, and performance optimization through techniques like hyperparameter tuning, data augmentation, and regularization. I have built and fine-tuned models including ResNet, Inception, and LLaMA 3.2, and conduct rigorous evaluation using metrics such as accuracy, precision, and recall to ensure generalizability. For data analysis and visualization, I use both Python and R.",
+    "metadata": {
+      "section": "section about skills",
+      "tags": [
+        "backend",
+        "Machine Learning"
+      ],
+      "questions": [
+        "What’s your favorite backend tool to work with?",
+        "How do you usually approach machine learning projects?",
+        "Do you enjoy working more with data or models?",
+        "Which platforms do you use for cloud deployment?",
+        "What kind of problems have you solved with Machine Learning ML so far?"
+      ],
+      "source": "Docs",
+      "id": "266653bae46a"
+    }
+  },
+  {
+    "content": "My data engineering background includes working with both SQL and NoSQL databases, including MySQL, PostgreSQL, SQLite, Firebase, and MongoDB. I write efficient queries, work with JSON data, and perform data processing, cleaning, and transformation using Python for backend systems and analytics pipelines. My preferred tech stack—Flutter, Python, and JavaScript/TypeScript—enables me to switch seamlessly between mobile, backend, and frontend development, allowing me to deliver scalable, production-ready applications efficiently.",
+    "metadata": {
+      "section": "section about skills",
+      "tags": [
+        "data engineering",
+        "preferred tech stack"
+      ],
+      "questions": [
+        "What’s your go-to tech stack?",
+        "Do you work more with SQL or NoSQL databases?",
+        "How do you manage data processing in your projects?",
+        "What do you like about combining mobile and backend development?",
+        "Which languages or frameworks do you use most often?"
+      ],
+      "source": "Docs",
+      "id": "0990d9f8fa73"
+    }
+  },
+  {
+    "content": "Beyond technical skills, I have cultivated strong business acumen through leading Campus Eats. I have conducted market research involving over 50 restaurants and 500 students, drafted detailed business plans, performed cash flow analysis, refined go-to-market strategies, and pitched at major events such as the Hatchery Dominant Pitch and the Hult Prize. These experiences strengthened my entrepreneurial mindset, market validation skills, and communication abilities. Additionally, I am fluent in both Mandarin and English—having lived in China for the first 16 years of my life and adapting quickly to English upon moving to Canada. I also plan to learn French to better engage with Canada’s bilingual culture and broaden my communication toolkit.",
+    "metadata": {
+      "section": "section about skills",
+      "tags": [
+        "Businese",
+        "Language"
+      ],
+      "questions": [
+        "What kind of business experience do you have?",
+        "Which languages do you speak fluently?",
+        "Are you planning to learn any new languages?"
+      ],
+      "source": "Docs",
+      "id": "2f86201d33e9"
+    }
+  },
+  {
+    "content": "I co-founded two impactful startups aimed at enhancing student life—Campus Eats and LockIn. Campus Eats is a mobile app designed to streamline campus dining by offering discounts and significantly reducing wait times through online ordering, while LockIn motivates students to reduce phone usage by rewarding them with discounts to boost productivity. Both apps were developed from scratch and successfully pitched at prestigious competitions like the Hult Prize and the University of Toronto Hatchery, earning recognition, mentorship, and support. Campus Eats, officially registered and recognized by multiple University of Toronto programs, was built upon extensive market research involving interviews with over 50 restaurant owners and surveys of over 500 students, identifying key pain points from both sides. I led a cross-functional team of over 20 members across technology, business, media, and UI/UX design, coordinating product development, marketing strategies, launch plans, and monetization strategies involving transaction fees and premium features. These experiences honed my strong business acumen, cash flow management skills, and deep insights into balancing profitability with community benefits.",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "Startups",
+        "Leadership"
+      ],
+      "questions": [
+        "What inspired you to start Campus Eats and LockIn?",
+        "How did you manage a team of over 20 people?",
+        "What are some of your startup or leadership experience?",
+        "Do you enjoy pitching and public speaking?",
+        "What’s one thing you learned about leading a startup?"
+      ],
+      "source": "Docs",
+      "id": "8e0825104ed2"
+    }
+  },
+  {
+    "content": "I maintain a diverse portfolio across software engineering. Notable AI projects include StevenAI, a personalized AI chatbot fine-tuned from the 3-billion-parameter LLaMA 3.2 model using LoRA and Retrieval-Augmented Generation (RAG); MentorAI, which leverages mentorship videos on YouTube to generate tailored advice through large language models trained on ACL mentorship talk transcripts; AISIM, a 7-player AI social deduction simulation that studies LLM behavior through dynamic character dialogue, memory tracking, and reasoning via a Godot-powered interface; and Food101, which applied deep neural networks such as ResNet, Inception, and VGG for food category classification. I also designed and deployed an AI assistant on Raspberry Pi 5, featuring voice interaction with custom TTS models and seamless smart home integration via the Home Assistant API, supporting real-time voice feedback, touch-based interaction, and full device control. These projects are showcased through my personal website (https://liustev6.ca), built from scratch with React, Bootstrap, and Django. The site also features an interactive 3D-rendered server room crafted with Blender and Three.js, enabling dynamic exploration of my technical background and projects. ",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "Personal Projects"
+      ],
+      "questions": [
+        "Can you tell me about some personal AI projects you've built?",
+        "Which project are you most proud of so far?",
+        "What does your personal website showcase?"
+      ],
+      "source": "Docs",
+      "id": "ea6fad5f4a43"
+    }
+  },
+  {
+    "content": "I have contributed significantly to research and industry. At FarDataLab, I participated in hardware-accelerated database research and developed novel methods to optimize data management systems by leveraging cloud hardware accelerators such as GPUs and FPGAs. This work addresses challenges posed by the end of Dennard scaling and the slowing of Moore's law, focusing on improving efficiency and scalability of data processing tasks while reducing operational costs at scale. At Jinesis Lab, I contributed to MentorAI, a research project using YouTube video links and user data to generate personalized mentorship advice by analyzing transcripts with large language models and NLP techniques. I also contributed to Johnson Controls’ home security mobile and cloud applications, integrating Google Cloud Geolocation and ChatGPT-3 for conversational device control. ",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "Research",
+        "Industry"
+      ],
+      "questions": [
+        "What kind of research have you done in AI or systems?",
+        "Have you worked on any projects in industry?"
+      ],
+      "source": "Docs",
+      "id": "6ce96cb66e02"
+    }
+  },
+  {
+    "content": "My backend technology choices adapt flexibly to project needs. I extensively use Firebase (Firestore and Cloud Functions) for real-time updates and scalable logic (Campus Eats, LockIn, DTC); Django with PostgreSQL for structured web applications (LandSink, personal website); Flask and FastAPI for LLM inference and vector database integrations (StevenAI, MentorAI); and AWS and GCP for GPU-accelerated inference and scalability. My mobile development expertise includes Flutter combined with Firebase, which enabled Campus Eats to evolve from a course project into a robust, fully functional, and secure application.",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "Backend",
+        "Mobile Development"
+      ],
+      "questions": [
+        "What kind of backend tools do you usually use?",
+        "What kind of mobile development tools do you usually use?",
+        "How do you decide which tools to use for each project?"
+      ],
+      "source": "Docs",
+      "id": "522d5348b83b"
+    }
+  },
+  {
+    "content": "Continuous learning is central to my growth. I integrate academic concepts into practical projects, applying neural networks in ML tasks and employing microservice architectures for scalable application design. I regularly explore new tools like Blender and Framer for interactive animations and sophisticated 3D web components to keep projects innovative and user-focused.",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "Continuous Learning",
+        "New Tech"
+      ],
+      "questions": [
+        "How do you keep learning new tools and techniques?",
+        "What motivates you to keep experimenting with new tech?",
+        "How do you apply what you learn from school to your projects?",
+        "What tools are you exploring right now?"
+      ],
+      "source": "Docs",
+      "id": "f1f137108dbc"
+    }
+  },
+  {
+    "content": "Creativity, collaboration, user-centered design, and robust security underpin all my work. I actively leverage brainstorming and prototyping tools like Figma, categorizing and prioritizing user feedback into actionable improvements. To ensure user-friendly designs, I conduct user interviews and surveys, follow iterative prototyping, and implement usability tests to identify and address pain points, focusing on clean, consistent UI and minimizing user friction. Customer feedback is methodically categorized into technical improvements, design changes, and feature requests, prioritized by feasibility and user impact, with ongoing acknowledgment and transparent communication of planned updates. Regular testing and feedback sessions are integral to continuous improvement.",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "UI/UX Design",
+        "Feedback"
+      ],
+      "questions": [
+        "How do you approach UI and UX design?",
+        "What role does feedback play in your projects?",
+        "Do you use tools like Figma for prototyping?",
+        "How do you make sure your apps are user-friendly?",
+        "What’s your process for turning user input into action?"
+      ],
+      "source": "Docs",
+      "id": "6b3cb97ffdbd"
+    }
+  },
+  {
+    "content": "Security is a top priority. I implement multi-factor authentication, encrypt data at rest and in transit, and use Cloudflare to protect against network attacks. I have experience integrating Stripe payment systems, ensuring sensitive data bypasses the backend, and is sent directly to Stripe. My projects follow clean architecture patterns for independent scaling, employing load balancers, cloud auto-scaling, optimized database queries, caching, and continuous monitoring to maintain performance and resilience as demand grows.",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "Security",
+        "Scalability"
+      ],
+      "questions": [
+        "How do you keep your projects secure?",
+        "Do you use multi-factor authentication or encryption?",
+        "Have you ever integrated payments into an app?",
+        "How do you make sure your projects scale smoothly?"
+      ],
+      "source": "Docs",
+      "id": "4b5a48c1c231"
+    }
+  },
+  {
+    "content": "My Git expertise spans all major projects. I use branching to isolate features and fixes, collaborate through pull requests and code reviews to maintain stable, clean codebases, manage milestones with tags and releases, and actively use GitHub to manage repositories, including Campus Eats and machine learning prototypes.",
+    "metadata": {
+      "section": "section about experience",
+      "tags": [
+        "Version Control",
+        "Git"
+      ],
+      "questions": [
+        "How do you usually manage your codebase?",
+        "Are you comfortable working with Git and GitHub?",
+        "Do you follow any version control best practices?",
+        "What’s your typical workflow with pull requests?",
+        "How do you organize features or releases in Git?"
+      ],
+      "source": "Docs",
+      "id": "08b1adf778aa"
+    }
+  },
+  {
+    "content": "Campus Eats began as a CSC207 final project at the University of Toronto, originally conceived as a food truck ordering system built using Java and an Android frontend with a command-line interface. Although only partially implemented, this initial version laid the foundation for what would evolve into a comprehensive campus dining platform. I subsequently rebuilt Campus Eats from the ground up using Flutter and Firebase, adding extensive functionalities such as account management, shopping cart, detailed menu browsing, driver-side interfaces, and exclusive student discounts. The updated version features a redesigned UI, faster backend performance, and dedicated interfaces tailored separately for users, restaurant owners, and drivers, offering a streamlined, efficient, and affordable solution for campus dining.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "History",
+        "Improvement"
+      ],
+      "questions": [
+        "How did Campus Eats get started?",
+        "What changes did you make from the original version?",
+        "How did you improve performance and design?",
+        "What features does the current version of Campus Eats offer?",
+        "Was it hard to turn a class project into a real product?"
+      ],
+      "source": "Docs",
+      "id": "f0b2b8e19ada"
+    }
+  },
+  {
+    "content": "Campus Eats addresses core issues students face with traditional food delivery apps—such as excessive wait times, high delivery fees, and limited food options. Inspired by students like Tony, a first-year student frustrated by high delivery costs and limited Asian food choices on campus, Campus Eats created the innovative Campus Grab-and-Go delivery model. This system consolidates student orders during peak hours and delivers them to central pickup locations on campus, significantly reducing costs for both students and restaurants. By offering exclusive student discounts and bulk-ordering efficiencies, Campus Eats lowers prices so students pay closer to dine-in rates rather than inflated delivery fees.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "Core features",
+        "Grab and Go"
+      ],
+      "questions": [
+        "What problem does Campus Eats solve for students?",
+        "How does the Grab-and-Go delivery system work?",
+        "What inspired you to create this model?",
+        "How does Campus Eats keep prices affordable?",
+        "What makes Campus Eats different from other delivery apps?"
+      ],
+      "source": "Docs",
+      "id": "b6f01d7b31e5"
+    }
+  },
+  {
+    "content": "Restaurant owners also face challenges from existing platforms, including high commissions of up to 30% per order, which force price hikes and reduce profitability. Through extensive market research—including interviews with over 50 restaurant owners and surveys of over 500 students—I identified these critical pain points. Campus Eats resolves these by offering restaurants lower commission fees (10–15%), increased visibility to student customers, and efficient bulk ordering, enhancing profit margins without necessitating price increases.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "Restaurant Challenges",
+        "commission fees"
+      ],
+      "questions": [
+        "What issues do restaurant owners face with delivery apps?",
+        "How does Campus Eats support local restaurants?",
+        "What kind of market research did you do?",
+        "Why are lower commission fees important?",
+        "How does bulk ordering help restaurant partners?"
+      ],
+      "source": "Docs",
+      "id": "59932f021863"
+    }
+  },
+  {
+    "content": "Campus Eats provides a modern, intuitive user interface, making it easy for students to explore dining options via integrated maps and place secure orders through seamless Stripe-powered payment processing. The app ensures robust security measures, including two-factor authentication and encrypted card handling, with smooth address management facilitated by Google Cloud Maps integration. Users benefit from flexible ordering options—pickup, direct delivery, or the Campus Grab-and-Go system—with live order tracking and built-in chat functions enhancing communication between users, vendors, and drivers.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "Integration",
+        "User Features"
+      ],
+      "questions": [
+        "What features does Campus Eats offer for students?",
+        "How does the app handle payments and security?",
+        "Can users track their orders in real time?",
+        "What are the ordering options in the app?",
+        "Is it easy to navigate and use for new students?"
+      ],
+      "source": "Docs",
+      "id": "dc68c0d19e08"
+    }
+  },
+  {
+    "content": "Vendor-side functionalities are equally comprehensive, allowing restaurant owners to manage storefronts, dynamically create nested menu structures, and instantly receive payments via Stripe Connect. An intuitive vendor onboarding system simplifies the launch process, helping restaurants quickly go live and seamlessly integrate banking information. Additionally, the platform incorporates Algolia-powered search features for convenient browsing by vendor name, food type, or category.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "Integration",
+        "Vendor Features"
+      ],
+      "questions": [
+        "What tools do restaurants get with Campus Eats?",
+        "How easy is it for a vendor to get started?",
+        "Can vendors customize their menus?",
+        "How does Campus Eats help vendors get paid?",
+        "Is there a way to search for specific food or restaurants?"
+      ],
+      "source": "Docs",
+      "id": "c78c7055ed4c"
+    }
+  },
+  {
+    "content": "Under my leadership, Campus Eats grew significantly, involving contributions of over 30,000 lines of code and effective coordination of a 20-person multidisciplinary team spanning mobile and web development, business strategy, and UI/UX design. I spearheaded the startup’s participation in prestigious entrepreneurial programs such as the University of Toronto Hatchery fellowship and pitched at competitions like the Hatchery Dominant Pitch and Hult Prize. Through mentorship from industry experts like Erica Barra, I refined my entrepreneurial and leadership skills, developed detailed cash flow projections, and crafted a sustainable business model.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "Contribution and Team",
+        "Businese"
+      ],
+      "questions": [
+        "What was your role in leading Campus Eats?",
+        "How big was your team and how did you manage it?",
+        "Did you take part in any startup programs or competitions?",
+        "What business skills did you develop during this project?",
+        "What made Campus Eats a successful student-led venture?"
+      ],
+      "source": "Docs",
+      "id": "662c1b13f332"
+    }
+  },
+  {
+    "content": "Feedback from users has been overwhelmingly positive, highlighting Campus Eats’ intuitive interface and time-saving features, with constructive suggestions for improvements like faster processing during peak hours and expanded dietary customization options. I actively leverage such feedback, maintaining ongoing communication with users and restaurant partners to continuously refine and align the app with user needs. Campus Eats remains my favorite and most challenging project, deepening my understanding of customer needs, entrepreneurship complexities, and effective team management.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "Feedback"
+      ],
+      "questions": [
+        "What do users say about Campus Eats?",
+        "How do you gather and apply user feedback?",
+        "What improvements have users asked for?",
+        "What did you learn from building Campus Eats?",
+        "Why is this project meaningful to you?"
+      ],
+      "source": "Docs",
+      "id": "7932fb3b6629"
+    }
+  },
+  {
+    "content": "Campus Eats’ innovative model has been validated by strong market interest: 72% of students surveyed expressed willingness to use a fairly-priced campus delivery service, and restaurant owners indicated the platform’s potential for improved profitability and market reach. With revenue streams from commissions, memberships, and in-app advertising—and carefully managed operational costs—Campus Eats projects profitability with a break-even threshold of just 30–40 daily orders per location.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "Survey"
+      ],
+      "questions": [
+        "Did students and restaurants like the Campus Eats idea?",
+        "How was the market interest measured?",
+        "What revenue streams does the app use?",
+        "How many daily orders are needed to break even?",
+        "Why was this model seen as sustainable?"
+      ],
+      "source": "Docs",
+      "id": "54e8a5f1d45e"
+    }
+  },
+  {
+    "content": "Founded in May 2023 by myself, Tom, Emma, and Kevin, Campus Eats has ambitious expansion goals. Initially launching pickup hubs at the UTSG campus, the startup plans to expand across Ontario campuses by 2025, enter additional Canadian regions by 2026, and eventually target high schools, offices, and residential neighborhoods. With a sizeable serviceable obtainable market of $18.25 million at U of T alone, $44.3 million across Canadian colleges, and a North American total available market of $4.75 billion, Campus Eats aims to revolutionize campus dining continent-wide, offering better food, greater affordability, and enhanced quality of life for students everywhere.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "History",
+        "Market Size"
+      ],
+      "questions": [
+        "Who founded Campus Eats?",
+        "Where did Campus Eats first launch?",
+        "What are the future expansion plans?",
+        "What’s the size of the market you’re targeting?",
+        "What’s the long-term vision for Campus Eats?"
+      ],
+      "source": "Docs",
+      "id": "4cea6be6c9d5"
+    }
+  },
+  {
+    "content": "We paused our projects in 2025 due to several key challenges. First, our Grab-and-Go business model relied on a large initial user base—essential for restaurants to remain profitable after offering discounts and for us to cover delivery, platform, and staffing costs. Second, with growing emphasis on diversity and fairness, we aimed to onboard a wider range of restaurants, but couldn’t ensure enough demand to justify discounted pricing for all partners. Third, health-related regulations from the university limited the sale of food from external vendors on campus. Looking ahead, we plan to pivot toward a flexible coupon-based model that supports not only restaurants but also other vendors seeking to reach the student market through tiered discounts. Campus Ease will manage student verification and offer subscription-based premium tiers for partners. While we will preserve the original dining functionalities of Campus Eats, this expanded vision reflects our goal to make Campus Ease a broader platform for student-focused savings and campus engagement.",
+    "metadata": {
+      "section": "section about campus eats",
+      "tags": [
+        "current status",
+        "future plan"
+      ],
+      "questions": [
+        "Why was Campus Eats paused in 2025?",
+        "What challenges did you face with the original model?",
+        "What is the new direction for the platform?",
+        "What’s the idea behind Campus Ease?",
+        "Will the original dining features still be available?"
+      ],
+      "source": "Docs",
+      "id": "b50c2f03f7df"
+    }
+  },
+  {
+    "content": "My personal website, https://liustev6.ca, serves as a comprehensive portfolio showcasing all of my projects with video demos, interactive elements, and detailed information about my background and experiences. It includes backend-interactive projects like StevenAI, LandSink, the Food-101 image classification tool, a full journey demo page for Campus Eats, and a 3D server room built with Blender and Three.js where objects are interactive, allowing visitors to click them to learn more details. The site also features my resume, a section about my life and interests, and provides direct ways to contact me",
+    "metadata": {
+      "section": "section about portfolio website",
+      "tags": [
+        "Overview",
+        "Projects"
+      ],
+      "questions": [
+        "What can I find on your personal website?",
+        "Which projects are featured on your site?",
+        "What’s the 3D server room and how does it work?",
+        "Is there a way to learn more about you on the site?",
+        "Can people contact you directly through the website?"
+      ],
+      "source": "Docs",
+      "id": "263afbd86e42"
+    }
+  },
+  {
+    "content": "The site was first built in 2022 using Tailwind CSS and Next.js with a very early 2000s look—you can view that initial version at https://my-personal-website-yuanxyyds.vercel.app/. For convenience and self-development, I shifted the project to React.js with Bootstrap in 2023, introducing a major UI update with cyber-casual styles. In 2025, I redesigned it again with cyber neon colors, giving it a slightly more professional look and adding more animations and sections. New features include the built-in 3D server room with Three.js, a two-column gallery with varying scroll speeds, and other interactive elements.",
+    "metadata": {
+      "section": "section about portfolio website",
+      "tags": [
+        "History and Tech Stack",
+        "Interations and Updates"
+      ],
+      "questions": [
+        "How has your personal website changed over time?",
+        "What technologies did you use to build it?",
+        "Why did you switch from Next.js to React?",
+        "What’s the inspiration behind the cyber-neon design?",
+        "What are some unique interactive features on the site?"
+      ],
+      "source": "Docs",
+      "id": "05eaa39f4254"
+    }
+  },
+  {
+    "content": "The backend is developed with Django. Initially, the site was hosted on AWS EC2, but since building my own home server, most of the backend has been shifted there for better control and scalability. Building this website has been a lifelong hobby of mine; it not only showcases my journey but also reflects my passion for software engineering, full-stack development, CI/CD workflows for continuous improvement, and UI/interactive design capabilities.",
+    "metadata": {
+      "section": "section about portfolio website",
+      "tags": [
+        "Backend",
+        "Skills"
+      ],
+      "questions": [
+        "What powers the backend of your website?",
+        "Why did you move the hosting to your home server?",
+        "Is the website a reflection of your skills and interests?",
+        "What do you enjoy most about maintaining your site?",
+        "How does your website show off your full-stack skills?"
+      ],
+      "source": "Docs",
+      "id": "516a618b2035"
+    }
+  },
+  {
+    "content": "During my co-op at Johnson Controls, I worked as a full-stack mobile app developer under the guidance of my supervisor, Praharsh Bhatt, and manager, Rajmy Sayavong. I contributed to the development of a smart home and community management app called DTC (also known as Community). The app was built using Flutter for the frontend and Firebase for the backend, with cloud functions written in TypeScript. I was also responsible for designing the user interface in Figma and implementing the UI into a fully functional and responsive mobile app.",
+    "metadata": {
+      "section": "section about coop at Johnson Controls",
+      "tags": [
+        "DTC/Community Overview",
+        "People"
+      ],
+      "questions": [
+        "What did you work on during your co-op at Johnson Controls?",
+        "Who supervised your work during the internship?",
+        "What technologies did you use to build the DTC app?",
+        "What role did you play in designing the app's UI?",
+        "Was the app focused on smart home or community features?"
+      ],
+      "source": "Docs",
+      "id": "4e9a6025e0e3"
+    }
+  },
+  {
+    "content": "The app featured several core functionalities. Users could create and manage different types of circles—private circles, community circles, and home circles—where they could invite others, assign roles, and manage shared chats, devices, and announcements. We integrated an AI-powered assistant bot that could help users navigate the app or control smart devices simply by sending a message or speaking. The bot supported both speech-to-text and text-to-speech, enabling users to have voice-based conversations with the assistant. Additionally, users could add smart devices to their circles and create automation routines between devices.",
+    "metadata": {
+      "section": "section about coop at Johnson Controls",
+      "tags": [
+        "DTC/Community Features"
+      ],
+      "questions": [
+        "What are the main features of the DTC app?",
+        "How do user circles work in the app?",
+        "Can users interact with smart devices through voice?",
+        "How does the assistant bot work in the app?",
+        "What kind of automation can users set up?"
+      ],
+      "source": "Docs",
+      "id": "9f7c0c836d48"
+    }
+  },
+  {
+    "content": "On the integration side, I worked on connecting the app to Google Cloud Platform APIs to enable real-time geolocation tracking for people and devices within each circle. We also integrated support for smart home protocols like Google Matter and Zigbee through our implementation of the Flutter Home Assistant SDK. This allowed users to remotely control devices and automate interactions within their smart environments, all through a central cloud database",
+    "metadata": {
+      "section": "section about coop at Johnson Controls",
+      "tags": [
+        "Integration"
+      ],
+      "questions": [
+        "How did you implement geolocation tracking in the app?",
+        "What smart home protocols does the app support?",
+        "Did you work with any SDKs for smart home control?",
+        "How do users control devices in real time?",
+        "Was cloud integration a major part of your work?"
+      ],
+      "source": "Docs",
+      "id": "fe19ec015b6a"
+    }
+  },
+  {
+    "content": "This co-op provided me with valuable hands-on experience in full-stack mobile development, real-time cloud integration, and smart home technologies. I deepened my skills in UI/UX design, mobile UI implementation, backend logic with cloud functions, API integrations, and building intelligent assistants with voice interaction. The project was both technically challenging and rewarding, giving me a well-rounded understanding of modern connected app ecosystems.",
+    "metadata": {
+      "section": "section about coop at Johnson Controls",
+      "tags": [
+        "What I Gain and Learn"
+      ],
+      "questions": [
+        "What did you learn from your co-op at Johnson Controls?",
+        "How did this project challenge you technically?",
+        "Did the co-op improve your UI/UX design skills?",
+        "What experience did you gain with voice-based assistants?",
+        "How did this experience shape your interest in smart home tech?"
+      ],
+      "source": "Docs",
+      "id": "15a707beb5fc"
+    }
+  },
+  {
+    "content": "LockIn, also known as aSocial, is a productivity-focused mobile and web application that I co-founded to help students reduce phone usage and improve their time management. The app is built around a simple but effective concept: when users “lock in” their phones, they earn rewards based on the duration of their screen-free time. These rewards can then be redeemed for discounts at nearby businesses, creating a tangible incentive for students to stay off their devices. LockIn not only helps students save time and improve focus, but also supports local merchants by increasing student engagement with discount-based foot traffic.",
+    "metadata": {
+      "section": "section about Lockin Asocial",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What is LockIn (aSocial) and what problem does it solve?",
+        "How does LockIn encourage students to stay off their phones?",
+        "What kind of rewards can users earn through LockIn?",
+        "Why did you choose to focus on student productivity?",
+        "How does LockIn benefit local businesses?"
+      ],
+      "source": "Docs",
+      "id": "6cbcb9e76a93"
+    }
+  },
+  {
+    "content": "The app features a reward system powered by the integration of iOS Screen Time APIs, allowing for accurate tracking of phone usage. It maintains a local-vendor reward database so students can exchange their earned time for discounts, contributing to a 30% average reduction in screen time among active users. LockIn is available as both a mobile app and a web platform. The mobile version was developed using Swift for iOS and Flutter for UI refinement, while the web version was built using Next.js. Firebase was integrated to enable real-time updates and seamless user experience across platforms.",
+    "metadata": {
+      "section": "section about Lockin Asocial",
+      "tags": [
+        "Features"
+      ],
+      "questions": [
+        "How does LockIn measure phone usage accurately?",
+        "What technologies power LockIn’s reward system?",
+        "What platforms is LockIn available on?",
+        "How does LockIn reduce screen time among students?",
+        "What role does Firebase play in the app?"
+      ],
+      "source": "Docs",
+      "id": "b17c9d18f8f2"
+    }
+  },
+  {
+    "content": "As a founding engineer, I played a central role in prototyping, developing, and launching the app on both the Apple Store and the web. I provided technical leadership across all parts of the stack, working on frontend and backend systems, reward tracking, and real-time infrastructure. My work included developing user-facing interfaces, implementing backend logic, and integrating key technologies like Firebase and iOS APIs. I also helped refine the product strategy to ensure it aligned with student needs and vendor partnerships.",
+    "metadata": {
+      "section": "section about Lockin Asocial",
+      "tags": [
+        "My role"
+      ],
+      "questions": [
+        "What was your role in building LockIn?",
+        "Did you lead both frontend and backend development?",
+        "How did you ensure the product aligned with student needs?",
+        "What technologies did you integrate into the app?",
+        "What was the biggest challenge you faced as a founding engineer?"
+      ],
+      "source": "Docs",
+      "id": "d01d6a28ff6b"
+    }
+  },
+  {
+    "content": "Currently, LockIn is live on the Apple Store and has achieved over 5,000 downloads, ranking as high as #60 in the Productivity category. The project has demonstrated strong impact, with measurable improvements in user focus and time management, and continues to expand its reach among student communities and local businesses.",
+    "metadata": {
+      "section": "section about Lockin Asocial",
+      "tags": [
+        "Launch"
+      ],
+      "questions": [
+        "Is LockIn currently available to the public?",
+        "How many downloads has LockIn received so far?",
+        "What ranking did LockIn achieve on the Apple Store?",
+        "What impact has LockIn had on student productivity?",
+        "Is LockIn still expanding to new users or markets?"
+      ],
+      "source": "Docs",
+      "id": "a24e9e0dfb8b"
+    }
+  },
+  {
+    "content": "I have served as a Research Assistant at the University of Toronto since September 2023, contributing to cutting-edge research in both large language models (LLMs) and hardware-accelerated database systems through my work with Jinesis Lab and FarDataLab. My interdisciplinary projects focus on optimizing computational systems for real-world applications in education, infrastructure, and machine learning. Guided by Professors Zhijing Jin and Qizhen Zhang, I blend theoretical insight with system-level engineering to advance AI for social good and improve database efficiency at scale.",
+    "metadata": {
+      "section": "section about Research",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What kind of research do you do at the University of Toronto?",
+        "Who are your research supervisors?",
+        "How is Qizhen Zhang and Zhijing Jin?",
+        "How do you contribute to AI for social good?",
+        "How are LLMs and database systems connected in your work?"
+      ],
+      "source": "Docs",
+      "id": "6fae79f7314c"
+    }
+  },
+  {
+    "content": "At Jinesis Lab, under the supervision of Zhijing Jin, I led the development of an LLM-powered mentorship chatbot (MentorAI) designed to help students navigate research planning by synthesizing knowledge from the ACL Mentorship Channel. My work involved building multiple video-to-chatbot pipelines using advanced components such as LLM summarizers, transcript-based Retrieval-Augmented Generation (RAG), supervised fine-tuning, and prompt engineering. I conducted evaluations across leading models including Qwen-2.5 and LLaMA-3, contributing to the lab’s broader mission of applying LLMs to promote equity and accessibility in academic mentorship.",
+    "metadata": {
+      "section": "section about Research",
+      "tags": [
+        "Jinese Lab"
+      ],
+      "questions": [
+        "What is MentorAI and how does it work?",
+        "How did you apply LLMs to mentorship support?",
+        "Which models did you evaluate in this project?",
+        "What is the goal of the Jinesis Lab?",
+        "How does your chatbot support academic equity and accessibility?"
+      ],
+      "source": "Docs",
+      "id": "e5691154fe9e"
+    }
+  },
+  {
+    "content": "At FarDataLab, under the guidance of Qizhen Zhang, I worked on accelerated database management systems aimed at overcoming performance limitations of general-purpose processors caused by the end of Dennard scaling and Moore’s Law. I designed and deployed three 5-node PrestoDB clusters configured with various combinations of GPU and FPGA hardware. I conducted extended TPC-H benchmark queries (lasting over 12 hours) to evaluate system performance, ultimately identifying a GPU-only configuration that delivered a 20% improvement in query throughput. This work contributes to the growing field of hardware-software co-design in large-scale cloud data systems.",
+    "metadata": {
+      "section": "section about Research",
+      "tags": [
+        "FDL Accelerated DBMS"
+      ],
+      "questions": [
+        "What kind of research did you do at FarDataLab?",
+        "How did you use GPU and FPGA for database acceleration?",
+        "What was the goal of your PrestoDB cluster experiments?",
+        "What performance improvements did you observe?",
+        "How does this research contribute to cloud data systems?"
+      ],
+      "source": "Docs",
+      "id": "9a1f4c1604d1"
+    }
+  },
+  {
+    "content": "My future research vision is driven by two major goals. First, I aim to deepen my understanding of low-level optimization for LLM training, inspired by hands-on experience configuring Unsloth for resource-efficient fine-tuning. I have successfully used LoRA adapters to merge models up to 11 billion parameters on a 16GB VRAM GPU, making advanced LLM research feasible in home lab environments. Questions such as why tools like Unsloth lack multi-GPU support motivate me to pursue deeper research in system efficiency, ideally at MIT using its world-class infrastructure. My goal is to publish impactful work that makes LLM training accessible to independent developers. Second, I am passionate about applied AI in industry, focusing on lightweight, verticalized models that achieve high accuracy for specialized tasks and are deployable locally, pushing forward the boundary of practical, secure, and scalable AI.",
+    "metadata": {
+      "section": "section about Research",
+      "tags": [
+        "Future Research Interest"
+      ],
+      "questions": [
+        "What are your long-term research goals?",
+        "How did your experience with Unsloth shape your interest?",
+        "Why is system efficiency in LLMs important to you?",
+        "What motivates you to focus on lightweight and verticalized models?",
+        "How do you plan to contribute to practical and scalable AI?"
+      ],
+      "source": "Docs",
+      "id": "6772ada9494f"
+    }
+  },
+  {
+    "content": "The Food-101 Image Classification Project is a deep learning–based system designed to automatically identify and categorize food images into 22 distinct classes, such as sushi, ramen, pizza, and dumplings. It leverages the widely-used Food-101 dataset, which contains thousands of labeled food images, as a foundation for training and evaluating models. The goal of the project is to build an accurate and efficient image classification pipeline capable of handling real-world food photos with varied lighting, angles, and compositions.",
+    "metadata": {
+      "section": "section about Food-101",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What is the Food-101 Image Classification Project?",
+        "How many food categories does your model recognize?",
+        "Why did you choose the Food-101 dataset for this project?",
+        "What real-world challenges does the model handle?",
+        "What was the main goal of building this classification system?"
+      ],
+      "source": "Docs",
+      "id": "04c8548bd717"
+    }
+  },
+  {
+    "content": "At its core, the project involves fine-tuning convolutional neural networks (CNNs) such as ResNet, Inception, and VGG. These pre-trained models are adapted using techniques like transfer learning, data augmentation, and hyperparameter tuning to improve performance and robustness. Beyond just model training, the project explores practical challenges in computer vision—like handling class imbalance, avoiding overfitting, and ensuring generalization through careful validation.",
+    "metadata": {
+      "section": "section about Food-101",
+      "tags": [
+        "Tech Models"
+      ],
+      "questions": [
+        "Which deep learning models did you use in the Food-101 project?",
+        "What techniques did you apply to improve model performance?",
+        "How did you deal with overfitting in this project?",
+        "What role does data augmentation play in your pipeline?",
+        "Why did you fine-tune models like ResNet or Inception instead of training from scratch?"
+      ],
+      "source": "Docs",
+      "id": "3cec6bd9b600"
+    }
+  },
+  {
+    "content": "From a user perspective, the project offers an interactive demo hosted at https://www.liustev6.ca/foodImageClassify, where users can upload a food image and receive a predicted category. This not only showcases the model's capabilities but also makes the system accessible and engaging for non-technical users. Overall, the Food-101 Image Classification Project demonstrates how machine learning can be applied to everyday tasks—like recognizing meals from images—while serving as a platform for experimenting with modern deep learning techniques. For me personally, this project marked my first experience building an advanced machine learning system. It introduced me to frequently-used deep learning architectures and helped me become familiar with state-of-the-art neural network techniques, forming a strong foundation for my future work in AI.",
+    "metadata": {
+      "section": "section about Food-101",
+      "tags": [
+        "Impact"
+      ],
+      "questions": [
+        "Where can people try out your Food-101 demo?",
+        "What does the interactive demo do?",
+        "How did this project help you grow in machine learning?",
+        "What was your biggest takeaway from building this system?",
+        "How does this project show the real-world value of deep learning?"
+      ],
+      "source": "Docs",
+      "id": "0d1a657dc529"
+    }
+  },
+  {
+    "content": "StevenAI is a personalized AI chatbot built to answer questions specifically about my life, projects, skills, and background. It was initially created by fine-tuning a large language model (LLaMA 3.2) and later enhanced with a custom Retrieval-Augmented Generation (RAG) layer to overcome the limitations of fine-tuning alone. StevenAI represents a hybrid system that merges parameter-efficient fine-tuning with semantic search–based retrieval to provide more accurate, flexible, and personalized responses. It can run on either the original fine-tuned LLaMA model or external models like ChatGPT-4, allowing users to compare and explore different answer qualities based on model architecture and context dependency.",
+    "metadata": {
+      "section": "section about Steven AI",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What is StevenAI and what does it do?",
+        "Why did you create a personalized AI chatbot?",
+        "What models power StevenAI?",
+        "How does StevenAI combine fine-tuning and retrieval?",
+        "Can users choose between different model backends when using StevenAI?"
+      ],
+      "source": "Docs",
+      "id": "47a0ccc96b87"
+    }
+  },
+  {
+    "content": "StevenAI is a personalized AI chatbot that I created by fine-tuning the LLaMA 3.2 model, which contains over 3 billion parameters. To build it, I developed a 1,000 Q&A custom dataset about myself, including my projects, experiences, academic background, and personal interests. This dataset was used to train a LoRA (Low-Rank Adaptation) adapter on my personal server, which was then merged with the base LLaMA 3.2 model to form the final chatbot.",
+    "metadata": {
+      "section": "section about Steven AI",
+      "tags": [
+        "Original Version",
+        "Base Model"
+      ],
+      "questions": [
+        "How did you build the original version of StevenAI?",
+        "What kind of data did you use to fine-tune LLaMA 3.2?",
+        "How big was your fine-tuned dataset for StevenAI?",
+        "What’s a LoRA adapter and how did you use it?"
+      ],
+      "source": "Docs",
+      "id": "6cf546091770"
+    }
+  },
+  {
+    "content": "While the original chatbot captured a wide range of personal details, I encountered multiple issues. Large models (like 8B) frequently surfaced unrelated pretraining noise, overshadowing fine-tuned responses. Conversely, smaller models (like 3B) lacked capacity, resulting in frequent errors such as mixing up friends’ names. Moreover, to emphasize key facts, the dataset included duplicated questions, which led to repetitive, overemphasized answers and reduced memory allocation for lower-priority facts.",
+    "metadata": {
+      "section": "section about Steven AI",
+      "tags": [
+        "Problems with Fine-Tuning"
+      ],
+      "questions": [
+        "What issues did you face when fine-tuning large models?",
+        "Why didn’t the 3B and 8B models work well for StevenAI?",
+        "How did repeated questions affect the model’s output?",
+        "What kinds of mistakes did StevenAI make without RAG?",
+        "Why wasn’t fine-tuning alone enough for your chatbot?"
+      ],
+      "source": "Docs",
+      "id": "f64c53a515c7"
+    }
+  },
+  {
+    "content": "To address these challenges, I added a Retrieval-Augmented Generation (RAG) layer. This upgrade uses bge-large-en-v1.5 to embed content and stores it in a FAISS index. The knowledge base was completely restructured: instead of using duplicated Q&A pairs, I rewrote the data into concise fact chunks, each appearing only once. When a user sends a question, the system performs two types of retrieval: (1) a top-3 direct fact match, and (2) a top-3 question match, based on five auto-generated sample questions per fact chunk. Only question embeddings are stored in the RAG index, with the corresponding answers saved in the metadata. The final prompt includes these six retrieved contexts before being passed to the chatbot.",
+    "metadata": {
+      "section": "section about Steven AI",
+      "tags": [
+        "RAG Enhancement",
+        "Current Improvement"
+      ],
+      "questions": [
+        "How does the RAG layer improve StevenAI?",
+        "What is stored in the FAISS index?",
+        "Why did you restructure the knowledge base into fact chunks?",
+        "How are questions matched during retrieval?",
+        "What model did you use for text embedding?"
+      ],
+      "source": "Docs",
+      "id": "7cafc57958eb"
+    }
+  },
+  {
+    "content": "StevenAI’s RAG-enhanced prompt can be passed to either the original fine-tuned LLaMA 3.2 model or a general-purpose model like ChatGPT-4. Each option has its trade-offs: the fine-tuned LLaMA model has strong internal knowledge about me but is limited in dynamic fact retrieval, while ChatGPT-4 depends entirely on the retrieved RAG context and performs better when interpreting semantically complex or rare questions. Users can try both models side-by-side at https://www.liustev6.ca to explore the strengths of each setup.",
+    "metadata": {
+      "section": "section about Steven AI",
+      "tags": [
+        "Multi-Model Serving",
+        "Trade-Offs"
+      ],
+      "questions": [
+        "What are the pros and cons of using LLaMA vs. ChatGPT-4 for StevenAI?",
+        "How does StevenAI decide which model to use?",
+        "Can users try both models in your demo?",
+        "When is ChatGPT-4 better than the fine-tuned model?",
+        "How does your system combine RAG with model prompting?"
+      ],
+      "source": "Docs",
+      "id": "94aeaa85fb9e"
+    }
+  },
+  {
+    "content": "LandSink is a predictive analytics project I developed during my CSC110 course, aimed at estimating future global temperatures and the percentage of land that may be submerged due to rising sea levels. The model is built using linear regression and trained on global datasets of sea level, temperature, and elevation. Originally implemented using Pygame, the early version generated HTML output for each prediction. Later, I upgraded the project by building a Django back-end hosted on AWS, allowing users to make predictions via API requests. Users can interact with the live prediction tool at [https://www.liustev6.ca/landSink](https://www.liustev6.ca/landSink). My responsibilities included collecting and cleaning data, building the regression model, and modernizing the tech stack for scalable, web-based access. The project tackles real-world environmental forecasting while serving as a hands-on application of regression modeling, data integration, and full-stack deployment.",
+    "metadata": {
+      "section": "section about Land Sink",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What is the LandSink project and what does it predict?",
+        "Why did you build LandSink and how did it evolve from CSC110?",
+        "How does your prediction model estimate land submersion?",
+        "Can people try the LandSink tool online?",
+        "What technologies did you use to build and deploy LandSink?"
+      ],
+      "source": "Docs",
+      "id": "a0deb2b4e848"
+    }
+  },
+  {
+    "content": "My data science showcasing website, built using Rmarkdown, serves as a central hub for a diverse range of projects that highlight my skills in data analysis, machine learning, and visualization using tools like R and Python. Among the featured projects is an NBA2K player rating prediction model, which uses linear regression based on players’ regular-season statistics to estimate their ratings in future NBA2K game editions. Another project applies natural language processing (NLP) to analyze Clash Royale players’ sentiment toward game updates, extracting emotional trends from player responses.",
+    "metadata": {
+      "section": "section about Data Science",
+      "tags": [
+        "Showcasing Website"
+      ],
+      "questions": [
+        "What is your data science showcasing website about?",
+        "What types of projects are featured on your site?",
+        "How did you predict NBA2K player ratings?",
+        "What did your Clash Royale sentiment analysis reveal?",
+        "What tools did you use to build and present these projects?"
+      ],
+      "source": "Docs",
+      "id": "47e4f2083e71"
+    }
+  },
+  {
+    "content": "I have also visualized theft patterns in Toronto, highlighting temporal and geographic trends using data visualization techniques. In another project, I explored the relationship between life expectancy and alcohol consumption, uncovering public health correlations through statistical analysis. Additionally, my Great Lakes Pollution analysis focuses on phosphorus contamination, using time series plots and interactive maps to visualize water quality data sourced from The Canadian Open Data Portal. Altogether, the website demonstrates my ability to apply machine learning models, perform insightful analyses, and communicate findings effectively through compelling visualizations.",
+    "metadata": {
+      "section": "section about Data Science",
+      "tags": [
+        "Data Analysis Report"
+      ],
+      "questions": [
+        "What kind of data analysis projects have you done?",
+        "How did you analyze Toronto theft trends?",
+        "What did you find about life expectancy and alcohol use?",
+        "Can you explain your Great Lakes pollution project?",
+        "How do you visualize your findings to make them understandable?"
+      ],
+      "source": "Docs",
+      "id": "4139b0a45e39"
+    }
+  },
+  {
+    "content": "I built a powerful 2-node personal server from scratch to support a wide range of projects—from web hosting and cloud storage to machine learning and remote gaming. Designed for flexibility and performance, one node runs 24/7 for lightweight tasks, while the other handles GPU-intensive workloads like fine-tuning models and LLM hosting. Both nodes run Proxmox and use containers and VMs for efficient workload management. This setup powers my apps like StevCloud and StevenAI and serves as a hands-on platform for learning system architecture, DevOps, and cloud infrastructure.",
+    "metadata": {
+      "section": "section about server",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What kind of server setup do you use for your projects?",
+        "Why did you choose a two-node architecture?",
+        "How do you manage different types of workloads across your server?",
+        "What kinds of projects run on your server?",
+        "What role does your server play in your learning and development?"
+      ],
+      "source": "Docs",
+      "id": "10db9887db90"
+    }
+  },
+  {
+    "content": "The first node is a lightweight, always-on host that ensures continuous availability for development tasks, real-time web services, and light machine learning jobs. It features an AMD Ryzen 7 5800X CPU, NVIDIA GeForce RTX 4060 Ti GPU, 32GB Corsair Vengeance RGB Pro DDR4 RAM at 3600MHz, and storage with a 1TB Samsung 990 EVO SSD paired with a 4TB Seagate IronWolf Pro HDD. The system is built on an ASUS TUF Gaming B550-PLUS Wi-Fi II motherboard, cooled with a Thermalright Peerless Assassin 120 SEARGB cooler, and housed in a Corsair iCUE 4000D RGB Airflow case with additional RGB fans for thermal performance and aesthetics. It’s powered by a Corsair RM750e PSU, recently upgraded to a Thermaltake GF3 1200W PSU for overhead and future expansions.",
+    "metadata": {
+      "section": "section about server",
+      "tags": [
+        "Hardware Node 1"
+      ],
+      "questions": [
+        "What are the specs of your always-on server node?",
+        "Why did you choose the Ryzen 7 5800X and RTX 4060 Ti for Node 1?",
+        "How do you keep your server cool and power-efficient?",
+        "What types of tasks run on your first server node?",
+        "Did you face any challenges when building this node?"
+      ],
+      "source": "Docs",
+      "id": "0202212fbd2c"
+    }
+  },
+  {
+    "content": "The second node is a high-performance, power-intensive machine used selectively for heavier tasks like fine-tuning large language models, hosting LLM inference servers (e.g., StevenAI base model), and remote gaming via GPU passthrough. This dual-boot system switches between Proxmox and Windows depending on the task and remains off when not in use to conserve power. It features an AMD Ryzen 9 9950X CPU, NVIDIA GeForce RTX 5090 with 32GB VRAM, 96GB Asgard x TUF Strix DDR5 RAM, a Samsung 990 Pro 4TB SSD, and a Kingston NV3 1TB SSD. The core is mounted on a ProArt X870E-Creator motherboard, making it ideal for content creation, deep learning training, and AI hosting.",
+    "metadata": {
+      "section": "section about server",
+      "tags": [
+        "Hardware Node 2"
+      ],
+      "questions": [
+        "What do you use your second high-performance node for?",
+        "Why does your second node dual boot between Proxmox and Windows?",
+        "What are the specs and components of your high-performance machine?",
+        "How do you handle GPU-intensive workloads on this setup?",
+        "When do you turn on your second node?"
+      ],
+      "source": "Docs",
+      "id": "bb5b08380e31"
+    }
+  },
+  {
+    "content": "Both systems run Proxmox as the primary OS for virtualization and container management. I use containers and VMs to deploy applications like the backend for my personal website, StevCloud (a self-hosted personal file storage service), and a Windows VM for remote gaming, enabling me to stream high-performance games to any device. Networking is configured via Cloudflare to securely manage web traffic and remote access.",
+    "metadata": {
+      "section": "section about server",
+      "tags": [
+        "Application and Operating System OS"
+      ],
+      "questions": [
+        "What operating system do you use for virtualization?",
+        "How do you manage different apps on your server?",
+        "What is StevCloud and how does it run on your server?",
+        "How do you handle remote gaming with your setup?",
+        "How do you manage web traffic and remote access securely?"
+      ],
+      "source": "Docs",
+      "id": "99ddf84752b2"
+    }
+  },
+  {
+    "content": "My home lab server reflects my deep interest in server architecture, DevOps, cloud infrastructure, and AI development. Managing my own infrastructure gives me full control over system resources, lets me experiment with virtual environments, and hones my skills in system administration and distributed deployment. The setup’s flexibility, raw power, and educational value make it a central part of my development and research workflow.",
+    "metadata": {
+      "section": "section about server",
+      "tags": [
+        "Impact"
+      ],
+      "questions": [
+        "Why did you decide to build your own home lab server?",
+        "How has running your own server helped you grow technically?",
+        "What have you learned from managing your infrastructure?",
+        "What benefits do you get from full control over your server?",
+        "How does your home lab support your research and personal projects?"
+      ],
+      "source": "Docs",
+      "id": "4d6a87970d21"
+    }
+  },
+  {
+    "content": "StevCloud is my self-hosted personal cloud server, built using NextCloud, an open-source cloud software platform. It is hosted on my own home server, giving me full control over my cloud infrastructure and data privacy. The system is backed by a 4TB Seagate IronWolf Pro HDD, providing ample and reliable storage capacity for my photos, learning materials, important documents, and media files. Accessible at https://cloud.liustev6.ca, StevCloud allows me to seamlessly access and manage my data from anywhere while also enabling secure file sharing. Because it’s fully self-hosted, I avoid reliance on third-party cloud providers and retain full autonomy over system configuration, security, and performance.",
+    "metadata": {
+      "section": "section about StevCloud",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What is StevCloud and what do you use it for?",
+        "Why did you decide to build your own cloud server?",
+        "How does StevCloud ensure data privacy and control?",
+        "What kind of files do you store on StevCloud?",
+        "Can others access or share files using StevCloud?"
+      ],
+      "source": "Docs",
+      "id": "eef380ccfb6b"
+    }
+  },
+  {
+    "content": "AISIM (AI Simulation Game) is an 7-player AI-powered social deduction game designed for research on large language model (LLM) behavior. The game simulates complex multi-agent interactions where each AI character engages in dialogue, tracks memory, and reasons toward hidden goals. AISIM connects to a 2D pixel-style Godot frontend, which renders real-time character portraits, dynamic conversations, and group chat scenes, creating an immersive and visually engaging environment. The backend is built using FastAPI and SQLite, enabling modular simulation of game rounds, conversation flows, and persistent player state management. AISIM integrates multiple LLMs—using LLaMA for real-time character dialogues and Deepseek for memory updates and strategic reasoning. Role-specific system prompts and contextual memory logs are employed to generate unique, goal-oriented behavior for each AI player. This setup allows researchers to explore how different LLMs interact, adapt strategies, and simulate social behavior in a controlled, game-like setting.",
+    "metadata": {
+      "section": "section about AISim",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What is AISIM and how does it work?",
+        "Why did you build a simulation game with LLMs?",
+        "How do different AI agents interact in AISIM?",
+        "What kind of research can AISIM support?",
+        "What tools and frameworks did you use to build AISIM?"
+      ],
+      "source": "Docs",
+      "id": "08c9376e8f33"
+    }
+  },
+  {
+    "content": "DIY AI Assistant is a personal, self-built voice assistant system deployed on a Raspberry Pi 5, designed for everyday use in my home. It serves as both a smart home control hub and an LLM-powered conversational assistant that I can talk to naturally. I use it to control lights, open doors with sensor triggers, and interact with my smart environment simply by speaking—like saying “turn on the light” or “open the door.” The assistant features a custom text-to-speech engine for natural voice responses and connects to all my smart devices via the Home Assistant API. I also built a real-time GUI using Kivy, which provides live voice feedback, touch control, and a smooth interface for managing devices. Beyond automation, it’s my playground for hardware exploration and AI experimentation, offering me a compact, open-source alternative to commercial systems—fully tailored to my needs, fully under my control.",
+    "metadata": {
+      "section": "section about DIY Voice Assistant",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "What does your DIY AI Assistant do?",
+        "Why did you choose to build your own voice assistant?",
+        "How do you use your assistant to control your home?",
+        "What hardware and software power your voice assistant?",
+        "How is your assistant different from commercial systems like Alexa?"
+      ],
+      "source": "Docs",
+      "id": "0685c7266e94"
+    }
+  },
+  {
+    "content": "I was born in Beijing, China, in 2001 and spent the first 16 years of my life there. In 2017, I moved to Surrey, British Columbia, Canada, to attend high school, where I lived for three years (2017–2020). In 2020, I relocated to Toronto, Ontario, to pursue my undergraduate studies at the University of Toronto, where I remained until my graduation in 2025. After completing my degree, I returned to Surrey, BC, and I am now planning to work in Seattle, Washington, USA, starting in 2026.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Me",
+        "My Journey Location"
+      ],
+      "questions": [
+        "Where did you grow up and live before university?",
+        "Where are you planning to work after graduation?",
+        "What cities have you called home over the years?"
+      ],
+      "source": "Docs",
+      "id": "c9cc5a690923"
+    }
+  },
+  {
+    "content": "I love my family deeply—my mother Stella (Lei Liu), my father Winston (Zheng Chang), and my two younger brothers, William (Shengming Chang) and Charles (Shenghua Chang). We all lived together in the Wangjing district of Beijing until 2016, and later in Surrey (near White Rock) until 2020. After I moved to Toronto for university, my parents and brothers relocated to Shawnigan Lake, Vancouver Island, where my parents worked at St. John’s Academy from 2020 to 2025. In 2025, they moved back to Surrey, near White Rock. My parents are both wonderful and have always supported me and my brothers in every possible way. For my younger brothers—despite the age gap—I share a strong and close relationship with them. I enjoy visiting, catching up, and being the older brother who supports them as they grow up and explore their interests. Our family dynamic is very close-knit and supportive. Although we’ve often lived in different cities, we stay in regular contact, and I make it a point to visit whenever possible. I feel deep love and gratitude toward my parents and brothers—they’ve had a hugely positive influence on me and bring great happiness to my life.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Overall",
+        "Location and Love"
+      ],
+      "questions": [
+        "Can you tell me about your family?",
+        "Do you have siblings?",
+        "What’s your relationship like with your parents?",
+        "Where does your family live now?",
+        "How do you stay close with your family across cities?"
+      ],
+      "source": "Docs",
+      "id": "ef9cdfc363e6"
+    }
+  },
+  {
+    "content": "My mother, Lei Liu (also known as Stella), was born in 1975 in Beijing. She graduated from West China University of Medical Sciences (now part of Sichuan University) and spent around 20 years working at the Western Academy of Beijing, both as an IT consultant and a Chinese culture teacher. After moving to Canada, she became a teacher at St. John’s Academy in Shawnigan Lake. Stella is a kind, talented educator—students love her. She is also the pillar of our family: smart, strong-willed, and highly capable. She was the first in our family to learn English and played a huge role in teaching me the language during my childhood. She worked tirelessly to secure a work visa and later permanent residency for our family. At home, she is both an excellent homemaker and a devoted mom—actively involved in my education, hobbies like piano and hockey, and personal development. Although she can be a little strict, I appreciate her efforts deeply and love her very much. She also has a passion for shopping—our home is always filled with things she picks up, from snacks to handbags.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Mother"
+      ],
+      "questions": [
+        "What does your mom do?",
+        "How has your mom influenced your journey?",
+        "What kind of person is Stella?",
+        "What are some things your mom enjoys?",
+        "How did your mom support your move to Canada?",
+        "Who is Stella, Lei Liu?"
+      ],
+      "source": "Docs",
+      "id": "a0cfc9b7faf4"
+    }
+  },
+  {
+    "content": "My father, Zheng Chang (or Winston), was born in 1976. In China, he worked at BGCTV as a network professional and product manager. After moving to Canada, he became a school bus driver at St. John’s Academy, where students really liked him. He is also an active stock trader—he trades almost every day and usually makes a profit, though sometimes he loses too. You can easily tell from his face whether it's been a gain or a loss kind of day! He has always been a caring and dependable father, even if occasionally emotional or short-tempered. He always wishes the best for me and my brothers. For nearly two decades, he drove me to school, to hockey games, and to so many other activities.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Father"
+      ],
+      "questions": [
+        "What does your dad do?",
+        "What is your relationship with your father like?",
+        "What hobbies or interests does your dad have?",
+        "What role did your dad play growing up?",
+        "Is your dad supportive of your work and goals?",
+        "Who is Winston, Zheng Chang?"
+      ],
+      "source": "Docs",
+      "id": "2689fa7030e4"
+    }
+  },
+  {
+    "content": "William Chang, also known as Shengming, is my younger brother, born in 2013—12 years younger than me—and the middle child between me and our youngest sibling, Charles. He attended St. John’s Academy, where our parents worked. William is exceptionally outgoing, energetic, and athletic. He excels in sports like soccer, basketball, softball, and hockey, often holding his own against older kids. He’s also a skilled gamer with a sharp mind, though he sometimes gets a bit too absorbed in video games and can be impulsive. Playful and mischievous, William has a habit of sneaking his iPad to play when no one’s watching and is known in the family for his humorous bragging. Despite his playful side, he’s also remarkably responsible for his age—especially in how he looks after Charles—and he shows clear musical talent as a piano player, even if his focus wavers during practice. His ability to balance fun, responsibility, and talent makes him a truly special and memorable younger brother.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "William Chang",
+        "Younger Brother"
+      ],
+      "questions": [
+        "Can you tell me about your brother William Chang?",
+        "What are William’s favorite hobbies?",
+        "What makes William unique?",
+        "How do you get along with William?",
+        "Is William more playful or responsible?"
+      ],
+      "source": "Docs",
+      "id": "08515b53829f"
+    }
+  },
+  {
+    "content": "Charles Chang (Shenghua), born in 2014, is my youngest brother and the third son in our family, following me and William. He is 13 years younger than me and shares a close, loving bond with both of us, as well as with our parents. Charles is incredibly clever, careful, and quick to pick up new concepts, often showing a level of thoughtfulness and attention to detail that stands out for his age. Unlike William, he tends to be more introverted and reserved, but he is always incredibly sweet, patient, and warm-hearted. He’s known for his cheerful and positive personality—often smiling, full of energy, and bringing joy to those around him. Academically, Charles is sharp and enthusiastic about learning, consistently performing well in school and showing a strong passion for new knowledge. Despite occasional sibling squabbles, he loves playing games with William and looks up to him deeply. Charles enjoys spending time with the family, especially during playful moments and gaming sessions—one of his favorite pastimes. He balances his fun-loving nature with a responsible and thoughtful side, making him not only a joy to be around but also an inspiring and special little brother.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Charles Chang",
+        "Youngest Brother"
+      ],
+      "questions": [
+        "Who is Charles, your youngest brother?",
+        "How is Charles different from William?",
+        "What are some of Charles’s strengths?",
+        "What kind of personality does Charles have?",
+        "What activities does Charles enjoy most?"
+      ],
+      "source": "Docs",
+      "id": "1d8f4607bb71"
+    }
+  },
+  {
+    "content": "Timi and Chocho are my two beloved cats, and they play an important role in my daily life. Timi is a playful 2-year-old American Shorthair with a striking black-and-white coat. He’s full of energy, always darting around the house, and loves to cuddle up in my arms when he’s tired. Chocho, on the other hand, is a calm and affectionate 2-year-old white Ragdoll with long, fluffy fur and big round eyes. She’s more reserved than Timi but incredibly sweet, often curling up beside us to sleep. Both cats are obsessed with treats—whether it’s dry or wet food—and they bring a lot of warmth and joy into our home. They’re always by our side, keeping us company during work, study breaks, and quiet evenings. Sharing life with Timi and Chocho has made our home feel even more loving and complete.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Cats",
+        "Timi and Chocho"
+      ],
+      "questions": [
+        "Who are Timi and Chocho?",
+        "What breeds are your cats?",
+        "What’s Timi’s personality like?",
+        "How does Chocho behave at home?",
+        "Do your cats play a big role in your life?"
+      ],
+      "source": "Docs",
+      "id": "804823674060"
+    }
+  },
+  {
+    "content": "I’m in a relationship with my girlfriend, Winnie Huang, who graduated from the University of Toronto in the same class as me. We met during our time at university and gradually developed a deep connection that eventually led to us dating. Today, we live together in a cozy and loving home, which we share with our two adorable cats—Timi, an American Shorthair, and Chocho, a white Ragdoll. Raising our cats has become a meaningful and joyful part of our life together.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Winnie",
+        "Girl Friend",
+        "Relationship"
+      ],
+      "questions": [
+        "Who is Winnie Huang to you?",
+        "How did you and Winnie meet?",
+        "What is your relationship like with Winnie?",
+        "Do you and Winnie live together?",
+        "What’s something you enjoy doing together?",
+        "Are you single?"
+      ],
+      "source": "Docs",
+      "id": "a9b9a82c7dd5"
+    }
+  },
+  {
+    "content": "Winnie is incredibly intelligent, supportive, and caring. She completed her Bachelor’s degree in Statistics and Economics at the Univeristy of Toronto, earning Dean’s List honors multiple times. Her coursework includes challenging topics such as Advanced Calculus, Software Design, and Data Analysis. She will continue her pursue of Master of Science in Biology Statistics at the Univeristy of Toronto starting 2025. Alongside her studies, she works as a Business Analyst at Environment and Climate Change Canada, where she is responsible for ensuring data integrity, performing quality assessments, and conducting environmental data analysis. She has created important rule sets for incoming data, identified errors, and contributed to nationwide environmental monitoring efforts.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Winnie's Background"
+      ],
+      "questions": [
+        "What does Winnie do professionally?",
+        "What did Winnie study in university?",
+        "Where does Winnie work now?",
+        "Is Winnie also pursuing graduate studies?",
+        "What makes Winnie special to you?"
+      ],
+      "source": "Docs",
+      "id": "b012957de23b"
+    }
+  },
+  {
+    "content": "Winnie is also the cutest girl I’ve ever met. We first crossed paths on our way to CSC311 in third year while walking with our friends, and a kind of magic sparked between us that day. Since then, we’ve spent countless hours studying together, relaxing at home, and caring for our cats. In our free time, we enjoy watching movies and TV shows, sharing meals, and traveling—Winnie is an amazing travel companion. We’ve explored Cuba, China, and many places closer to home. I often say how lucky I am to have Winnie in my life. Our relationship is built on mutual respect, shared goals, and a deep emotional bond. I truly couldn’t ask for a better partner.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Life with Winnie"
+      ],
+      "questions": [
+        "What are some fun memories you share with Winnie?",
+        "How did you two start dating?",
+        "What are your favorite trips with Winnie?",
+        "What do you love most about your relationship?",
+        "How do you support each other in daily life?"
+      ],
+      "source": "Docs",
+      "id": "804df23eb9a0"
+    }
+  },
+  {
+    "content": "When it comes to balancing my personal and professional life, I prioritize time management and makes dedicated space for his family, relationship, and pets, while staying focused on his academic and career goals. The most important people in my life are his parents, siblings, girlfriend, and pets—all of whom form the emotional and motivational foundation that supports his journey.",
+    "metadata": {
+      "section": "section about family",
+      "tags": [
+        "Thoughts on Family"
+      ],
+      "questions": [
+        "How do you balance work and personal life?",
+        "Who are the most important people in your life?",
+        "Do you make time for your pets and family?",
+        "How do your loved ones support your goals?",
+        "Why is family so central to your life?"
+      ],
+      "source": "Docs",
+      "id": "f52e1bb54897"
+    }
+  },
+  {
+    "content": "During my time at the University of Toronto, I developed close friendships with Tom Li, Tom Zhang, William Zhang, Kevin Li, Eric Wu, Jonathon Wen, and Yixin Guo. Each of them has played an important role in my life—academically, personally, and professionally. We studied together, supported one another through difficult courses, and collaborated on major projects like Campus Eats. Tom Li, Kevin Li, and Yixin Guo were particularly involved in our project work, where we shared ideas, problem-solved, and built meaningful products together. Beyond academics, we bonded over shared hobbies, played games, and created lasting memories throughout our university years. Whether it was through late-night study sessions or relaxing hangouts, these friends have formed a strong support network that I deeply value and continue to cherish.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Overview"
+      ],
+      "questions": [
+        "Who are some of your closest friends from university?",
+        "How did you meet your core friend group?",
+        "What role did your friends play during your university life?",
+        "Did you work on any major projects with your friends?",
+        "How do you stay in touch with your friends after graduation?"
+      ],
+      "source": "Docs",
+      "id": "681b39601290"
+    }
+  },
+  {
+    "content": "Tom Li is one of my closest friends and most trusted collaborators. We met at the University of Toronto and quickly developed a strong connection through shared academic and personal experiences. Currently at AMD, Tom has interned at top-tier companies like AMD and Nokia, where he contributed to graphics driver development, API performance optimization, and software visualization. His technical fluency and adaptability are truly impressive. Our most meaningful collaboration was on the Campus Eats project. Tom was instrumental in business strategy and UI/UX design. He applied the double diamond design process in Figma, conducted extensive market research, and led partnership-building efforts with student unions and local businesses. On the technical side, he evaluated features like Stripe integration, recommendation algorithms, and in-app advertisements. Outside of work, we often hang out—playing games, brainstorming side projects, and coding for fun. Tom is incredibly clever, curious, and has a strong sense of initiative. He’s always eager to explore new ideas and solve challenging problems. We balance each other well—his strength in design and strategy perfectly complements my focus on backend and system infrastructure. He’s not just a teammate, but a lifelong friend.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Tom Li"
+      ],
+      "questions": [
+        "Can you tell me about your friendship with Tom Li?",
+        "What kind of work have you and Tom Li collaborated on?",
+        "What makes Tom Li stand out as a teammate and friend?",
+        "Do you and Tom Li still work on projects together?",
+        "How did your friendship with Tom Li grow over time?"
+      ],
+      "source": "Docs",
+      "id": "9b912abae406"
+    }
+  },
+  {
+    "content": "William Zhang is one of my closest friends from the University of Toronto, where we both pursued Data Science and shared a nearly identical academic path. From 2020 to 2022, we lived together at New College, spending long nights working on assignments, reviewing material, and pushing each other through tough courses. William consistently earned top grades and maintained an A average, a testament to his discipline and strong analytical thinking. He also conducted statistical research with Professor Meredith during the summer, working on modeling and data analysis that further strengthened his academic background. William’s brilliance is matched by his humility and kindness—he’s always been approachable and supportive, whether it's group projects or impromptu board game nights. We share a love for games and deep conversations, which helped make our academic life feel more balanced and enjoyable. Despite graduating and moving to different cities, we stay in regular contact. William is now pursuing his Master’s in Biology Statistics at Yale University, and I couldn’t be more proud. His combination of intellectual rigor, grounded personality, and supportive nature makes him one of the most inspiring people I know",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "William Zhang"
+      ],
+      "questions": [
+        "How did you and William Zhang become close?",
+        "What do you admire most about William Zhang?",
+        "What was it like living and studying with William Zhang?",
+        "Is William Zhang also pursuing a graduate degree?",
+        "What kinds of things did you and William Zhang do for fun?"
+      ],
+      "source": "Docs",
+      "id": "8b98d4abd549"
+    }
+  },
+  {
+    "content": "Kevin Li is my oldest and most enduring friend—we met in high school at Semiahmoo Secondary in Surrey, BC, and immediately connected over our shared passion for the mobile game Clash Royale. From the beginning, Kevin distinguished himself with his intelligence and drive, excelling in the IB program with near-perfect scores. We later both attended the University of Toronto—Kevin in Computer Engineering and myself in Data Science—and although our programs differed, our bond remained strong. Kevin played a key leadership role in our Campus Eats project as the technical lead, overseeing the design and implementation of the platform’s core infrastructure. His deep understanding of engineering principles, strong communication skills, and reliability made him an invaluable asset. Kevin is also incredibly talented musically—his singing voice often stuns people during karaoke nights, and he’s always the life of the party at KTV. He balances technical excellence with creativity, humor, and emotional intelligence. Whether we’re reminiscing about high school, building projects, or just enjoying downtime together, Kevin’s presence has always been steady, uplifting, and irreplaceable. He’s one of my most trusted friends and collaborators.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Kevin Li"
+      ],
+      "questions": [
+        "How did you first meet Kevin Li?",
+        "What was Kevin’s role in the Campus Eats project?",
+        "Why do you consider Kevin a long-term friend?",
+        "What makes Kevin unique as both a friend and collaborator?",
+        "Do you still keep in touch with Kevin regularly?"
+      ],
+      "source": "Docs",
+      "id": "c69cdd49f39a"
+    }
+  },
+  {
+    "content": "Eric Wu became one of my closest friends during our time living at New College at the University of Toronto. Our bond grew especially strong during one quiet summer when we were the only two students remaining in residence. We developed a daily rhythm of cooking together—his fried pork with onion became my all-time favorite—and shared meals turned into some of our most meaningful moments. We spent countless hours playing games, reflecting on life, and discussing our dreams of one day becoming professors. Eric’s intellectual curiosity is matched by a calm maturity and a global outlook—he’s traveled widely, conducted international research in Singapore, and always brings a thoughtful perspective to our conversations. Beyond academics, he’s one of the most consistent and emotionally grounded people I know. Even now, while pursuing his Master’s at McGill, we remain in close contact through game nights, calls, and planned visits. Eric is someone who brings warmth, insight, and stability to any friendship. Our connection is built on trust, shared aspirations, and deep mutual respect, and I know we’ll continue supporting each other for many years to come.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Eric Wu"
+      ],
+      "questions": [
+        "What’s your connection with Eric Wu?",
+        "Why was that summer living with Eric so special?",
+        "How did your friendship with Eric shape your university experience?",
+        "What kinds of conversations do you usually have with Eric?",
+        "Do you still hang out or talk often with Eric?"
+      ],
+      "source": "Docs",
+      "id": "70c9882c3956"
+    }
+  },
+  {
+    "content": "Jonathan Wen is one of the most vibrant, intelligent, and driven friends I’ve had the pleasure of knowing. We met during our first year at New College at the University of Toronto, and his energy and humor stood out right away. Jonathan is studying Electrical and Computer Engineering and has a passion for finance, technology, and entrepreneurship. He founded Fintorch, a startup that builds AI tools for financial analysts, and previously interned as a Quantitative Trading Analyst at RBC, where he worked with high-frequency trading strategies using Python and kdb+/q. He also served as Head of Quant at UTEFA, organizing major events and strengthening ties between students, professors, and industry leaders. His research at Rotman, focused on using machine learning to detect bots in financial markets, is yet another example of his innovation and focus. Beyond his accomplishments, Jonathan is simply fun to be around—his jokes, insights, and enthusiasm make every hangout memorable. One highlight was our trip to Montreal, where we chased the northern lights and had deep conversations. Jonathan is a rare mix of humor, intelligence, and ambition, and he constantly inspires those around him.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Jonathan Wen"
+      ],
+      "questions": [
+        "How did you become friends with Jonathan Wen?",
+        "What kind of work has Jonathan done that you find impressive?",
+        "Do you have any memorable trips or moments with Jonathan?",
+        "What is Jonathan like in a group of friends?",
+        "How has Jonathan inspired you?"
+      ],
+      "source": "Docs",
+      "id": "6d1e4dfe82f4"
+    }
+  },
+  {
+    "content": "Yixin Guo is one of my closest university friends and someone I deeply admire for his discipline, ambition, and multifaceted personality. We both studied Computer Science at the University of Toronto and became close while living in New College. What stands out most about Yixin is his laser-sharp focus—he regularly commits over 10 hours a day to studying and personal projects, following a strict, self-imposed routine with remarkable consistency. His drive has always been motivating to me. Yet despite his intense academic schedule, Yixin finds time for his passions. He’s an avid skier and tennis player, and has recently taken up snowboarding—activities that reflect his commitment to work-life balance. During his internship at Huawei in Vancouver, he picked up several of these hobbies while continuing to push himself professionally. We’ve spent many late nights studying side by side, exchanging motivation and ideas. Yixin also has a strong interest in finance, often analyzing market trends and exploring investment strategies. He’s preparing to move to Hong Kong for his Master’s studies, and although I’ll miss him, I know he’s destined for success. He’s hardworking, thoughtful, and one of the most reliable friends I’ve ever had.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Yixin Guo"
+      ],
+      "questions": [
+        "Who is Yixin Guo and how did you two become close?",
+        "What do you admire about Yixin’s work ethic?",
+        "How did Yixin influence your study habits or mindset?",
+        "Do you know what Yixin plans to do after graduation?",
+        "What kinds of things did you and Yixin bond over?"
+      ],
+      "source": "Docs",
+      "id": "2cd249742eb1"
+    }
+  },
+  {
+    "content": "Tom Zhang was the first friend I made in Toronto, and our bond has remained strong ever since. We met on our very first day at New College at the University of Toronto, and quickly connected through our shared background and interests. Both of us are from Beijing, and discovering that made it even easier to relate and support each other as we adjusted to university life abroad. Tom studied Psychology at UofT, and we often found ourselves talking about everything from coursework to life, relationships, and aspirations. One of our favorite shared activities was playing Honor of Kings (HoK)—we played together frequently, and it became a fun way to unwind and stay connected during the busiest school terms. Tom has always struck me as not only smart and thoughtful, but also confident and charming—someone who carries himself well and builds meaningful connections with others. I had the privilege of seeing his full love story unfold during our undergraduate years, and it was truly heartwarming. He’s now pursuing his Master’s at McMaster University, and I’m excited to see what the next chapter brings for him.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Tom Zhang"
+      ],
+      "questions": [
+        "How did you meet Tom Zhang?",
+        "What do you and Tom Zhang usually talk about?",
+        "Why is your friendship with Tom Zhang special to you?",
+        "What hobbies or games do you and Tom Zhang enjoy together?",
+        "What are your fondest memories with Tom Zhang?"
+      ],
+      "source": "Docs",
+      "id": "fc9fa6e4b950"
+    }
+  },
+  {
+    "content": "Praharsh Bhatt was my supervisor and mentor during my internship at Johnson Controls, and he had a profound impact on my technical and professional growth. Originally from India, Praharsh is a passionate coder and entrepreneur who began programming at a young age. By the age of 19, he had already co-founded a startup and launched his own company—an impressive feat that speaks to his ambition and talent. During my internship, his hands-on mentorship guided me not only through server setup and software architecture but also inspired me to build my own startup, Campus Eats. His experience spans full-stack mobile development, scalable infrastructure, and effective problem-solving across industries. Even after the internship ended, we’ve remained in close contact. I frequently meet with Praharsh to exchange ideas about new technologies and to discuss personal projects. His continued support and feedback have been invaluable as I explore new ventures and refine my technical direction. Having him as a supervisor early in my career has been incredibly fortunate—his guidance shaped my confidence, broadened my skills, and continues to influence the way I approach software development and entrepreneurship.",
+    "metadata": {
+      "section": "section about friend",
+      "tags": [
+        "Praharsh Bhatt"
+      ],
+      "questions": [
+        "Who is Praharsh Bhatt and how did he mentor you?",
+        "What did you learn from your internship under Praharsh?",
+        "Did Praharsh influence your decision to start your own project?",
+        "What’s it like keeping in touch with a mentor after the internship?",
+        "How has Praharsh shaped your thinking around tech and entrepreneurship?"
+      ],
+      "source": "Docs",
+      "id": "e00fa49eaa8f"
+    }
+  }
+]

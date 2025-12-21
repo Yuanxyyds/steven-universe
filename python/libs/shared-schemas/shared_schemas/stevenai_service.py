@@ -3,8 +3,21 @@ StevenAI Service API schemas.
 Type-safe contracts for stevenai-service endpoints.
 """
 
-from typing import List, Optional, Literal, Dict, Any
+from typing import List, Optional, Dict, Any
+from enum import Enum
 from pydantic import BaseModel, Field
+
+
+# ============================================================================
+# Chat Response Types
+# ============================================================================
+
+class ChatChunkType(str, Enum):
+    """Types of chat response chunks in SSE stream."""
+    DELTA = "delta"      # Streaming text delta
+    CONTEXT = "context"  # RAG contexts
+    DONE = "done"        # Stream complete
+    ERROR = "error"      # Error occurred
 
 
 # ============================================================================
@@ -29,7 +42,7 @@ class ChatRequest(BaseModel):
         description="Include RAG QA pairs dataset"
     )
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0)
-    max_tokens: Optional[int] = Field(default=512, ge=1, le=4096)
+    max_tokens: Optional[int] = Field(default=2048, ge=1, le=4096)
     stream: bool = Field(default=True, description="Enable streaming (required)")
 
 
@@ -42,7 +55,7 @@ class RAGContext(BaseModel):
 
 class ChatResponseChunk(BaseModel):
     """Single SSE chunk for streaming response."""
-    type: Literal["delta", "context", "done", "error"]
+    type: ChatChunkType
     delta: Optional[str] = None          # For type="delta"
     full_text: Optional[str] = None      # For type="done"
     contexts: Optional[List[RAGContext]] = None  # For type="context"

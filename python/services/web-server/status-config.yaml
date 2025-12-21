@@ -13,6 +13,8 @@ servers:
         node: local2
       gpu-service:
         node: local2
+      stevenai-service:
+        node: local2
 
   # Backup Proxmox server
   us-east:

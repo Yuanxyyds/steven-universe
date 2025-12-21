@@ -34,8 +34,9 @@ class Settings(BaseSettings):
     PROXMOX_US_EAST_API_URL: str
     PROXMOX_US_EAST_API_TOKEN: str
 
-    # Downstream Microservices (for future use)
-    STEVENAI_SERVICE_URL: str  # Future stevenai-service
+    # Downstream Microservices
+    STEVENAI_SERVICE_URL: str
+    STEVENAI_SERVICE_API_KEY: str
     FOOD101_SERVICE_URL: str   # Future food101-service
     LANDSINK_SERVICE_URL: str  # Future landsink-service
 
@@ -107,6 +108,7 @@ class Settings(BaseSettings):
         config_map = {
             "file-service": (self.FILE_SERVICE_URL, self.FILE_SERVICE_API_KEY),
             "gpu-service": (self.GPU_SERVICE_URL, self.GPU_SERVICE_API_KEY),
+            "stevenai-service": (self.STEVENAI_SERVICE_URL, self.STEVENAI_SERVICE_API_KEY),
         }
         return config_map.get(service_name, ("", ""))
 

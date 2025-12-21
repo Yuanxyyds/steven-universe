@@ -1,6 +1,6 @@
 """
-Web Server - Main FastAPI Application
-API Gateway that routes requests to specialized microservices.
+StevenAI Service - Main FastAPI Application.
+Chat service with RAG and model routing.
 """
 
 import logging
@@ -12,7 +12,8 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.dependencies import close_http_client
-from app.api import health, status, landsink, food, chat
+from app.services.rag_service import rag_service
+from app.api import health, chat
 
 # Configure logging
 logging.basicConfig(
@@ -30,12 +31,16 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-    logger.info("HTTP client will be initialized on first request")
+
+    # Initialize RAG service (load models and indexes)
+    logger.info("Initializing RAG service...")
+    await rag_service.initialize()
+    logger.info("✅ RAG service ready")
 
     yield
 
     # Shutdown
-    logger.info("Shutting down Web Server...")
+    logger.info("Shutting down StevenAI Service...")
     await close_http_client()
     logger.info("HTTP client closed")
 
@@ -43,27 +48,22 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title=settings.APP_NAME,
-    description="API Gateway for steven-universe microservices",
+    description="AI chat service with RAG for Steven's personal information",
     version=settings.APP_VERSION,
     lifespan=lifespan
 )
-
 
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-
 # Include API routers
 app.include_router(health.router)
-app.include_router(status.router)
-app.include_router(landsink.router)
-app.include_router(food.router)
 app.include_router(chat.router)
 
 
@@ -75,27 +75,12 @@ async def root():
         "version": settings.APP_VERSION,
         "status": "running",
         "endpoints": {
-            "health": {
-                "GET /health": "Service health check",
-                "GET /health/services": "Downstream services status"
-            },
-            "status": {
-                "GET /status": "Proxmox server status"
-            },
-            "predictions": {
-                "GET /predictions/landsink?year=YYYY": "Climate prediction (Phase 4)"
-            },
-            "classifications": {
-                "POST /classifications/food": "Food image classification (Phase 3)"
-            },
-            "chat": {
-                "GET /chat/stream": "AI chatbot query (Phase 2)"
-            }
+            "health": "GET /health",
+            "chat_stream": "POST /chat/stream"
         },
         "documentation": {
             "swagger": "/docs",
-            "redoc": "/redoc",
-            "openapi": "/openapi.json"
+            "redoc": "/redoc"
         }
     }
 
@@ -106,10 +91,7 @@ async def global_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={
-            "success": False,
-            "detail": "Internal server error"
-        }
+        content={"error": "Internal server error", "detail": str(exc)}
     )
 
 
