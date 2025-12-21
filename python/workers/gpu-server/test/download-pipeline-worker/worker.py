@@ -17,7 +17,7 @@ from typing import AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
 
 # Import shared schemas
 from shared_schemas.worker.test.download_pipeline.schemas import (
@@ -28,7 +28,7 @@ from shared_schemas.worker.protocol import (
     WorkerHealthResponse,
     WorkerStopResponse
 )
-from shared_schemas.gpu_service import StreamEvent
+from shared_schemas.sse import StreamEvent
 
 # Configure logging
 logging.basicConfig(
@@ -83,10 +83,10 @@ async def process_task(task: DownloadPipelineTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.logs(
             log=f"Task {task.task_id} received",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
 
         # Text delta: Task Received!
-        yield StreamEvent.text_delta(delta="Task Received!\n").to_sse_format()
+        yield StreamEvent.text_delta(delta="Task Received!\n").to_dict()
         await asyncio.sleep(5)
 
         # Check model path
@@ -100,10 +100,10 @@ async def process_task(task: DownloadPipelineTaskRequest) -> AsyncIterator[str]:
             yield StreamEvent.completed(
                 status="failed",
                 error=error_msg
-            ).to_sse_format()
+            ).to_dict()
         else:
             # Text delta: Found folder
-            yield StreamEvent.text_delta(delta="Found file's folder\n").to_sse_format()
+            yield StreamEvent.text_delta(delta="Found file's folder\n").to_dict()
             await asyncio.sleep(5)
 
         # Countdown from 20 to 1
@@ -112,17 +112,17 @@ async def process_task(task: DownloadPipelineTaskRequest) -> AsyncIterator[str]:
             countdown_count += 1
             yield StreamEvent.text_delta(
                 delta=f"Counting down: {count}\n"
-            ).to_sse_format()
+            ).to_dict()
             await asyncio.sleep(1)
 
         # Text delta: Completed message
-        yield StreamEvent.text_delta(delta="Completed\n").to_sse_format()
+        yield StreamEvent.text_delta(delta="Completed\n").to_dict()
 
         # Completed event
         yield StreamEvent.completed(
             status="completed",
             countdown_steps=countdown_count
-        ).to_sse_format()
+        ).to_dict()
 
         logger.info(f"Task {task.task_id} completed successfully ({countdown_count} countdown steps)")
 
@@ -131,7 +131,7 @@ async def process_task(task: DownloadPipelineTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.completed(
             status="failed",
             error=str(e)
-        ).to_sse_format()
+        ).to_dict()
 
 
 # ============================================================================
@@ -190,14 +190,10 @@ async def submit_task(task: DownloadPipelineTaskRequest):
     """
     logger.info(f"Task endpoint called: {task.task_id}")
 
-    return StreamingResponse(
-        process_task(task),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        }
-    )
+    return EventSourceResponse(process_task(task), headers={
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+    })
 
 
 # ============================================================================

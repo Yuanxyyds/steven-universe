@@ -36,7 +36,7 @@ echo "✓ Copied shared_schemas"
 
 # Build the image
 echo "Building Docker image..."
-docker build -t vllm-worker:latest .
+docker build --no-cache -t vllm-worker:latest .
 
 # Clean up copied shared_schemas
 echo "Cleaning up..."

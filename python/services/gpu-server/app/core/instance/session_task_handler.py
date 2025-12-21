@@ -23,7 +23,8 @@ from app.core.manager.model_downloader import model_downloader
 from app.core.manager.session_manager import session_manager
 from app.core.manager.gpu_manager import gpu_manager
 from app.core.manager.docker_manager import docker_manager
-from shared_schemas.gpu_service import StreamEvent, WorkerStatus
+from shared_schemas.gpu_service import WorkerStatus
+from shared_schemas.sse import StreamEvent
 
 logger = logging.getLogger(__name__)
 
@@ -122,9 +123,9 @@ class SessionTaskHandler:
             if queue_position >= 0:
                 # Emit queue position notice
                 yield StreamEvent.logs(
-                    log=f"Queue: {queue_position + 1} task(s) ahead of you",
+                    log=f"Queue: {queue_position} task(s) ahead of you",
                     level="info"
-                )
+                ).to_dict()
 
             # Step 6: Process based on scheduler type
             if self.task_def.scheduler_type == "centralized":
@@ -143,7 +144,7 @@ class SessionTaskHandler:
             yield StreamEvent.completed(
                 status="failed",
                 error=str(e)
-            )
+            ).to_dict()
 
     async def _load_config(self):
         """Load task configuration with request overrides applied."""
@@ -337,7 +338,7 @@ class SessionTaskHandler:
                 yield StreamEvent.completed(
                     status="timeout",
                     error="Timeout waiting for dispatch"
-                )
+                ).to_dict()
                 return
 
             logger.info(f"[{self.task_id}] Task dequeued by dispatcher, processing")
@@ -355,7 +356,7 @@ class SessionTaskHandler:
             yield StreamEvent.completed(
                 status="failed",
                 error=str(e)
-            )
+            ).to_dict()
         finally:
             # Always cleanup: update status with stop signal, mark activity, clean event
             # Update session status back to WAITING (sends stop signal to worker)
@@ -406,7 +407,7 @@ class SessionTaskHandler:
                 yield StreamEvent.completed(
                     status="timeout",
                     error="Timeout waiting for dispatch"
-                )
+                ).to_dict()
                 return
 
             logger.info(f"[{self.task_id}] Task dequeued by dispatcher, sending to worker")
@@ -427,7 +428,7 @@ class SessionTaskHandler:
             yield StreamEvent.completed(
                 status="failed",
                 error=str(e)
-            )
+            ).to_dict()
         finally:
             # Always cleanup: mark activity, clean event
             # Note: Status stays WAITING for distributed

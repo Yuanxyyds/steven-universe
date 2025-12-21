@@ -37,7 +37,7 @@ echo "✓ Copied shared_schemas"
 
 # Build the image
 echo "Building Docker image..."
-docker build -t loading-worker:latest .
+docker build --no-cache -t loading-worker:latest .
 
 # Clean up copied shared_schemas
 echo "Cleaning up..."

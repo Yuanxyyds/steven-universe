@@ -5,14 +5,16 @@ Implements GPUWorkerProtocol for vLLM worker communication.
 Converts Task objects into VLLMTaskRequest and streams back results.
 """
 
+import json
 import logging
 from typing import AsyncIterator
 
 import httpx
+from httpx_sse import aconnect_sse
 
 from app.clients.worker.base import GPUWorkerProtocol
 from app.models.task import Task
-from shared_schemas.gpu_service import StreamEvent
+from shared_schemas.sse import StreamEvent
 from shared_schemas.worker.protocol import WorkerHealthResponse, WorkerStopResponse
 from shared_schemas.worker.vllm.schemas import VLLMTaskRequest
 
@@ -110,29 +112,19 @@ class VLLMClient(GPUWorkerProtocol):
 
         try:
             async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-                async with client.stream(
+                async with aconnect_sse(
+                    client,
                     'POST',
                     task_url,
-                    json=task_request.model_dump(),
-                    headers={"Accept": "text/event-stream"}
-                ) as response:
-                    if response.status_code != 200:
-                        error_text = await response.atext()
-                        logger.error(f"Worker error for task {task.task_id}: {error_text}")
-                        raise Exception(f"Worker returned status {response.status_code}: {error_text}")
-
-                    # Stream SSE events
-                    event_type = None
-                    async for line in response.aiter_lines():
-                        if line.startswith('event: '):
-                            event_type = line[7:].strip()
-                        elif line.startswith('data: '):
-                            if event_type:
-                                try:
-                                    # Deserialize SSE to StreamEvent
-                                    yield StreamEvent.from_sse(event_type, line[6:])
-                                except ValueError as e:
-                                    logger.warning(f"Failed to parse SSE event: {e}")
+                    json=task_request.model_dump()
+                ) as event_source:
+                    async for sse_event in event_source.aiter_sse():
+                        try:
+                            # Parse JSON data and deserialize to StreamEvent
+                            data_dict = json.loads(sse_event.data)
+                            yield StreamEvent.from_dict(data_dict)
+                        except (json.JSONDecodeError, ValueError) as e:
+                            logger.warning(f"Failed to parse SSE event: {e}, data: {sse_event.data[:200]}")
 
         except httpx.TimeoutException:
             logger.error(f"Worker timeout for task {task.task_id}")

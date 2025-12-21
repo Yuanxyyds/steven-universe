@@ -10,3 +10,4 @@ from shared_schemas.common import *  # noqa: F403, F401
 from shared_schemas.file_service import *  # noqa: F403, F401
 from shared_schemas.web_server import *  # noqa: F403, F401
 from shared_schemas.gpu_service import *  # noqa: F403, F401
+from shared_schemas.sse import *  # noqa: F403, F401

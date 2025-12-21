@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import AsyncIterator
 
 from app.models.task import Task
-from shared_schemas.gpu_service import StreamEvent
+from shared_schemas.sse import StreamEvent
 
 
 class GPUWorkerProtocol(ABC):

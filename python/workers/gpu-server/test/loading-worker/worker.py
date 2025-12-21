@@ -13,12 +13,12 @@ from typing import AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
 
 # Import shared schemas
 from shared_schemas.worker.test.loading.schemas import LoadingTestTaskRequest
 from shared_schemas.worker.protocol import WorkerHealthResponse, WorkerStopResponse
-from shared_schemas.gpu_service import StreamEvent
+from shared_schemas.sse import StreamEvent
 
 # Configure logging
 logging.basicConfig(
@@ -75,54 +75,54 @@ async def process_task(task: LoadingTestTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.logs(
             log="Initializing GPU...",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
         await asyncio.sleep(2)
 
         # Log: Loading model (reduced from 15s to 3s total)
         yield StreamEvent.logs(
             log=f"Loading model {MODEL_NAME} into GPU memory...",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
 
         # Simulate loading progress (3 iterations instead of 5, 1s each instead of 3s)
         for i in range(1, 4):
             await asyncio.sleep(1)
             yield StreamEvent.text_delta(
                 delta=f"Loading progress: {i * 33}%\n"
-            ).to_sse_format()
+            ).to_dict()
 
         # Model loaded
         yield StreamEvent.logs(
             log="Model loaded successfully",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
 
         # Simulate GPU computation (reduced from 2s to 1s)
         yield StreamEvent.text_delta(
             delta="\nPerforming GPU computation...\n"
-        ).to_sse_format()
+        ).to_dict()
         await asyncio.sleep(1)
 
         yield StreamEvent.text_delta(
             delta=f"Model {MODEL_NAME} computation complete!\nGPU memory allocated: ~2GB\n"
-        ).to_sse_format()
+        ).to_dict()
 
         # Simulate unloading model (1s, unchanged)
         yield StreamEvent.logs(
             log="Unloading model from GPU...",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
         await asyncio.sleep(1)
 
         yield StreamEvent.text_delta(
             delta="GPU memory freed.\n"
-        ).to_sse_format()
+        ).to_dict()
 
         # Completed event
         yield StreamEvent.completed(
             status="completed",
             model=MODEL_NAME
-        ).to_sse_format()
+        ).to_dict()
 
         logger.info(f"Task {task.task_id} completed successfully")
 
@@ -131,7 +131,7 @@ async def process_task(task: LoadingTestTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.completed(
             status="failed",
             error=str(e)
-        ).to_sse_format()
+        ).to_dict()
 
 
 # ============================================================================
@@ -170,14 +170,10 @@ async def submit_task(task: LoadingTestTaskRequest):
     """
     logger.info(f"Task endpoint called: {task.task_id}")
 
-    return StreamingResponse(
-        process_task(task),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        }
-    )
+    return EventSourceResponse(process_task(task), headers={
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+    })
 
 
 # ============================================================================

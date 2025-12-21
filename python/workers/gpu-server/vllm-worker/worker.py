@@ -16,12 +16,12 @@ from typing import AsyncIterator
 import uvicorn
 import httpx
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
 
 # Import shared schemas
 from shared_schemas.worker.vllm.schemas import VLLMTaskRequest
 from shared_schemas.worker.protocol import WorkerHealthResponse, WorkerStopResponse
-from shared_schemas.gpu_service import StreamEvent
+from shared_schemas.sse import StreamEvent
 
 # Configure logging
 logging.basicConfig(
@@ -114,7 +114,7 @@ async def process_task(task: VLLMTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.logs(
             log="Checking vLLM server status...",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
 
         if not await check_vllm_health():
             raise RuntimeError("vLLM server is not healthy")
@@ -122,7 +122,7 @@ async def process_task(task: VLLMTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.logs(
             log="vLLM server ready",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
 
         # Prepare vLLM request
         prompt, messages = task.get_prompt_or_messages()
@@ -157,7 +157,7 @@ async def process_task(task: VLLMTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.logs(
             log=f"Starting inference with {task.model_id}...",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
 
         # Stream from vLLM
         async with httpx.AsyncClient(timeout=300.0) as client:
@@ -203,7 +203,7 @@ async def process_task(task: VLLMTaskRequest) -> AsyncIterator[str]:
                                         full_text += delta_content
                                         yield StreamEvent.text_delta(
                                             delta=delta_content
-                                        ).to_sse_format()
+                                        ).to_dict()
 
                                 # Handle completions format
                                 elif "text" in choice:
@@ -212,7 +212,7 @@ async def process_task(task: VLLMTaskRequest) -> AsyncIterator[str]:
                                         full_text += delta_content
                                         yield StreamEvent.text_delta(
                                             delta=delta_content
-                                        ).to_sse_format()
+                                        ).to_dict()
 
                         except json.JSONDecodeError as e:
                             logger.warning(f"Failed to parse vLLM chunk: {e}")
@@ -222,12 +222,12 @@ async def process_task(task: VLLMTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.logs(
             log=f"Generated {len(full_text)} characters",
             level="info"
-        ).to_sse_format()
+        ).to_dict()
 
         yield StreamEvent.completed(
             status="completed",
             model=task.model_id
-        ).to_sse_format()
+        ).to_dict()
 
         logger.info(f"Task {task.task_id} completed successfully")
 
@@ -236,11 +236,11 @@ async def process_task(task: VLLMTaskRequest) -> AsyncIterator[str]:
         yield StreamEvent.logs(
             log=f"Error: {str(e)}",
             level="error"
-        ).to_sse_format()
+        ).to_dict()
         yield StreamEvent.completed(
             status="failed",
             error=str(e)
-        ).to_sse_format()
+        ).to_dict()
 
 
 # ============================================================================
@@ -286,14 +286,10 @@ async def submit_task(task: VLLMTaskRequest):
     """
     logger.info(f"Task endpoint called: {task.task_id}")
 
-    return StreamingResponse(
-        process_task(task),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        }
-    )
+    return EventSourceResponse(process_task(task), headers={
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+    })
 
 
 # ============================================================================
