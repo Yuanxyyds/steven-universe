@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NavBar from "@/components/common/Navbar";
-import Footer from "@/components/common/Footer";
 import Loader from "@/components/common/Loader";
 import ChatbotWrapper from "@/components/common/ChatbotWrapper";
 import NeonTrail from "@/components/effects/NeonTrail";
+import FooterWrapper from "@/components/common/FooterWrapper";
 
 export const metadata: Metadata = {
   title: "Hongyuan (Steven) Liu | AI Developer",
@@ -51,7 +51,7 @@ export default function RootLayout({
         <NeonTrail />
         <NavBar />
         {children}
-        <Footer />
+        <FooterWrapper />
         <ChatbotWrapper />
       </body>
     </html>
