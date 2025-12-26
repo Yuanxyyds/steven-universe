@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { FiSend } from "react-icons/fi";
 import clsx from "clsx";
+import { sendChatMessage } from "../../app/stevenAi/controller";
 
 /**
  * Floating chatbot component
@@ -10,7 +11,7 @@ import clsx from "clsx";
  * Features:
  * - Fixed position at bottom-right corner
  * - Toggle between icon and chat window
- * - Chat with Steven AI (GPT-4o + QA + Docs RAG)
+ * - Streaming chat with Steven AI (chatGPT-5 + QA + Docs RAG)
  * - Click outside to close
  * - Animated neon border
  * - Message history with context awareness
@@ -43,30 +44,71 @@ export default function Chatbot() {
         }
 
         try {
-            // Use Next.js API route with fixed configuration (GPT-4o + QA + Docs)
-            const response = await fetch('/api/stevenai', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    question: userMessage,
+            await sendChatMessage(
+                userMessage,
+                {
+                    model: "chatGPT-5",
+                    ragOptions: ["QA Pairs", "Docs of Facts"],
                     lastQuestion,
-                    lastAnswer,
-                    model: 'ChatGPT-4o',
-                    rag: ['QA Pairs', 'Docs of Facts'],
-                }),
-            });
+                    lastAnswer
+                },
+                {
+                    onDelta: (_delta, accumulatedText) => {
+                        setMessages((prev) => {
+                            const lastMessage = prev[prev.length - 1];
 
-            const data = await response.json();
+                            // If last message is from AI, update it
+                            if (lastMessage && lastMessage.sender === "AI") {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    sender: "AI",
+                                    text: accumulatedText
+                                };
+                                return updated;
+                            }
 
-            if (data.answer) {
-                setMessages((prev) => [...prev, { sender: "AI", text: data.answer }]);
-            } else if (data.error) {
-                setMessages((prev) => [...prev, { sender: "AI", text: `Error: ${data.error}` }]);
-            } else {
-                setMessages((prev) => [...prev, { sender: "AI", text: "No response received." }]);
-            }
+                            // Otherwise add new AI message
+                            return [...prev, { sender: "AI", text: accumulatedText }];
+                        });
+                    },
+                    onDone: (fullText) => {
+                        setMessages((prev) => {
+                            const lastMessage = prev[prev.length - 1];
+
+                            // If last message is from AI, update it
+                            if (lastMessage && lastMessage.sender === "AI") {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    sender: "AI",
+                                    text: fullText
+                                };
+                                return updated;
+                            }
+
+                            // Otherwise add new AI message (no deltas received)
+                            return [...prev, { sender: "AI", text: fullText }];
+                        });
+                    },
+                    onError: (error) => {
+                        setMessages((prev) => {
+                            const lastMessage = prev[prev.length - 1];
+
+                            // If last message is from AI, update it
+                            if (lastMessage && lastMessage.sender === "AI") {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    sender: "AI",
+                                    text: `Error: ${error}`
+                                };
+                                return updated;
+                            }
+
+                            // Otherwise add new error message
+                            return [...prev, { sender: "AI", text: `Error: ${error}` }];
+                        });
+                    }
+                }
+            );
         } catch (error) {
             setMessages((prev) => [...prev, { sender: "AI", text: `Error: ${(error as Error).message}` }]);
         } finally {
@@ -121,7 +163,7 @@ export default function Chatbot() {
                                 <div
                                     key={idx}
                                     className={clsx(
-                                        "mb-2 text-[13px] px-3 py-2 rounded-lg w-[80%]",
+                                        "mb-2 text-[13px] px-3 py-2 rounded-lg w-[80%] whitespace-pre-wrap break-words",
                                         msg.sender === 'You'
                                             ? "text-[#61dafb] bg-[rgb(27,41,75)]"
                                             : "text-white bg-[rgb(27,41,75)]"

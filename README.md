@@ -14,7 +14,7 @@ steven-universe/
 │   │   └── shared-schemas/       # Shared Pydantic schemas for API contracts
 │   ├── services/
 │   │   ├── file-management/      # File management microservice (MinIO/S3)
-│   │   ├── web-server/           # Backend API server
+│   │   ├── web-gateway/          # Backend API gateway
 │   │   ├── stevenai-service/     # RAG-powered AI chatbot
 │   │   └── gpu-server/           # GPU task execution service
 │   └── workers/
@@ -53,7 +53,7 @@ Centralized file management microservice with three-tier bucket architecture for
 
 **Path:** `python/services/file-management/`
 
-### Web Server (API Gateway)
+### Web gateway (API Gateway)
 
 FastAPI-based API Gateway that routes requests to specialized microservices.
 

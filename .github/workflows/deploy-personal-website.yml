@@ -5,15 +5,20 @@ on:
     branches: [ main ]
     paths:
       - 'js/apps/personal-website-new/**'
+      - 'js/libs/shared-schemas/**'
+      - 'js/package.json'
       - '.github/workflows/deploy-personal-website.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'js/apps/personal-website-new/**'
+      - 'js/libs/shared-schemas/**'
+      - 'js/package.json'
       - '.github/workflows/deploy-personal-website.yml'
 
 env:
   WORKING_DIRECTORY: ./js/apps/personal-website-new
+  MONOREPO_ROOT: ./js
 
 jobs:
   deploy:
@@ -29,8 +34,8 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Install Dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+      - name: Install Dependencies (Monorepo)
+        working-directory: ${{ env.MONOREPO_ROOT }}
         run: npm ci
 
       # PREVIEW (PR)
@@ -42,6 +47,10 @@ jobs:
       - name: Build (PR)
         if: github.event_name == 'pull_request'
         working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          # Inject all environment variables from GitHub Secrets
+          WEB_GATEWAY_API_KEY: ${{ secrets.WEB_GATEWAY_API_KEY }}
+          WEB_GATEWAY_URL: ${{ secrets.WEB_GATEWAY_URL }}
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Preview
@@ -60,7 +69,11 @@ jobs:
       - name: Build (Production)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          # Inject all environment variables from GitHub Secrets
+          WEB_GATEWAY_API_KEY: ${{ secrets.WEB_GATEWAY_API_KEY }}
+          WEB_GATEWAY_URL: ${{ secrets.WEB_GATEWAY_URL }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

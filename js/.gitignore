@@ -1,0 +1,7 @@
+node_modules/
+
+# Lockfiles - only keep root lockfile for workspace
+apps/*/package-lock.json
+apps/*/yarn.lock
+libs/*/package-lock.json
+libs/*/yarn.lock

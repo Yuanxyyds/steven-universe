@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@steven-universe/shared-schemas": ["../../libs/shared-schemas"]
     }
   },
   "include": [

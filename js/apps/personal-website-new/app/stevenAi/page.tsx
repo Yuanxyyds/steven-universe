@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import clsx from "clsx";
+import { sendChatMessage } from "./controller";
 
 /**
  * Steven AI chatbot page
@@ -19,7 +20,7 @@ export default function StevenAI() {
     const [messageInput, setMessageInput] = useState("");
     const [showPopup, setShowPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [selectedModel, setSelectedModel] = useState("ChatGPT-4o");
+    const [selectedModel, setSelectedModel] = useState("chatGPT-5");
     const [selectedRAG, setSelectedRAG] = useState(["QA Pairs", "Docs of Facts"]);
 
     // Neon text effect classes (matches CodeCard implementation)
@@ -44,31 +45,73 @@ export default function StevenAI() {
         }
 
         try {
-            // Call Next.js API route instead of backend directly
-            const response = await fetch('/api/stevenai', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    question: userMessage,
-                    lastQuestion,
-                    lastAnswer,
+            await sendChatMessage(
+                userMessage,
+                {
                     model: selectedModel,
-                    rag: selectedRAG,
-                }),
-            });
+                    ragOptions: selectedRAG,
+                    lastQuestion,
+                    lastAnswer
+                },
+                {
+                    onDelta: (_delta, accumulatedText) => {
+                        setMessages((prev) => {
+                            const lastMessage = prev[prev.length - 1];
 
-            const data = await response.json();
+                            // If last message is from AI, update it
+                            if (lastMessage && lastMessage.sender === "AI") {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    sender: "AI",
+                                    text: accumulatedText
+                                };
+                                return updated;
+                            }
 
-            if (data.answer) {
-                setMessages((prev) => [...prev, { sender: "AI", text: data.answer }]);
-            } else if (data.error) {
-                setMessages((prev) => [...prev, { sender: "AI", text: `Error: ${data.error}` }]);
-            } else {
-                setMessages((prev) => [...prev, { sender: "AI", text: "No response received." }]);
-            }
+                            // Otherwise add new AI message
+                            return [...prev, { sender: "AI", text: accumulatedText }];
+                        });
+                    },
+                    onDone: (fullText) => {
+                        setMessages((prev) => {
+                            const lastMessage = prev[prev.length - 1];
+
+                            // If last message is from AI, update it
+                            if (lastMessage && lastMessage.sender === "AI") {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    sender: "AI",
+                                    text: fullText
+                                };
+                                return updated;
+                            }
+
+                            // Otherwise add new AI message (no deltas received)
+                            return [...prev, { sender: "AI", text: fullText }];
+                        });
+                    },
+                    onError: (error) => {
+                        setMessages((prev) => {
+                            const lastMessage = prev[prev.length - 1];
+
+                            // If last message is from AI, update it
+                            if (lastMessage && lastMessage.sender === "AI") {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    sender: "AI",
+                                    text: `Error: ${error}`
+                                };
+                                return updated;
+                            }
+
+                            // Otherwise add new error message
+                            return [...prev, { sender: "AI", text: `Error: ${error}` }];
+                        });
+                    }
+                }
+            );
         } catch (error) {
+            console.error('Error:', error);
             setMessages((prev) => [...prev, { sender: "AI", text: `Error: ${(error as Error).message}` }]);
         } finally {
             setIsLoading(false);
@@ -94,8 +137,9 @@ export default function StevenAI() {
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full p-1.5 mt-1.5 rounded-md border-none text-sm bg-[#2a2a2a] text-white"
                             >
-                                <option value="ChatGPT-4o">ChatGPT-4o</option>
-                                <option value="LLaMA">FT LLaMA-3.2-3B</option>
+                                <option value="chatGPT-5">chatGPT-5</option>
+                                <option value="Qwen">Qwen3-4B (Self Host)</option>
+                                <option value="LLaMA">FT LLaMA-3.2-3B (Coming Soon)</option>
                             </select>
                         </label>
 

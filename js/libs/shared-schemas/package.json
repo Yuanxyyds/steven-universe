@@ -1,0 +1,19 @@
+{
+  "name": "@steven-universe/shared-schemas",
+  "version": "1.0.0",
+  "description": "Shared TypeScript schemas for steven-universe services",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./stevenai_service": "./stevenai_service.ts"
+  },
+  "scripts": {},
+  "keywords": [
+    "schemas",
+    "typescript",
+    "stevenai"
+  ],
+  "author": "Steven Liu",
+  "license": "MIT"
+}
