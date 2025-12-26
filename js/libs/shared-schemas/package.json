@@ -2,18 +2,28 @@
   "name": "@steven-universe/shared-schemas",
   "version": "1.0.0",
   "description": "Shared TypeScript schemas for steven-universe services",
-  "main": "index.ts",
-  "types": "index.ts",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./index.ts",
-    "./stevenai_service": "./stevenai_service.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./stevenai_service": {
+      "import": "./dist/stevenai_service.js",
+      "types": "./dist/stevenai_service.d.ts"
+    }
   },
-  "scripts": {},
-  "keywords": [
-    "schemas",
-    "typescript",
-    "stevenai"
-  ],
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "keywords": ["schemas", "typescript", "stevenai"],
   "author": "Steven Liu",
   "license": "MIT"
 }

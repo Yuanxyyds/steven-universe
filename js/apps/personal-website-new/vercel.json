@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd ../.. && npm install && cd apps/personal-website-new && npm run build",
-  "installCommand": "npm install --prefix ../..",
-  "framework": "nextjs"
-}

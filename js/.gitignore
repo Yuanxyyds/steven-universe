@@ -5,3 +5,7 @@ apps/*/package-lock.json
 apps/*/yarn.lock
 libs/*/package-lock.json
 libs/*/yarn.lock
+
+dist/
+.vercel
+.env*.local

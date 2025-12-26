@@ -163,7 +163,7 @@ export default function Chatbot() {
                                 <div
                                     key={idx}
                                     className={clsx(
-                                        "mb-2 text-[13px] px-3 py-2 rounded-lg w-[80%] whitespace-pre-wrap break-words",
+                                        "mb-2 text-[13px] px-3 py-2 rounded-lg w-[80%] whitespace-pre-wrap wrap-break-word",
                                         msg.sender === 'You'
                                             ? "text-[#61dafb] bg-[rgb(27,41,75)]"
                                             : "text-white bg-[rgb(27,41,75)]"

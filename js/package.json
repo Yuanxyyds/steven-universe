@@ -8,10 +8,16 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=personal-website-new",
-    "build": "npm run build --workspace=personal-website-new",
+    "build": "npm run build --workspace=@steven-universe/shared-schemas && npm run build --workspace=personal-website-new",
+    "build:schemas": "npm run build --workspace=@steven-universe/shared-schemas",
+    "build:website": "npm run build --workspace=personal-website-new",
     "dev:old": "npm run start --workspace=portfolio"
   },
   "description": "Steven Universe monorepo - TypeScript/React applications",
   "author": "Steven Liu",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/warning": "^3.0.3",
+    "typescript": "^5.9.3"
+  }
 }
